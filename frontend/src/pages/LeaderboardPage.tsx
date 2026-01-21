@@ -1,8 +1,10 @@
 // pages/LeaderboardPage.tsx
 import { Title, Box } from '@mantine/core';
 import { RobotGameLeaderboard } from '../components/RobotGameLeaderboard';
+import { useDocumentTitle } from "@mantine/hooks";
 
 export const LeaderboardPage = () => {
+    useDocumentTitle('Global Robot Game | FLL Hub')
     return (
         // 1. CALCULATED HEIGHT: Viewport (100dvh) minus Header (60px)
         //    This creates the "App Mode" feel just for this route.

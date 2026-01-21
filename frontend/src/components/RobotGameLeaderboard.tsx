@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useState } from 'react';
 import { MantineReactTable, useMantineReactTable, type MRT_ColumnDef } from 'mantine-react-table';
-import { Badge, Text, Anchor, Box } from '@mantine/core';
+import {Badge, Text, Anchor, Box, useMantineColorScheme } from '@mantine/core';
 import { type OverallRobotGameEntryDto } from '../api/generated';
 import { client } from '../api';
 
@@ -8,10 +8,12 @@ import { client } from '../api';
 
 const COLOR_QUALIFIED = 'rgba(46, 204, 113, 0.15)'
 const COLOR_NOT_QUALIFIED = 'rgba(231, 76, 60, 0.15)'
+const MAX_ROWS = 10000;
 
 export const RobotGameLeaderboard = () => {
     const [data, setData] = useState<OverallRobotGameEntryDto[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const colorScheme = useMantineColorScheme();
 
     useEffect(() => {
         client.api.getOverallRobotGameLeaderboard()
@@ -123,9 +125,16 @@ export const RobotGameLeaderboard = () => {
         enableStickyHeader: true, // Header stays fixed at top
         enableColumnPinning: true, // Enable the "Freeze" feature
 
+        enableDensityToggle: false, // Disable density toggle
+
+        mantinePaginationProps: {
+            rowsPerPageOptions: ['5', '10', '25', '50', '100', { value: String(MAX_ROWS), label: 'All' }],
+            hideWithOnePage: true,
+        },
+
         initialState: {
             density: 'xs',
-            pagination: { pageSize: 50, pageIndex: 0 },
+            pagination: { pageSize: MAX_ROWS, pageIndex: 0 },
         },
 
         // 3. STICKY SCROLLBAR (Max Height) 📏
@@ -145,10 +154,10 @@ export const RobotGameLeaderboard = () => {
 
         // Reduce cell padding to make it truly compact
         mantineTableBodyCellProps: {
-            style: { padding: '4px', justifyContent: 'start'},
+            style: { padding: '5px', justifyContent: 'start'},
         },
         mantineTableHeadCellProps: {
-            style: { padding: '4px', justifyContent: 'center' },
+            style: { padding: '5px', justifyContent: 'center' },
         },
 
         mantineTableBodyRowProps: ({ row }) => ({
@@ -156,6 +165,9 @@ export const RobotGameLeaderboard = () => {
                 backgroundColor: row.original.qualified
                     ? COLOR_QUALIFIED
                     : COLOR_NOT_QUALIFIED,
+                '--mrt-row-hover-background-color': colorScheme.colorScheme === 'dark'
+                    ? 'rgba(255, 255, 255, 0.1)'
+                    : 'rgba(0, 0, 0, 0.05)', // A subtle dark tint for light mode
             },
         }),
     });

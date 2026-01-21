@@ -3,9 +3,9 @@ spring:
     name: FLL Hub Backend
   datasource:
     # Connects to localhost:5432 (your Docker container)
-    url: jdbc:postgresql://localhost:5432/fll_hub
-    username: dev
-    password: dev
+    url: jdbc:postgresql://${PGHOST:localhost}:${PGPORT:5432}/${PGDATABASE:fll_hub}
+    username: ${PGUSER:dev}
+    password: ${PGPASSWORD:dev}
     driver-class-name: org.postgresql.Driver
   jpa:
     # "update": Automatically creates/updates tables based on your Java code

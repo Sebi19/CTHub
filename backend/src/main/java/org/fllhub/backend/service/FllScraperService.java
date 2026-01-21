@@ -29,9 +29,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 @Service
 public class FllScraperService {
@@ -66,9 +64,15 @@ public class FllScraperService {
     @Transactional
     @Async
     public void scrapeCurrentSeason() {
-        // 1. Ensure Season exists
+        // 1. Ensure Season exists or create new
         Season season = seasonRepository.findByActiveTrue()
-                .orElseThrow(() -> new IllegalStateException("No active season found"));
+                .orElse(Season.builder()
+                    .id("2025-2026")
+                    .name("Unearthed")
+                    .startYear(2025)
+                    .active(true)
+                    .build());
+        seasonRepository.save(season);
 
         LOG.info("Starting scrape for Season: {}", season.getId());
 

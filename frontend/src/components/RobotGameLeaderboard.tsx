@@ -1,10 +1,10 @@
 import { useMemo, useEffect, useState } from 'react';
 import { MantineReactTable, useMantineReactTable, type MRT_ColumnDef } from 'mantine-react-table';
 import { Badge, Text, Anchor, Box } from '@mantine/core';
-import { Api, type OverallRobotGameEntryDto } from '../api/generated';
+import { type OverallRobotGameEntryDto } from '../api/generated';
+import { client } from '../api';
 
 // @ts-ignore
-const client = new Api({ baseURL: window.location.origin });
 
 const COLOR_QUALIFIED = 'rgba(46, 204, 113, 0.15)'
 const COLOR_NOT_QUALIFIED = 'rgba(231, 76, 60, 0.15)'
@@ -28,7 +28,7 @@ export const RobotGameLeaderboard = () => {
 
     // 1. Helper for Score Columns 📏
     // This allows us to apply the "narrow" logic to all score columns at once
-    const scoreColProps = {
+    const scoreColProps: Partial<MRT_ColumnDef<OverallRobotGameEntryDto>> = {
         size: 50,      // Target width
         minSize: 40,   // ALLOW it to go this small (Crucial!)
         maxSize: 60,
@@ -50,7 +50,7 @@ export const RobotGameLeaderboard = () => {
                 minSize: 30,  // Override default limit
                 maxSize: 50,
                 enableResizing: false,
-                Cell: ({ cell, row }) => (
+                Cell: ({ cell }) => (
                     <Text fw={700}>{cell.getValue<number>()}</Text>
                 )
             },
@@ -59,7 +59,7 @@ export const RobotGameLeaderboard = () => {
                 header: 'Land',
                 size: 60,
                 minSize: 60,
-                Cell: ({ cell, row }) => (
+                Cell: ({ cell }) => (
                     <Badge variant="outline" color="gray">{cell.getValue<string>()}</Badge>
                 ),
             },

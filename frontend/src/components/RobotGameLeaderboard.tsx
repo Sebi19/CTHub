@@ -128,7 +128,7 @@ export const RobotGameLeaderboard = () => {
         enableDensityToggle: false, // Disable density toggle
 
         mantinePaginationProps: {
-            rowsPerPageOptions: ['5', '10', '25', '50', '100', { value: String(MAX_ROWS), label: 'All' }],
+            rowsPerPageOptions: ['5', '10', '25', '50', '100', { value: String(MAX_ROWS), label: 'All' }] as unknown as string[],
             hideWithOnePage: true,
         },
 

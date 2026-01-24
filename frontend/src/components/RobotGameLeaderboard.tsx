@@ -75,6 +75,16 @@ export const RobotGameLeaderboard = () => {
                 )
             },
             {
+                id: 'qualified',
+                accessorFn: (row) => row.qualified ? 'Ja' : 'Nein',
+                header: 'Qual.',
+                size: 220, // Give the name some room
+                minSize: 150,
+                Cell: ({ row }) => (
+                    <Text fw={600} size="sm" truncate>{row.original.qualified ? 'Ja' : 'Nein'}</Text>
+                )
+            },
+            {
                 // Explicit ID for sorting logic
                 id: 'location',
                 accessorFn: (row) => row.competition,

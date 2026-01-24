@@ -11,6 +11,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(uniqueConstraints = {
+    @UniqueConstraint(columnNames = { "season_id", "url_part" })
+})
 public class Competition {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,11 +29,9 @@ public class Competition {
     @Enumerated(EnumType.STRING)
     private CompetitionType type; // Enum defined below
 
-    @Column(unique = true)
     private String urlPart; // "weinviertel"
 
     // Can actually differ from normal url part
-    @Column(unique = true)
     private String resultsUrlPart; // "weinviertel"
 
     private boolean resultsAvailable;

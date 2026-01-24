@@ -2,7 +2,6 @@ package org.fllhub.backend.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.util.List;
 
 @Entity
 @Data
@@ -18,8 +17,4 @@ public class TeamProfile {
     private String customUrl; // "rootbots" - The PERMANENT identifier
 
     private String displayName; // "ROOTBOTS"
-
-    // One Profile has many seasonal participations
-    @OneToMany(mappedBy = "teamProfile")
-    private List<SeasonTeam> participations;
 }

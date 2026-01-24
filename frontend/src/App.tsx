@@ -1,6 +1,7 @@
-import { AppShell, Group, Title, Button, ActionIcon, useMantineColorScheme, useComputedColorScheme } from '@mantine/core';
+import { AppShell, Group, Title, Image, Button, ActionIcon, useMantineColorScheme, useComputedColorScheme } from '@mantine/core';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { IconTrophy, IconSun, IconMoon } from '@tabler/icons-react';
+import logo from './assets/fllhub.png';
 
 // Components
 import { LeaderboardPage } from './pages/LeaderboardPage';
@@ -29,7 +30,20 @@ export default function App() {
         >
             <AppShell.Header>
                 <Group h="100%" px="md" justify="space-between">
-                    <Title order={3}>🤖 FLL Hub</Title>
+                    <Group
+                        gap="sm"
+                        style={{ cursor: 'pointer', userSelect: 'none' }}
+                        onClick={() => navigate('/')}
+                    >
+                        <Image
+                            src={logo}
+                            h={32}
+                            w="auto"
+                            fit="contain"
+                            alt="FLL Hub Logo"
+                        />
+                        <Title order={3}>FLL Hub</Title>
+                    </Group>
 
                     <Group gap="xs">
                         <Button

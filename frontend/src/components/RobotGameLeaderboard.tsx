@@ -6,8 +6,10 @@ import { client } from '../api';
 
 // @ts-ignore
 
-const COLOR_QUALIFIED = 'rgba(46, 204, 113, 0.15)'
-const COLOR_NOT_QUALIFIED = 'rgba(231, 76, 60, 0.15)'
+const COLOR_QUALIFIED_DARK_MODE = 'rgba(46, 204, 113, 0.15)'
+const COLOR_NOT_QUALIFIED_DARK_MODE = 'rgba(231, 76, 60, 0.15)'
+const ROW_HOVER_DARK_MODE = 'rgba(255, 255, 255, 0.1)'
+const ROW_HOVER_LIGHT_MODE = 'rgba(0, 0, 0, 0.05)'
 const MAX_ROWS = 10000;
 
 export const RobotGameLeaderboard = () => {
@@ -173,11 +175,11 @@ export const RobotGameLeaderboard = () => {
         mantineTableBodyRowProps: ({ row }) => ({
             style: {
                 backgroundColor: row.original.qualified
-                    ? COLOR_QUALIFIED
-                    : COLOR_NOT_QUALIFIED,
+                    ? COLOR_QUALIFIED_DARK_MODE
+                    : COLOR_NOT_QUALIFIED_DARK_MODE,
                 '--mrt-row-hover-background-color': colorScheme.colorScheme === 'dark'
-                    ? 'rgba(255, 255, 255, 0.1)'
-                    : 'rgba(0, 0, 0, 0.05)', // A subtle dark tint for light mode
+                    ? ROW_HOVER_DARK_MODE
+                    : ROW_HOVER_LIGHT_MODE, // A subtle dark tint for light mode
             },
         }),
     });

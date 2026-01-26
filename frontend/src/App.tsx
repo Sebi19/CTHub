@@ -1,7 +1,7 @@
 import { AppShell, Group, Title, Image, Button, ActionIcon, useMantineColorScheme, useComputedColorScheme } from '@mantine/core';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { IconTrophy, IconSun, IconMoon } from '@tabler/icons-react';
-import logo from './assets/fllhub.png';
+import logo from './assets/v1.1.png';
 
 // Components
 import { LeaderboardPage } from './pages/LeaderboardPage';

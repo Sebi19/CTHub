@@ -1,5 +1,6 @@
 package org.fllhub.backend.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -14,6 +15,9 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    @Value("${cors.allowed-origins}")
+    private String corsAllowedOrigins;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -33,13 +37,12 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
+        List<String> origins = Arrays.stream(corsAllowedOrigins.split(","))
+            .map(String::trim)
+            .toList();
+
         // 1. Enter your exact Frontend URL here (no trailing slash!)
-        configuration.setAllowedOrigins(Arrays.asList(
-            "https://fllhub-frontend-production.up.railway.app", // Your Railway Frontend
-            "https://fll-hub.org",                     // Your Custom Domain Frontend
-            "http://localhost:5173",  // Your Local Frontend
-            "http://localhost:3000"   // Just in case
-        ));
+        configuration.setAllowedOrigins(origins);
 
         // 2. Allow all standard methods
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));

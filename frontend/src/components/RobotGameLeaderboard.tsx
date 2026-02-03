@@ -12,6 +12,8 @@ const ROW_HOVER_DARK_MODE = 'rgba(255, 255, 255, 0.1)'
 const ROW_HOVER_LIGHT_MODE = 'rgba(0, 0, 0, 0.05)'
 const MAX_ROWS = 10000;
 
+
+
 export const RobotGameLeaderboard = () => {
     const [data, setData] = useState<OverallRobotGameEntryDto[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -29,6 +31,10 @@ export const RobotGameLeaderboard = () => {
     const getLink = (urlPart: string) => {
         return `https://www.first-lego-league.org/de/challenge-2025-26/${urlPart}`;
     };
+
+    const formatName = (entry: OverallRobotGameEntryDto): string => {
+        return `${entry.teamName} [${entry.teamId}]`;
+    }
 
     // 1. Helper for Score Columns 📏
     // This allows us to apply the "narrow" logic to all score columns at once
@@ -68,12 +74,12 @@ export const RobotGameLeaderboard = () => {
                 ),
             },
             {
-                accessorKey: 'teamName',
+                accessorFn: (row) => formatName(row),
                 header: 'Team',
                 size: 220, // Give the name some room
                 minSize: 150,
                 Cell: ({ row }) => (
-                    <Text fw={600} size="sm" truncate>{row.original.teamName}</Text>
+                    <Text fw={600} size="sm" truncate>{formatName(row.original)}</Text>
                 )
             },
             {

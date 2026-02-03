@@ -538,7 +538,7 @@ public class FllScraperService {
             if (championRow != null) {
 
                 Element qualifierCountElement = championRow.select("div.next-round-message").first();
-                int qualifierCount = 5;
+                int qualifierCount = 1; // Default to 1 since regex doesn't match for 1 qualifier
                 if (qualifierCountElement != null) {
                     String text = qualifierCountElement.text();
                     java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("Platz \\d+ bis (\\d+)");

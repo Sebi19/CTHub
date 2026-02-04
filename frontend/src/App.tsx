@@ -40,9 +40,9 @@ export default function App() {
                             h={32}
                             w="auto"
                             fit="contain"
-                            alt="FLL Hub Logo"
+                            alt="Challenge Team Hub Logo"
                         />
-                        <Title order={3}>FLL Hub</Title>
+                        <Title order={3}>Challenge Team Hub</Title>
                     </Group>
 
                     <Group gap="xs">

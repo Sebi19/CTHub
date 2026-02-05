@@ -11,7 +11,7 @@ import {
 } from '@mantine/core';
 import {useNavigate, useLocation, Outlet} from 'react-router-dom';
 import { IconTrophy, IconSun, IconMoon } from '@tabler/icons-react';
-import logo from './assets/v1.1.png';
+import logo from './assets/CTH.svg';
 import {useDisclosure} from "@mantine/hooks";
 
 const NAV_LINKS = [

@@ -1,11 +1,11 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: fll_db
+    container_name: cth_db
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: fll_hub
+      POSTGRES_DB: ct_hub
       POSTGRES_USER: dev
       POSTGRES_PASSWORD: dev
     volumes:

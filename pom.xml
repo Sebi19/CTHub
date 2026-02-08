@@ -8,10 +8,10 @@
 		<version>4.0.1</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>org.fllhub</groupId>
+	<groupId>org.cthub</groupId>
 	<artifactId>backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>FLL Hub Backend</name>
+	<name>Challenge Team Hub Backend</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
 	<licenses>

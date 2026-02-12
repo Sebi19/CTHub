@@ -3,6 +3,8 @@ package org.cthub.backend.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -17,11 +19,14 @@ import java.util.Set;
 public class SeasonTeam {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "team_seq_gen")
+    @SequenceGenerator(name = "team_seq_gen", sequenceName = "team_seq")
     private Long id;
 
     @ManyToOne(optional = false)
     private Season season;
+
+    private boolean active;
 
     @Column(nullable = false)
     private String fllId; // "1011" - Not unique globally!
@@ -36,10 +41,12 @@ public class SeasonTeam {
     private TeamProfile teamProfile;
 
     @ElementCollection
-    private List<Link> links;
+    @Builder.Default
+    private List<Link> links = new ArrayList<>();
 
     @ManyToMany
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    private Set<Competition> registeredCompetitions;
+    @Builder.Default
+    private Set<Competition> registeredCompetitions = new HashSet<>();
 }

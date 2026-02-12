@@ -4,12 +4,12 @@ import org.cthub.backend.model.Competition;
 import org.cthub.backend.model.SeasonTeam;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import java.util.Optional;
+
+import java.util.List;
 
 @Repository
 public interface SeasonTeamRepository extends JpaRepository<SeasonTeam, Long> {
-    // Vital: Check if "Team 1046" already exists in "Season 2024"
-    Optional<SeasonTeam> findBySeasonIdAndFllId(String seasonId, String fllId);
+    List<SeasonTeam> findByRegisteredCompetitionsContains(Competition competition);
 
-    Optional<SeasonTeam> findByRegisteredCompetitionsContainsAndNameIgnoreCase(Competition competition, String name);
+    List<SeasonTeam> findBySeasonIdAndFllIdIn(String seasonId, List<String> fllIds);
 }

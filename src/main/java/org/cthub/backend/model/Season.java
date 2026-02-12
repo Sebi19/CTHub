@@ -22,4 +22,6 @@ public class Season {
     // only true once
     @Column
     private boolean active;
+
+    private String overviewHash;
 }

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -16,11 +17,14 @@ import java.util.List;
 })
 public class Competition {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "comp_seq_gen")
+    @SequenceGenerator(name = "comp_seq_gen", sequenceName = "comp_seq")
     private Long id;
 
     @ManyToOne(optional = false)
     private Season season;
+
+    private boolean active;
 
     private String name; // "Weinviertel"
     private String country; // "at"
@@ -29,19 +33,25 @@ public class Competition {
     @Enumerated(EnumType.STRING)
     private CompetitionType type; // Enum defined below
 
+    private int registeredTeamCount; // 12
+    private int maxTeamCount; // 24
+
     private String urlPart; // "weinviertel"
 
     // Can actually differ from normal url part
     private String resultsUrlPart; // "weinviertel"
 
-    private boolean resultsAvailable;
+    private String qualificationUrlPart; // "weinviertel-qualifikation"
+
+    private boolean resultsAvailable = false;
 
     @Column(columnDefinition = "TEXT")
     private String location; // "HTL Hollabrunn"
 
     // Stores "Link 1", "Link 2" in a separate simple table automatically
     @ElementCollection
-    private List<Link> links;
+    @Builder.Default
+    private List<Link> links = new ArrayList<>();
 
     // Embed contact info directly into this table to avoid unnecessary joins
     @Embedded
@@ -61,6 +71,12 @@ public class Competition {
         private String contactName;
         private String contactEmail;
     }
+
+    private String detailHash;
+
+    private String robotGameHash;
+
+    private String awardsHash;
 
     @Override
     public boolean equals(Object o) {

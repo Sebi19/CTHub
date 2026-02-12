@@ -2,19 +2,15 @@ package org.cthub.backend.repository;
 
 import org.cthub.backend.model.Competition;
 import org.cthub.backend.model.RobotGameResult;
-import org.cthub.backend.model.SeasonTeam;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface RobotGameResultRepository extends JpaRepository<RobotGameResult, Long> {
-    Optional<RobotGameResult> findByCompetitionAndSeasonTeam(Competition competition, SeasonTeam seasonTeam);
-
     // 1. Filter by Season directly in the WHERE clause
     // 2. LEFT JOIN Place to find the matching entry for this Team + Competition
     // 3. COALESCE handles nulls (if no Place entry exists, they didn't advance -> false)
@@ -26,4 +22,5 @@ public interface RobotGameResultRepository extends JpaRepository<RobotGameResult
         "LEFT JOIN Place p ON p.seasonTeam = r.seasonTeam AND p.competition = r.competition " +
         "WHERE r.competition.season.id = :seasonId")
     List<Object[]> findAllBySeasonIdWithQualification(@Param("seasonId") String seasonId);
+    void deleteByCompetition(Competition competition);
 }

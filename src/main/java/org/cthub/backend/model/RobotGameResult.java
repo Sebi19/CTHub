@@ -12,7 +12,8 @@ import lombok.*;
 @Table(uniqueConstraints = { @UniqueConstraint(columnNames = { "season_team_id", "competition_id" }) })
 public class RobotGameResult {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "rg_seq_gen")
+    @SequenceGenerator(name = "rg_seq_gen", sequenceName = "rg_seq")
     private Long id;
 
     @ManyToOne(optional = false)

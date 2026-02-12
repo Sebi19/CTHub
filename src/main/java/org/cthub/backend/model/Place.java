@@ -10,7 +10,8 @@ import lombok.*;
 @Builder
 public class Place {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "place_seq_gen")
+    @SequenceGenerator(name = "place_seq_gen", sequenceName = "place_seq")
     private Long id;
 
     @ManyToOne(optional = false)

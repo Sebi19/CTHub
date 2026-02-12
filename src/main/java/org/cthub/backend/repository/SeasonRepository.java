@@ -7,8 +7,5 @@ import java.util.Optional;
 
 @Repository
 public interface SeasonRepository extends JpaRepository<Season, String> {
-    // To find the season by the integer year (e.g. 2024)
-    Optional<Season> findByStartYear(Integer startYear);
-
     Optional<Season> findByActiveTrue();
 }

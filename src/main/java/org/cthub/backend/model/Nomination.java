@@ -10,7 +10,8 @@ import lombok.*;
 @Builder
 public class Nomination {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "nom_seq_gen")
+    @SequenceGenerator(name = "nom_seq_gen", sequenceName = "nom_seq")
     private Long id;
 
     @ManyToOne(optional = false)

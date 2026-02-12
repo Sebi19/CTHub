@@ -1,2 +1,2 @@
 cors:
-  allowed-origins: "https://fllhub-frontend-production.up.railway.app,https://challengeteamhub.org"
+  allowed-origins: "https://challengeteamhub.org,https://cthub.up.railway.app"

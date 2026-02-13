@@ -31,14 +31,17 @@ public class ScraperTestController {
     }
 
     @GetMapping("/api/force-full")
-    public ResponseEntity<String> forceFullSync(@RequestParam String pw) {
+    public ResponseEntity<String> forceFullSync(
+        @RequestParam String pw,
+        @RequestParam(defaultValue = "false") boolean ignoreHashes
+    ) {
         if (!adminPassword.equals(pw)) {
             log.warn("⛔ Unauthorized attempt to trigger Full Sync");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Wrong password");
         }
 
         // Run in background
-        scraperService.runFullSync();
+        scraperService.runFullSync(ignoreHashes);
         return ResponseEntity.ok("🌙 Full Sync started in background.");
     }
 

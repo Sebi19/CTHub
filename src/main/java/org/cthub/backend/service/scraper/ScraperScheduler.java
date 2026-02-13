@@ -20,7 +20,7 @@ public class ScraperScheduler {
     @Scheduled(cron = "0 0 3 * * *", zone = "Europe/Vienna")
     public void scheduleFullSync() {
         log.info("⏰ Scheduler triggered: Nightly Full Sync");
-        scraperService.runFullSync();
+        scraperService.runFullSync(false);
     }
 
     // ==========================================

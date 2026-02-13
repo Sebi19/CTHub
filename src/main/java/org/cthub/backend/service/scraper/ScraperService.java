@@ -21,6 +21,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ScraperService {
 
+    private static final double MAX_ALLOWED_COMPETITION_DROP = 0.20; // Max 20% drop allowed
+    private static final int MIN_COMPETITIONS_FOR_SANITY = 10; // Only enforce ratio if we have >10 events
+
     private final FllHtmlParser parser;
     private final ScraperPersister persister;
     private final SeasonRepository seasonRepository;
@@ -35,7 +38,7 @@ public class ScraperService {
     // ==========================================
 
     @Async
-    public void runFullSync() {
+    public void runFullSync(boolean ignoreHashes) {
         log.info("🌒 STARTING FULL SYNC...");
         long start = System.currentTimeMillis();
 
@@ -49,13 +52,13 @@ public class ScraperService {
                 .build()));
 
         // 2. Sync The Overview List
-        List<Competition> activeCompetitions = syncOverview(season);
+        List<Competition> activeCompetitions = syncOverview(season, ignoreHashes);
 
         // 3. Sync Details for Each Competition
         int updatedCount = 0;
         for (Competition comp : activeCompetitions) {
             /*try {*/
-                if (processSingleCompetition(comp)) {
+                if (processSingleCompetition(comp, ignoreHashes)) {
                     updatedCount++;
                 }
             /*} catch (Exception e) {
@@ -118,7 +121,7 @@ public class ScraperService {
     /**
      * @return true if any data was updated in the DB
      */
-    private boolean processSingleCompetition(Competition comp) {
+    private boolean processSingleCompetition(Competition comp, boolean ignoreHashes) {
         log.info("🔍 Processing competition: {}", comp.getName());
         boolean dataChanged = false;
 
@@ -130,11 +133,23 @@ public class ScraperService {
             String newDetailHash = parser.computeDetailHash(detailHtml);
 
             // HASH CHECK 🛑
-            if (!newDetailHash.equals(comp.getDetailHash())) {
+            if (ignoreHashes || !newDetailHash.equals(comp.getDetailHash())) {
                 log.info("📝 Parsing Details for: {}", comp.getName());
-                detailsDto = parser.parseEventPage(detailHtml);
-                detailsDto.setContentHash(newDetailHash); // Inject Hash for Persister
-                dataChanged = true;
+                ScrapedEventDetailsDto candidateDto = parser.parseEventPage(detailHtml);
+
+                boolean suspiciousParsing = candidateDto.getTeams().isEmpty() && comp.getRegisteredTeamCount() > 0;
+
+                if (suspiciousParsing) {
+                    log.error("⛔ SANITY CHECK FAILED for {}: Overview says {} teams, but parsed 0. Skipping update.",
+                        comp.getName(), comp.getRegisteredTeamCount());
+                    // We DO NOT set dataChanged = true. We silently skip this update.
+                } else {
+                    // All good, accept the data
+                    log.info("📝 Parsing Details for: {}", comp.getName());
+                    detailsDto = candidateDto;
+                    detailsDto.setContentHash(newDetailHash);
+                    dataChanged = true;
+                }
             }
         }
 
@@ -153,11 +168,10 @@ public class ScraperService {
 
             if (robotGameResultsHtml != null) {
                 String newRgHash = parser.computeRobotGameHash(robotGameResultsHtml);
-                if (!newRgHash.isEmpty() && !newRgHash.equals(comp.getRobotGameHash())) {
+                if (!newRgHash.isEmpty() && (ignoreHashes || !newRgHash.equals(comp.getRobotGameHash()))) {
                     log.info("🤖 Parsing Scores for: {}", comp.getName());
                     robotGameDto = parser.parseRobotGameResults(robotGameResultsHtml);
-
-                    robotGameDto.setContentHash(newRgHash); // Inject Hash for Persister
+                    robotGameDto.setContentHash(newRgHash);
                     dataChanged = true;
                 }
             }
@@ -167,7 +181,7 @@ public class ScraperService {
 
             if (awardsResultsHtml != null) {
                 String newAwardsHash = parser.computeAwardsHash(awardsResultsHtml);
-                if (!newAwardsHash.isEmpty() && !newAwardsHash.equals(comp.getAwardsHash())) {
+                if (!newAwardsHash.isEmpty() && (ignoreHashes || !newAwardsHash.equals(comp.getAwardsHash()))) {
                     log.info("🏆 Parsing Awards for: {}", comp.getName());
                     awardsDto = parser.parseAwardResults(awardsResultsHtml);
                     awardsDto.setContentHash(newAwardsHash);
@@ -185,20 +199,31 @@ public class ScraperService {
         return false;
     }
 
-    private List<Competition> syncOverview(Season season) {
+    private List<Competition> syncOverview(Season season, boolean ignoreHashes) {
         String html = fetchOrNull(LOCATIONS_URL);
         if (html == null) return new ArrayList<>();
 
         String newHash = parser.computeOverviewHash(html);
 
         // HASH CHECK 🛑
-        if (newHash.equals(season.getOverviewHash())) {
+        if (!ignoreHashes && newHash.equals(season.getOverviewHash())) {
             log.info("🌍 Overview Page Unchanged. Skipping list parse.");
             return competitionRepository.findAllBySeason(season);
         }
 
         log.info("🌍 Overview Changed! syncing competition list...");
         List<ScrapedEventOverviewDto> dtos = parser.parseCompetitionsList(html, season);
+
+        long currentCount = competitionRepository.countBySeasonAndActiveTrue(season);
+        if (currentCount > MIN_COMPETITIONS_FOR_SANITY) {
+            // If we parse significantly fewer competitions than we have active in DB
+            if (dtos.size() < currentCount * (1.0 - MAX_ALLOWED_COMPETITION_DROP)) {
+                log.error("⛔ SANITY CHECK FAILED: Scraper found {} events, but DB has {}. Drop > 20%. ABORTING SYNC.",
+                    dtos.size(), currentCount);
+                // Return existing to prevent damage, effectively cancelling the update
+                return competitionRepository.findAllBySeason(season);
+            }
+        }
 
         List<Competition> active = persister.syncCompetitionsFromOverview(season, dtos);
 
@@ -222,7 +247,7 @@ public class ScraperService {
             // 2. If valid, trigger the full parse logic for this competition
             // We temporarily set the URL part on the object so processSingleCompetition uses it
             comp.setResultsUrlPart(urlPart);
-            processSingleCompetition(comp);
+            processSingleCompetition(comp, false);
             return true;
         }
         return false;

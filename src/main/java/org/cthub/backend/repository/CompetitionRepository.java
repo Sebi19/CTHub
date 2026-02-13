@@ -17,4 +17,7 @@ public interface CompetitionRepository extends JpaRepository<Competition, Long> 
            "WHERE c.resultsAvailable = false " +
            "AND c.date <= :currentDate")
     List<Competition> findPendingResults(LocalDate currentDate);
+
+
+    int countBySeasonAndActiveTrue(Season season);
 }

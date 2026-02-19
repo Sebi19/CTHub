@@ -10,6 +10,18 @@
  * ---------------------------------------------------------------
  */
 
+export interface LoginRequestDto {
+  email?: string;
+  password?: string;
+}
+
+export interface UserDto {
+  /** @format int64 */
+  id?: number;
+  email?: string;
+  role?: string;
+}
+
 export interface OverallRobotGameEntryDto {
   /** @format int32 */
   rank?: number;
@@ -234,13 +246,43 @@ export class Api<
     /**
      * No description
      *
-     * @tags test-controller
-     * @name TriggerScrape
-     * @request GET:/api/trigger-scrape
+     * @tags auth-controller
+     * @name Logout
+     * @request POST:/api/auth/logout
      */
-    triggerScrape: (params: RequestParams = {}) =>
+    logout: (params: RequestParams = {}) =>
       this.request<string, any>({
-        path: `/api/trigger-scrape`,
+        path: `/api/auth/logout`,
+        method: "POST",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags auth-controller
+     * @name Login
+     * @request POST:/api/auth/login
+     */
+    login: (data: LoginRequestDto, params: RequestParams = {}) =>
+      this.request<UserDto, any>({
+        path: `/api/auth/login`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags scraper-test-controller
+     * @name Test
+     * @request GET:/api/scraper/test
+     */
+    test: (params: RequestParams = {}) =>
+      this.request<Record<string, string>, any>({
+        path: `/api/scraper/test`,
         method: "GET",
         ...params,
       }),
@@ -248,14 +290,42 @@ export class Api<
     /**
      * No description
      *
-     * @tags test-controller
-     * @name Test
-     * @request GET:/api/test
+     * @tags scraper-test-controller
+     * @name ForceQuickSync
+     * @request GET:/api/scraper/force-quick
      */
-    test: (params: RequestParams = {}) =>
-      this.request<Record<string, string>, any>({
-        path: `/api/test`,
+    forceQuickSync: (
+      query: {
+        pw: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<string, any>({
+        path: `/api/scraper/force-quick`,
         method: "GET",
+        query: query,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags scraper-test-controller
+     * @name ForceFullSync
+     * @request GET:/api/scraper/force-full
+     */
+    forceFullSync: (
+      query: {
+        pw: string;
+        /** @default false */
+        ignoreHashes?: boolean;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<string, any>({
+        path: `/api/scraper/force-full`,
+        method: "GET",
+        query: query,
         ...params,
       }),
 
@@ -276,6 +346,20 @@ export class Api<
         path: `/api/leaderboard/overall-robot-game`,
         method: "GET",
         query: query,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags auth-controller
+     * @name GetCurrentUser
+     * @request GET:/api/auth/me
+     */
+    getCurrentUser: (params: RequestParams = {}) =>
+      this.request<UserDto, any>({
+        path: `/api/auth/me`,
+        method: "GET",
         ...params,
       }),
   };

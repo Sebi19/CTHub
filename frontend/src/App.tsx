@@ -7,12 +7,22 @@ import {
     ActionIcon,
     useMantineColorScheme,
     useComputedColorScheme,
-    Burger, Stack, Drawer
+    Burger, Stack, Drawer, Menu, Avatar, Text, rem
 } from '@mantine/core';
 import {useNavigate, useLocation, Outlet} from 'react-router-dom';
-import { IconTrophy, IconSun, IconMoon } from '@tabler/icons-react';
+import {
+    IconTrophy,
+    IconSun,
+    IconMoon,
+    IconLogin,
+    IconChevronDown,
+    IconLogout,
+    IconUser
+} from '@tabler/icons-react';
 import logo from './assets/CTH.svg';
 import {useDisclosure} from "@mantine/hooks";
+import {useAuth} from "./features/auth/AuthContext.tsx";
+import type {UserDto} from "./api/generated.ts";
 
 const NAV_LINKS = [
     { link: '/robotgame', label: 'Leaderboard', icon: IconTrophy },
@@ -28,10 +38,17 @@ export default function App() {
     const { setColorScheme } = useMantineColorScheme();
     const computedColorScheme = useComputedColorScheme('light', { getInitialValueInEffect: true });
 
+    const { isAuthenticated, user, logout } = useAuth();
+
     const isActive = (path: string) => location.pathname === path;
 
     const toggleColorScheme = () => {
         setColorScheme(computedColorScheme === 'light' ? 'dark' : 'light');
+    };
+
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
     };
 
     const renderNavLinks = (isMobile: boolean) => NAV_LINKS.map((item) => (
@@ -46,6 +63,40 @@ export default function App() {
             {item.label}
         </Button>
     ));
+
+    function UserMenu({ user, logout }: { user: UserDto, logout: () => void }) {
+        return (
+            <Menu shadow="md" width={200}>
+                <Menu.Target>
+                    <Button variant="subtle" rightSection={<IconChevronDown size={14} />} px="xs">
+                        <Group gap={8}>
+                            <Avatar src={user?.email} radius="xl" size={26} color="blue" />
+                            <Text visibleFrom="sm" size="sm" fw={500}>{user?.email}</Text>
+                        </Group>
+                    </Button>
+                </Menu.Target>
+
+                <Menu.Dropdown>
+                    <Menu.Item
+                        hiddenFrom={"sm"}
+                        leftSection={<IconUser size={14} />}
+                        style={{ opacity: 1, cursor: 'default', color: 'var(--mantine-color-text)' }}
+                        // We use 'component="div"' so it doesn't behave like a button
+                        component="div"
+                    >{user?.email}</Menu.Item>
+                    <Menu.Label>Account</Menu.Label>
+                    <Menu.Divider />
+                    <Menu.Item
+                        color="red"
+                        leftSection={<IconLogout style={{ width: rem(14), height: rem(14) }} />}
+                        onClick={logout}
+                    >
+                        Logout
+                    </Menu.Item>
+                </Menu.Dropdown>
+            </Menu>
+        );
+    }
 
     return (
         <AppShell header={{ height: 60 }} padding="0">
@@ -71,18 +122,18 @@ export default function App() {
                             {renderNavLinks(false)}
                         </Group>
 
-                        {/* Theme Toggle */}
-                        <ActionIcon onClick={toggleColorScheme} variant="default" size="lg">
-                            {computedColorScheme === 'dark' ? <IconSun size={18} /> : <IconMoon size={18} />}
-                        </ActionIcon>
-
-                        {/*{!isAuthenticated ? (
+                        {!isAuthenticated ? (
                             <Button variant="default" onClick={() => navigate('/login')} leftSection={<IconLogin size={18}/>}>
                                 Login
                             </Button>
                         ) : (
-                            <UserMenu user={user} logout={logout} />
-                        )}*/}
+                            <UserMenu user={user!} logout={handleLogout} />
+                        )}
+
+                        {/* Theme Toggle */}
+                        <ActionIcon onClick={toggleColorScheme} variant="default" size="lg">
+                            {computedColorScheme === 'dark' ? <IconSun size={18} /> : <IconMoon size={18} />}
+                        </ActionIcon>
                     </Group>
                 </Group>
             </AppShell.Header>
@@ -91,11 +142,11 @@ export default function App() {
             <Drawer opened={opened} onClose={close} size="75%" padding="md" title="Menu" hiddenFrom="sm">
                 <Stack>
                     {renderNavLinks(true)}
-                    {/*{!isAuthenticated && (
+                    {!isAuthenticated && (
                         <Button variant="default" fullWidth justify="flex-start" onClick={() => { navigate('/login'); close(); }} leftSection={<IconLogin size={18}/>}>
                             Login
                         </Button>
-                    )}*/}
+                    )}
                 </Stack>
             </Drawer>
 

@@ -3,8 +3,6 @@ package org.cthub.backend.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.cthub.backend.service.scraper.ScraperService;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,9 +20,6 @@ public class ScraperTestController {
 
     private final ScraperService scraperService;
 
-    @Value("${scraper.admin-pw:changeMe!}")
-    private String adminPassword;
-
     @GetMapping("/test")
     public Map<String, String> test() {
         // Spring automatically converts this Map to JSON
@@ -35,27 +30,18 @@ public class ScraperTestController {
     }
 
     @GetMapping("/force-full")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> forceFullSync(
-        @RequestParam String pw,
         @RequestParam(defaultValue = "false") boolean ignoreHashes
     ) {
-        if (!adminPassword.equals(pw)) {
-            log.warn("⛔ Unauthorized attempt to trigger Full Sync");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Wrong password");
-        }
-
         // Run in background
         scraperService.runFullSync(ignoreHashes);
         return ResponseEntity.ok("🌙 Full Sync started in background.");
     }
 
     @GetMapping("/force-quick")
-    public ResponseEntity<String> forceQuickSync(@RequestParam String pw) {
-        if (!adminPassword.equals(pw)) {
-            log.warn("⛔ Unauthorized attempt to trigger Quick Sync");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Wrong password");
-        }
-
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> forceQuickSync() {
         scraperService.runQuickResultSync();
         return ResponseEntity.ok("⚡ Quick Sync started in background.");
     }

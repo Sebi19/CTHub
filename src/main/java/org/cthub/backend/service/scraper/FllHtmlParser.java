@@ -63,10 +63,33 @@ public class FllHtmlParser {
     public String computeDetailHash(String html) {
         Document doc = Jsoup.parse(html);
 
+        String qualificationUrl = null;
+        List<ScrapedLinkDto> correspondingQualifications = findLinks(doc, "Zugehöriger Qualifikationswettbewerb");
+        if (correspondingQualifications.size() == 1) {
+            qualificationUrl = correspondingQualifications.getFirst().getUrl();
+        }
+
+        Element qualiContainer = doc.select("strong:contains(Zugehöriger Qualifikationswettbewerb)").first();
+        if (qualiContainer != null) {
+            Element qualiParent = qualiContainer.parent();
+            if (qualiParent != null) {
+                qualiParent.remove();
+            }
+        }
+
+        Element regContainer = doc.select("strong:contains(Zugehörige Standorte)").first();
+        if (regContainer != null) {
+            Element regParent = regContainer.parent();
+            if (regParent != null) {
+                regParent.remove();
+            }
+        }
+
         StringBuilder signature = new StringBuilder();
         for (Element el : doc.select("div.location-detail")) {
             signature.append(el.outerHtml());
         }
+        signature.append(qualificationUrl != null ? qualificationUrl : "no-qualification");
 
         return DigestUtils.sha256Hex(signature.toString());
     }

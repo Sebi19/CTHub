@@ -2,12 +2,14 @@ package org.cthub.backend.service.scraper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Profile("prod") // Only enable this scheduler in production profile
 public class ScraperScheduler {
 
     private final ScraperService scraperService;

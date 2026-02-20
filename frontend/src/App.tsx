@@ -7,7 +7,7 @@ import {
     ActionIcon,
     useMantineColorScheme,
     useComputedColorScheme,
-    Burger, Stack, Drawer, Menu, Avatar, Text, rem
+    Burger, Stack, Drawer, Menu, Avatar, Text, rem, Tooltip
 } from '@mantine/core';
 import {useNavigate, useLocation, Outlet} from 'react-router-dom';
 import {
@@ -23,13 +23,19 @@ import logo from './assets/CTH.svg';
 import {useDisclosure} from "@mantine/hooks";
 import {useAuth} from "./features/auth/AuthContext.tsx";
 import type {UserDto} from "./api/generated.ts";
+import {LanguageSwitcher} from "./features/navbar/LanguageSwitcher.tsx";
+import {useTranslation} from "react-i18next";
 
-const NAV_LINKS = [
-    { link: '/robotgame', label: 'Leaderboard', icon: IconTrophy },
-    // Add more later: { link: '/teams', label: 'Teams', icon: IconUsers },
-];
+
 
 export default function App() {
+    const { t } = useTranslation();
+
+    const NAV_LINKS = [
+        { link: '/robotgame', label: t("app.header.leaderboard"), icon: IconTrophy },
+        // Add more later: { link: '/teams', label: 'Teams', icon: IconUsers },
+    ];
+
     const navigate = useNavigate();
     const location = useLocation();
     const [opened, { toggle, close }] = useDisclosure();
@@ -124,16 +130,22 @@ export default function App() {
 
                         {!isAuthenticated ? (
                             <Button variant="default" onClick={() => navigate('/login')} leftSection={<IconLogin size={18}/>}>
-                                Login
+                                {t("app.header.login")}
                             </Button>
                         ) : (
                             <UserMenu user={user!} logout={handleLogout} />
                         )}
 
                         {/* Theme Toggle */}
-                        <ActionIcon onClick={toggleColorScheme} variant="default" size="lg">
-                            {computedColorScheme === 'dark' ? <IconSun size={18} /> : <IconMoon size={18} />}
-                        </ActionIcon>
+                        <Tooltip label={t("app.header.toggleTheme")}>
+                            <ActionIcon onClick={toggleColorScheme} variant="default" size="lg">
+                                {computedColorScheme === 'dark' ? <IconSun size={18} /> : <IconMoon size={18} />}
+                            </ActionIcon>
+                        </Tooltip>
+
+
+                        {/* Language Switcher*/}
+                        <LanguageSwitcher />
                     </Group>
                 </Group>
             </AppShell.Header>
@@ -144,7 +156,7 @@ export default function App() {
                     {renderNavLinks(true)}
                     {!isAuthenticated && (
                         <Button variant="default" fullWidth justify="flex-start" onClick={() => { navigate('/login'); close(); }} leftSection={<IconLogin size={18}/>}>
-                            Login
+                            {t("app.header.login")}
                         </Button>
                     )}
                 </Stack>

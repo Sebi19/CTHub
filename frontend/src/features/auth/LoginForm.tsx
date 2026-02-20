@@ -14,8 +14,10 @@ import {useNavigate} from "react-router-dom";
 import {useState} from "react";
 import {useAuth} from "./AuthContext.tsx"
 import {type LoginRequestDto } from "../../api/generated.ts";
+import {useTranslation} from "react-i18next";
 
 export function LoginForm() {
+    const { t} = useTranslation();
     const {login} = useAuth();
     const navigate = useNavigate();
     const [error, setError] = useState<string | null>(null);
@@ -23,8 +25,8 @@ export function LoginForm() {
     const form = useForm({
         initialValues: { email: '', password: '' },
         validate: {
-            email: (val: string) => (val.length <= 2 ? 'Email is too short' : null),
-            password: (val: string) => (val.length <= 2 ? 'Password is too short' : null),
+            email: (val: string) => (val.length <= 2 ? t('app.login.email_too_short') : null),
+            password: (val: string) => (val.length <= 2 ? t('app.login.password_too_short') : null),
         },
     });
 
@@ -63,16 +65,16 @@ export function LoginForm() {
         } catch (err: any) {
             // Axios error handling
             if (err.response?.status === 401 || err.response?.status === 403) {
-                setError('Benutzername oder Passwort ungültig');
+                setError(t('app.login.invalid_credentials'));
             } else {
-                setError('Login fehlgeschlagen: ' + (err.message || 'Unbekannter Fehler'));
+                setError(t('app.login.error') + ' ' + (err.message || 'Unbekannter Fehler'));
             }
         }
     };
 
     return (
         <Paper radius="md" p="xl" withBorder style={{ maxWidth: 400, margin: 'auto' }}>
-            <Text size="lg" fw={500} mb="md">Willkommen zur Challenge Team Hub!</Text>
+            <Text size="lg" fw={500} mb="md">{t("app.login.greeting")}</Text>
 
             {error && <Alert color="red" mb="md">{error}</Alert>}
 
@@ -80,21 +82,21 @@ export function LoginForm() {
                 <Stack gap="md">
                     <TextInput
                         required
-                        label="E-Mail"
-                        placeholder="E-Mail..."
+                        label={t('app.login.email')}
+                        placeholder={t('app.login.placeholder.email')}
                         {...form.getInputProps('email')}
                     />
                     <PasswordInput
                         required
-                        label="Passwort"
-                        placeholder="Passwort..."
+                        label={t('app.login.password')}
+                        placeholder={t('app.login.placeholder.password')}
                         {...form.getInputProps('password')}
                     />
                 </Stack>
 
                 <Group justify="space-between" mt="xl">
                     <Button type="submit" radius="xl">
-                        Login
+                        {t('app.login.login_button')}
                     </Button>
                 </Group>
             </form>

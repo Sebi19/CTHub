@@ -2,9 +2,11 @@
 import { Title, Box } from '@mantine/core';
 import { RobotGameLeaderboard } from '../components/RobotGameLeaderboard';
 import { useDocumentTitle } from "@mantine/hooks";
+import {useTranslation} from "react-i18next";
 
 export const LeaderboardPage = () => {
-    useDocumentTitle('DACH Scores | CTH')
+    const { t } = useTranslation();
+    useDocumentTitle(t('app.overall_robotgame.doc_title'))
     return (
         // 1. CALCULATED HEIGHT: Viewport (100dvh) minus Header (60px)
         //    This creates the "App Mode" feel just for this route.
@@ -16,7 +18,7 @@ export const LeaderboardPage = () => {
 
             {/* Title Area */}
             <Box p="md" pb="xs">
-                <Title order={2}>🏆 Robot-Game Leaderboard DACH-Region</Title>
+                <Title order={2}>{t("app.overall_robotgame.title")}</Title>
             </Box>
 
             {/* Table Wrapper: Fills the remaining space in our calculated box */}

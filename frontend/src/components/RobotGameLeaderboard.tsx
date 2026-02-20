@@ -3,8 +3,14 @@ import { MantineReactTable, useMantineReactTable, type MRT_ColumnDef } from 'man
 import {Badge, Text, Anchor, Box, useMantineColorScheme } from '@mantine/core';
 import { type OverallRobotGameEntryDto } from '../api/generated';
 import { client } from '../api';
+import {useTranslation} from "react-i18next";
+import { MRT_Localization_EN } from 'mantine-react-table/locales/en/index.cjs';
+import { MRT_Localization_DE } from 'mantine-react-table/locales/de/index.cjs';
 
-// @ts-ignore
+const tableLocales = {
+    en: MRT_Localization_EN,
+    de: MRT_Localization_DE,
+};
 
 const COLOR_QUALIFIED_DARK_MODE = 'rgba(46, 204, 113, 0.15)'
 const COLOR_NOT_QUALIFIED_DARK_MODE = 'rgba(231, 76, 60, 0.15)'
@@ -13,8 +19,12 @@ const ROW_HOVER_LIGHT_MODE = 'rgba(0, 0, 0, 0.05)'
 const MAX_ROWS = 10000;
 
 
-
 export const RobotGameLeaderboard = () => {
+    const { i18n, t } = useTranslation();
+    const currentLang = i18n.resolvedLanguage || 'de'; // Default to German if not resolved
+    const currentTableLocale = useMemo(() => tableLocales[currentLang as keyof typeof tableLocales], [currentLang]);
+
+
     const [data, setData] = useState<OverallRobotGameEntryDto[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const colorScheme = useMantineColorScheme();
@@ -38,18 +48,19 @@ export const RobotGameLeaderboard = () => {
 
     // 1. Helper for Score Columns 📏
     // This allows us to apply the "narrow" logic to all score columns at once
-    const scoreColProps: Partial<MRT_ColumnDef<OverallRobotGameEntryDto>> = {
-        size: 50,      // Target width
-        minSize: 40,   // ALLOW it to go this small (Crucial!)
-        maxSize: 60,
-        enableResizing: false,
-        Header: ({ column }) => (
-            <Box style={{ textAlign: 'center', width: '100%' }}>{column.columnDef.header}</Box>
-        ),
-        Cell: ({ cell }) => (
-            <Text size="sm">{cell.getValue<number>()}</Text>
-        ),
-    };
+    const scoreColProps = useMemo<Partial<MRT_ColumnDef<OverallRobotGameEntryDto>>>(
+        () => ({
+            size: 50,      // Target width
+                minSize: 40,   // ALLOW it to go this small (Crucial!)
+                maxSize: 60,
+                enableResizing: false,
+                Header: ({ column }) => (
+                <Box style={{ textAlign: 'center', width: '100%' }}>{column.columnDef.header}</Box>
+            ),
+                Cell: ({ cell }) => (
+                <Text size="sm">{cell.getValue<number>()}</Text>
+            )
+        }), []);
 
     const columns = useMemo<MRT_ColumnDef<OverallRobotGameEntryDto>[]>(
         () => [
@@ -66,7 +77,7 @@ export const RobotGameLeaderboard = () => {
             },
             {
                 accessorKey: 'country',
-                header: 'Land',
+                header: t('app.overall_robotgame.table.country'),
                 size: 60,
                 minSize: 60,
                 Cell: ({ cell }) => (
@@ -75,7 +86,7 @@ export const RobotGameLeaderboard = () => {
             },
             {
                 accessorFn: (row) => formatName(row),
-                header: 'Team',
+                header: t('app.overall_robotgame.table.team'),
                 size: 220, // Give the name some room
                 minSize: 150,
                 Cell: ({ row }) => (
@@ -85,7 +96,7 @@ export const RobotGameLeaderboard = () => {
             {
                 id: 'qualified',
                 accessorFn: (row) => row.qualified ? 'Ja' : 'Nein',
-                header: 'Qual.',
+                header: t('app.overall_robotgame.table.qualified'),
                 size: 220, // Give the name some room
                 minSize: 150,
                 Cell: ({ row }) => (
@@ -96,7 +107,7 @@ export const RobotGameLeaderboard = () => {
                 // Explicit ID for sorting logic
                 id: 'location',
                 accessorFn: (row) => row.competition,
-                header: 'Ort',
+                header: t('app.overall_robotgame.table.location'),
                 size: 150,
                 Cell: ({ row }) => (
                     <Anchor
@@ -114,29 +125,30 @@ export const RobotGameLeaderboard = () => {
             // --- SCORE COLUMNS ---
             {
                 accessorKey: 'bestScore',
-                header: 'Best',
+                header: t('app.overall_robotgame.table.best'),
                 ...scoreColProps, // Apply our narrow styles
                 Cell: ({ cell }) => <Text fw={700} c="blue">{cell.getValue<number>()}</Text>,
             },
-            { accessorKey: 'medianScore', header: 'Med', ...scoreColProps },
-            { accessorKey: 'averageScore', header: 'Avg', ...scoreColProps },
-            { accessorKey: 'worstScore', header: 'Worst', ...scoreColProps },
-            { accessorKey: 'preliminaryRound1', header: 'VR1', ...scoreColProps },
-            { accessorKey: 'preliminaryRound2', header: 'VR2', ...scoreColProps },
-            { accessorKey: 'preliminaryRound3', header: 'VR3', ...scoreColProps },
-            { accessorKey: 'bestPreliminaryScore', header: 'Beste VR', ...scoreColProps, size: 70 }, // Slightly wider header
-            { accessorKey: 'quarterFinal', header: 'QF', ...scoreColProps },
-            { accessorKey: 'semiFinal', header: 'SF', ...scoreColProps },
-            { accessorKey: 'final1', header: 'F1', ...scoreColProps },
-            { accessorKey: 'final2', header: 'F2', ...scoreColProps },
+            { accessorKey: 'medianScore', header: t('app.overall_robotgame.table.median'), ...scoreColProps },
+            { accessorKey: 'averageScore', header: t('app.overall_robotgame.table.average'), ...scoreColProps },
+            { accessorKey: 'worstScore', header: t('app.overall_robotgame.table.worst'), ...scoreColProps },
+            { accessorKey: 'preliminaryRound1', header: t('app.overall_robotgame.table.preOne'), ...scoreColProps },
+            { accessorKey: 'preliminaryRound2', header: t('app.overall_robotgame.table.preTwo'), ...scoreColProps },
+            { accessorKey: 'preliminaryRound3', header: t('app.overall_robotgame.table.preThree'), ...scoreColProps },
+            { accessorKey: 'bestPreliminaryScore', header: t('app.overall_robotgame.table.bestPre'), ...scoreColProps, size: 70 }, // Slightly wider header
+            { accessorKey: 'quarterFinal', header: t('app.overall_robotgame.table.qf'), ...scoreColProps },
+            { accessorKey: 'semiFinal', header: t('app.overall_robotgame.table.sf'), ...scoreColProps },
+            { accessorKey: 'final1', header: t('app.overall_robotgame.table.fOne'), ...scoreColProps },
+            { accessorKey: 'final2', header: t('app.overall_robotgame.table.fTwo'), ...scoreColProps },
         ],
-        []
+        [scoreColProps, t]
     );
 
     const table = useMantineReactTable({
         columns,
         data,
         state: { isLoading },
+        localization: currentTableLocale,
         enableRowActions: false,
 
         // 2. STICKY HEADERS & COLUMNS 📌
@@ -146,7 +158,7 @@ export const RobotGameLeaderboard = () => {
         enableDensityToggle: false, // Disable density toggle
 
         mantinePaginationProps: {
-            rowsPerPageOptions: ['5', '10', '25', '50', '100', { value: String(MAX_ROWS), label: 'All' }] as unknown as string[],
+            rowsPerPageOptions: ['5', '10', '25', '50', '100', { value: String(MAX_ROWS), label: t('app.overall_robotgame.table.all') }] as unknown as string[],
             hideWithOnePage: true,
         },
 

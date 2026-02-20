@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import {createTheme, MantineProvider} from '@mantine/core';
 import {BrowserRouter} from 'react-router-dom'
 import {ModalsProvider} from "@mantine/modals";
+import './i18n/config.ts';
 
 // 1. Import Core Mantine Styles
 import '@mantine/core/styles.css';

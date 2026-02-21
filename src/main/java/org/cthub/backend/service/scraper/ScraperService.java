@@ -284,6 +284,7 @@ public class ScraperService {
     private List<String> generatePossibleResultUrlParts(Season season, String eventUrlPart) {
         String fullUrl = getSeasonUrlPart(season) + "-" + eventUrlPart;
         List<String> candidates = new ArrayList<>();
+        fullUrl = fullUrl.replace(".", "").replace("---", "-");
         candidates.add(fullUrl); // Standard
 
         // Lazy ASCII variant (schwaebisch -> schwabisch)

@@ -6,7 +6,14 @@ export const de = {
             leaderboard: "Rangliste",
             login: "Anmelden",
             toggleTheme: "Farbschema wechseln",
-            toggleLanguage: "Change Language",
+            toggleLanguage: "Sprache wechseln",
+            currentLanguage: "DE",
+        },
+        sidebar: {
+            menu: "Menü",
+            login: "Anmelden",
+            currentLanguage: "Deutsch",
+            toggleTheme: "Farbschema wechseln",
         },
         login: {
             doc_title: "Anmelden | CTH",

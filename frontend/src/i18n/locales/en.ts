@@ -6,7 +6,14 @@ export const en: I18nLocale = {
             leaderboard: "Leaderboard",
             login: "Login",
             toggleTheme: "Change Theme",
-            toggleLanguage: "Sprache wechseln",
+            toggleLanguage: "Change Language",
+            currentLanguage: "EN",
+        },
+        sidebar: {
+            menu: "Menu",
+            login: "Login",
+            currentLanguage: "English",
+            toggleTheme: "Change Color Scheme",
         },
         login: {
             doc_title: "Login | CTH",

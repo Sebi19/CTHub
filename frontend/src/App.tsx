@@ -137,28 +137,44 @@ export default function App() {
                         )}
 
                         {/* Theme Toggle */}
-                        <Tooltip label={t("app.header.toggleTheme")}>
-                            <ActionIcon onClick={toggleColorScheme} variant="default" size="lg">
-                                {computedColorScheme === 'dark' ? <IconSun size={18} /> : <IconMoon size={18} />}
-                            </ActionIcon>
-                        </Tooltip>
+                        <Group visibleFrom="sm">
+                            <Tooltip label={t("app.header.toggleTheme")}>
+                                <ActionIcon onClick={toggleColorScheme} variant="default" size="lg">
+                                    {computedColorScheme === 'dark' ? <IconSun size={18} /> : <IconMoon size={18} />}
+                                </ActionIcon>
+                            </Tooltip>
+                        </Group>
 
 
                         {/* Language Switcher*/}
-                        <LanguageSwitcher />
+                        <Group visibleFrom="sm">
+                            <LanguageSwitcher isMobile={false}/>
+                        </Group>
                     </Group>
                 </Group>
             </AppShell.Header>
 
             {/* MOBILE DRAWER */}
-            <Drawer opened={opened} onClose={close} size="75%" padding="md" title="Menu" hiddenFrom="sm">
-                <Stack>
-                    {renderNavLinks(true)}
-                    {!isAuthenticated && (
-                        <Button variant="default" fullWidth justify="flex-start" onClick={() => { navigate('/login'); close(); }} leftSection={<IconLogin size={18}/>}>
-                            {t("app.header.login")}
+            <Drawer opened={opened} onClose={close} size="75%" padding="md" title={t("app.sidebar.menu")} hiddenFrom="sm">
+                <Stack justify={"space-between"} style={{ height: 'calc(100vh - 80px)' }}>
+                    <Stack gap={15}>
+                        <Stack gap={5}>
+                            {renderNavLinks(true)}
+                        </Stack>
+                        {!isAuthenticated && (
+                            <Button variant="default" fullWidth justify="flex-start" onClick={() => { navigate('/login'); close(); }} leftSection={<IconLogin size={18}/>}>
+                                {t("app.sidebar.login")}
+                            </Button>
+                        )}
+                    </Stack>
+                    <Stack gap={5}>
+                        <LanguageSwitcher isMobile={true} />
+                        {/* Theme Toggle */}
+                        <Button variant="default" fullWidth justify="flex-start" onClick={toggleColorScheme} leftSection={computedColorScheme === 'dark' ? <IconSun size={18} /> : <IconMoon size={18} />}>
+                            {t("app.sidebar.toggleTheme")}
                         </Button>
-                    )}
+                    </Stack>
+
                 </Stack>
             </Drawer>
 

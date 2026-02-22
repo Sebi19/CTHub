@@ -125,6 +125,12 @@ public class ScraperService {
         log.info("🔍 Processing competition: {}", comp.getName());
         boolean dataChanged = false;
 
+        String regionalCountry = null;
+
+        if (comp.getType().equals(Competition.CompetitionType.REGIONAL)) {
+            regionalCountry = comp.getCountry();
+        }
+
         // --- STEP 1: DETAILS & TEAMS ---
         String detailHtml = fetchOrNull(generateDetailUrl(comp));
         ScrapedEventDetailsDto detailsDto = null;
@@ -135,7 +141,7 @@ public class ScraperService {
             // HASH CHECK 🛑
             if (ignoreHashes || !newDetailHash.equals(comp.getDetailHash())) {
                 log.info("📝 Parsing Details for: {}", comp.getName());
-                ScrapedEventDetailsDto candidateDto = parser.parseEventPage(detailHtml);
+                ScrapedEventDetailsDto candidateDto = parser.parseEventPage(detailHtml, regionalCountry);
 
                 boolean suspiciousParsing = candidateDto.getTeams().isEmpty() && comp.getRegisteredTeamCount() > 0;
 

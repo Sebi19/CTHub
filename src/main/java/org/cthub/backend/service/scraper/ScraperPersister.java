@@ -305,6 +305,9 @@ public class ScraperPersister {
         team.setName(dto.getName());
         team.setInstitution(dto.getInstitution());
         team.setCity(dto.getCity());
+        if (dto.getCountry() != null) {
+            team.setCountry(dto.getCountry());
+        }
         if (dto.getLinks() != null) {
             team.setLinks(mapLinks(dto.getLinks()));
         }

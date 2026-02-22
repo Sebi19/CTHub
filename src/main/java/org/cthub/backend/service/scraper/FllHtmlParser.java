@@ -138,7 +138,7 @@ public class FllHtmlParser {
         return events;
     }
 
-    public ScrapedEventDetailsDto parseEventPage(String html) {
+    public ScrapedEventDetailsDto parseEventPage(String html, String regionalCountry) {
         Document doc = Jsoup.parse(html);
 
         // Parse Metadata
@@ -168,7 +168,7 @@ public class FllHtmlParser {
         }
 
         // Parse Teams
-        List<ScrapedTeamDto> teams = parseTeamsList(doc);
+        List<ScrapedTeamDto> teams = parseTeamsList(doc, regionalCountry);
 
         return ScrapedEventDetailsDto.builder()
             .location(location)
@@ -446,7 +446,7 @@ public class FllHtmlParser {
         return String.format(SEASON_PART_TEMPLATE, seasonPart);
     }
 
-    private List<ScrapedTeamDto> parseTeamsList(Document doc) {
+    private List<ScrapedTeamDto> parseTeamsList(Document doc, String regionalCountry) {
         List<ScrapedTeamDto> teams = new ArrayList<>();
         // Selector from your screenshot/old code
         Elements rows = doc.select("div.ce_table.teams div.row:not(.header)");
@@ -472,6 +472,7 @@ public class FllHtmlParser {
                     .name(teamName)
                     .institution(institution)
                     .city(city)
+                    .country(regionalCountry)
                     .links(links)
                     .build());
             } catch (Exception e) {

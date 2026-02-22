@@ -11,5 +11,6 @@ public class ScrapedTeamDto {
     private String name;       // "RootBots"
     private String institution;// "School of Code"
     private String city;       // "Linz"
+    private String country;    // "AT"
     private List<ScrapedLinkDto> links; // Social media links found in the popup
 }

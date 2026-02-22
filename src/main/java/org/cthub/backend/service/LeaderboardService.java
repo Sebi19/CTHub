@@ -84,7 +84,7 @@ public class LeaderboardService {
             .teamId(result.getSeasonTeam().getFllId()) // Ensure this exists on SeasonTeam
             .competition(result.getCompetition().getName())
             .competitionUrlPart(result.getCompetition().getUrlPart()) // e.g. "ortenau"
-            .country(result.getCompetition().getCountry())
+            .country(result.getSeasonTeam().getCountry())
             .qualified(qualified)
 
             // Calculated Stats

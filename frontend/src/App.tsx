@@ -156,16 +156,17 @@ export default function App() {
 
             {/* MOBILE DRAWER */}
             <Drawer opened={opened} onClose={close} size="75%" padding="md" title={t("app.sidebar.menu")} hiddenFrom="sm">
-                <Stack justify={"space-between"} style={{ height: 'calc(100vh - 80px)' }}>
+                <Stack justify={"space-between"} style={{ height: 'calc(100dvh - 80px)' }}>
                     <Stack gap={15}>
-                        <Stack gap={5}>
-                            {renderNavLinks(true)}
-                        </Stack>
                         {!isAuthenticated && (
                             <Button variant="default" fullWidth justify="flex-start" onClick={() => { navigate('/login'); close(); }} leftSection={<IconLogin size={18}/>}>
                                 {t("app.sidebar.login")}
                             </Button>
                         )}
+
+                        <Stack gap={5}>
+                            {renderNavLinks(true)}
+                        </Stack>
                     </Stack>
                     <Stack gap={5}>
                         <LanguageSwitcher isMobile={true} />

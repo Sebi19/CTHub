@@ -1,2 +1,5 @@
 cors:
   allowed-origins: "https://challengeteamhub.org,https://cthub.up.railway.app"
+app:
+  security:
+    remember-me-key: "${REMEMBER_ME_KEY:prod-remember-me-key}"

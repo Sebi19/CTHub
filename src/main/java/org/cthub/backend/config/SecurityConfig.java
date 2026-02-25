@@ -31,7 +31,7 @@ public class SecurityConfig {
     @Value("${cors.allowed-origins}")
     private String corsAllowedOrigins;
 
-    @Value("${app.security.remember-me-key:default-secret-key-change-in-prod}")
+    @Value("${app.security.remember-me-key}")
     private String rememberMeKey;
 
     @Bean

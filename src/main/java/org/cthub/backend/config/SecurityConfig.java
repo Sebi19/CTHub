@@ -15,6 +15,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.RememberMeServices;
+import org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -29,12 +31,16 @@ public class SecurityConfig {
     @Value("${cors.allowed-origins}")
     private String corsAllowedOrigins;
 
+    @Value("${app.security.remember-me-key:default-secret-key-change-in-prod}")
+    private String rememberMeKey;
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, RememberMeServices rememberMeServices) {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             // 1. Disable CSRF (Common for REST APIs, crucial for Postman testing)
             .csrf(csrf -> csrf.disable())
+            .rememberMe(rm -> rm.rememberMeServices(rememberMeServices))
             // 2. Allow everything
             .authorizeHttpRequests(auth -> auth
                 .anyRequest().permitAll()
@@ -86,5 +92,26 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    @Bean
+    public RememberMeServices rememberMeServices(UserDetailsService userDetailsService) {
+        // Using Spring Security 6's TokenBasedRememberMeServices
+        TokenBasedRememberMeServices.RememberMeTokenAlgorithm encodingAlgorithm =
+            TokenBasedRememberMeServices.RememberMeTokenAlgorithm.SHA256;
+
+        TokenBasedRememberMeServices rememberMe = new TokenBasedRememberMeServices(
+            rememberMeKey,
+            userDetailsService,
+            encodingAlgorithm
+        );
+
+        // Set cookie validity to 90 days (in seconds)
+        rememberMe.setTokenValiditySeconds(60 * 60 * 24 * 90);
+        rememberMe.setCookieName("remember-me");
+
+        rememberMe.setAlwaysRemember(true);
+
+        return rememberMe;
     }
 }

@@ -1,6 +1,8 @@
 package org.cthub.backend.controller;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.cthub.backend.dto.auth.LoginRequestDto;
@@ -13,6 +15,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,11 +26,16 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
+    private final RememberMeServices rememberMeServices;
 
     // POST /api/auth/login
     @PostMapping("/login")
     @PreAuthorize("permitAll()")
-    public ResponseEntity<UserDto> login(@RequestBody LoginRequestDto loginRequest, HttpServletRequest request) {
+    public ResponseEntity<UserDto> login(
+        @RequestBody LoginRequestDto loginRequest,
+        HttpServletRequest request,
+        HttpServletResponse response) {
+
         // 1. Authenticate the user (checks DB & password)
         Authentication authenticationRequest =
             UsernamePasswordAuthenticationToken.unauthenticated(loginRequest.getEmail(), loginRequest.getPassword());
@@ -42,6 +50,8 @@ public class AuthController {
 
         HttpSession session = request.getSession(true);
         session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, securityContext);
+
+        rememberMeServices.loginSuccess(request, response, authenticationResponse);
 
         // 3. Return User Info (No redirect!)
         org.cthub.backend.model.User user = (org.cthub.backend.model.User) authenticationResponse.getPrincipal(); // Assuming your User implements UserDetails
@@ -60,12 +70,24 @@ public class AuthController {
     // POST /api/auth/logout
     @PostMapping("/logout")
     @PreAuthorize("permitAll()")
-    public ResponseEntity<String> logout(HttpServletRequest request) {
+    public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response) {
         HttpSession session = request.getSession(false);
         if (session != null) {
             session.invalidate(); // Kill the session
         }
         SecurityContextHolder.clearContext();
+        Cookie rememberMeCookie = new Cookie("remember-me", null);
+        rememberMeCookie.setMaxAge(0); // This tells the browser to delete it immediately
+        rememberMeCookie.setPath("/"); // Must match the path of the original cookie
+        rememberMeCookie.setHttpOnly(true);
+        response.addCookie(rememberMeCookie);
+
+        // 4. Nuke the JSESSIONID cookie (Good practice)
+        Cookie jsessionCookie = new Cookie("JSESSIONID", null);
+        jsessionCookie.setMaxAge(0);
+        jsessionCookie.setPath("/");
+        jsessionCookie.setHttpOnly(true);
+        response.addCookie(jsessionCookie);
         return ResponseEntity.ok("Logged out successfully");
     }
 

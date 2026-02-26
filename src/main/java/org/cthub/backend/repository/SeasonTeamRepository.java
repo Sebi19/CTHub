@@ -17,7 +17,8 @@ public interface SeasonTeamRepository extends JpaRepository<SeasonTeam, Long> {
         "LEFT JOIN FETCH st.teamProfile " + // Eager fetch the profile
         "LEFT JOIN FETCH st.links " +       // Eager fetch the links
         "JOIN st.registeredCompetitions c " + // Normal join just for the WHERE clause
-        "WHERE c.id = :competitionId")
+        "WHERE c.id = :competitionId " +
+        "ORDER BY st.fllId ASC")
     List<SeasonTeam> findRegisteredTeamsByCompetitionId(@Param("competitionId") Long competitionId);
 
     List<SeasonTeam> findBySeasonIdAndFllIdIn(String seasonId, List<String> fllIds);

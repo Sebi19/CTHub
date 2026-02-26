@@ -16,6 +16,7 @@ public class CompetitionController {
     private final CompetitionService competitionService;
 
     @GetMapping("/{urlPart}")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<CompetitionDetailDto> getCompetitionDetails(
         @PathVariable String seasonId,
         @PathVariable String urlPart) {

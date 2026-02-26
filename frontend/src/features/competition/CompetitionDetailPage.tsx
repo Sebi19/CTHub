@@ -101,7 +101,7 @@ export const CompetitionDetailPage = () => {
 
             {/* Header Section */}
                 <Group justify="space-between" align="flex-start" mb="sm">
-                <Box flex={{base: '1', xs: 'initial'}}>
+                <Box style={{ flex: '1 1 min-content', minWidth: 0 }}>
                     <Group gap="xs" mb="sm">
                         <Badge color={getCompetitionTypeColor(competition.type!)}>
                             {t(`app.competition.detail.type.${competition.type!}`)}
@@ -122,7 +122,7 @@ export const CompetitionDetailPage = () => {
 
                     <Title order={1} mb="sm">{competition.name}</Title>
 
-                    <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md" mb="sm">
+                    <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md" mb="sm" w={{ base: '100%', xs: 'fit-content' }}>
 
                         {/* Date Card */}
                         <Card withBorder radius="md" p="md" bg="transparent">

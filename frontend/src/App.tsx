@@ -129,15 +129,19 @@ export default function App() {
                         </Group>
 
                         {!isAuthenticated ? (
-                            <Button variant="default" onClick={() => navigate('/login')}>
-                                <Group gap="xs">
-                                    <IconLogin size={18}/>
-                                    <Text visibleFrom={"sm"}>
-                                        {t("app.header.login")}
-                                    </Text>
-                                </Group>
+                            <>
+                                <Button
+                                    visibleFrom={"sm"}
+                                    variant="default"
+                                    onClick={() => navigate('/login')}
+                                    leftSection={<IconLogin size={18} />}
+                                >{t("app.header.login")}
+                                </Button>
+                                <Button hiddenFrom={"sm"} variant="default" onClick={() => navigate('/login')} p="xs">
+                                    <IconLogin size={18} />
+                                </Button>
+                            </>
 
-                            </Button>
                         ) : (
                             <UserMenu user={user!} logout={handleLogout} />
                         )}

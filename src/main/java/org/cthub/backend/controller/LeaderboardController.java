@@ -1,7 +1,7 @@
 package org.cthub.backend.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.cthub.backend.dto.OverallRobotGameEntryDto;
+import org.cthub.backend.dto.robotgame.OverallRobotGameEntryDto;
 import org.cthub.backend.service.LeaderboardService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;

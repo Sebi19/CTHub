@@ -3,6 +3,7 @@ import {Navigate, Route, Routes} from "react-router-dom";
 import App from "./App.tsx";
 import {LoginPage} from "./features/auth/LoginPage.tsx";
 import {LeaderboardPage} from "./pages/LeaderboardPage.tsx";
+import {CompetitionDetailPage} from "./features/competition/CompetitionDetailPage.tsx";
 
 export function AppRoutes() {
     const {isAuthenticated} = useAuth();
@@ -21,6 +22,8 @@ export function AppRoutes() {
 
                 {/* Public Pages */}
                 <Route path="robotgame" element={<LeaderboardPage/>}/>
+
+                <Route path="competition/:seasonId/:urlPart" element={<CompetitionDetailPage/>}/>
 
                 {/* Example Protected Page (Add later) */}
                 {/* <Route path="my-team" element={<ProtectedRoute><MyTeamPage /></ProtectedRoute>} /> */}

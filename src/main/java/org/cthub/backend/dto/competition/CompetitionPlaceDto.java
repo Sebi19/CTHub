@@ -1,4 +1,4 @@
-package org.cthub.backend.dto.auth;
+package org.cthub.backend.dto.competition;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserDto {
-    private Long id;
-    private String email;
-    private String role;
+public class CompetitionPlaceDto {
+    private Long teamId;
+    private int place;
+    private boolean advancing;
 }

@@ -84,7 +84,7 @@ export default function App() {
 
                 <Menu.Dropdown>
                     <Menu.Item
-                        hiddenFrom={"sm"}
+                        hiddenFrom={"lg"}
                         leftSection={<IconUser size={14} />}
                         style={{ opacity: 1, cursor: 'default', color: 'var(--mantine-color-text)' }}
                         // We use 'component="div"' so it doesn't behave like a button
@@ -124,20 +124,26 @@ export default function App() {
                     {/* RIGHT: Actions (Theme + Auth) */}
                     <Group gap="xs">
                         {/* Desktop Nav Links (Hidden on mobile) */}
-                        <Group visibleFrom="sm" gap={5} mr={"md"}>
+                        <Group visibleFrom="lg" gap={5} mr={"md"}>
                             {renderNavLinks(false)}
                         </Group>
 
                         {!isAuthenticated ? (
-                            <Button variant="default" onClick={() => navigate('/login')} leftSection={<IconLogin size={18}/>}>
-                                {t("app.header.login")}
+                            <Button variant="default" onClick={() => navigate('/login')}>
+                                <Group gap="xs">
+                                    <IconLogin size={18}/>
+                                    <Text visibleFrom={"sm"}>
+                                        {t("app.header.login")}
+                                    </Text>
+                                </Group>
+
                             </Button>
                         ) : (
                             <UserMenu user={user!} logout={handleLogout} />
                         )}
 
                         {/* Theme Toggle */}
-                        <Group visibleFrom="sm">
+                        <Group visibleFrom="lg">
                             <Tooltip label={t("app.header.toggleTheme")}>
                                 <ActionIcon onClick={toggleColorScheme} variant="default" size="lg">
                                     {computedColorScheme === 'dark' ? <IconSun size={18} /> : <IconMoon size={18} />}
@@ -147,7 +153,7 @@ export default function App() {
 
 
                         {/* Language Switcher*/}
-                        <Group visibleFrom="sm">
+                        <Group visibleFrom="lg">
                             <LanguageSwitcher isMobile={false}/>
                         </Group>
                     </Group>
@@ -155,7 +161,7 @@ export default function App() {
             </AppShell.Header>
 
             {/* MOBILE DRAWER */}
-            <Drawer opened={opened} onClose={close} size="75%" padding="md" title={t("app.sidebar.menu")} hiddenFrom="sm">
+            <Drawer opened={opened} onClose={close} size="75%" padding="md" title={t("app.sidebar.menu")} hiddenFrom="lg">
                 <Stack justify={"space-between"} style={{ height: 'calc(100dvh - 80px)' }}>
                     <Stack gap={15}>
                         {!isAuthenticated && (

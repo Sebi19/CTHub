@@ -53,6 +53,52 @@ export const de = {
                 all: "Alle",
           },
         },
+        competition: {
+            detail: {
+                error_loading: "Fehler beim Laden der Wettbewerbsdetails",
+                inactive_title: "Wettbewerb inaktiv",
+                inactive_message: "Dieser Wettbewerb ist derzeit nicht aktiv. Es könnte sein dass er abgesagt wurde oder sich die URL geändert hat. Überprüfen sie die offizielle Website für weitere Informationen.",
+                type: {
+                    REGIONAL: "Regionalwettbewerb",
+                    QUALIFICATION: "Qualifikationswettbewerb",
+                    FINAL: "DACH-Finale",
+                },
+                tabs: {
+                    teams: "Teams ({{teamCount}})",
+                    awards: "Gesamtwertung",
+                    robotgame: "Robot-Game",
+                },
+                season: "{{seasonName}} - {{seasonId}}",
+                official_link: "Offizielle Wettbewerbsseite",
+                date: "Datum",
+                location: "Austragungsort",
+                contact: "Kontakt",
+            },
+            teams: {
+                title: "Registrierte Teams ({{registeredCount}}/{{maxCount}})",
+                empty: "Es sind noch keine Teams für diesen Wettbewerb registriert.",
+                country: {
+                    DE: "Deutschland",
+                    AT: "Österreich",
+                    CH: "Schweiz",
+                },
+                tooltip: {
+                    links: "Links",
+                    grid: "Kacheln",
+                    table: "Liste",
+                    city: "Ort",
+                    institution: "Institution",
+                },
+                table: {
+                    id: "ID",
+                    country: "Land",
+                    name: "Teamname",
+                    institution: "Institution",
+                    city: "Ort",
+                    links: "Links",
+                },
+            },
+        }
     },
 } as const;
 

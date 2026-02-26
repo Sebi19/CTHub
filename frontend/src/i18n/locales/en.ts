@@ -53,5 +53,51 @@ export const en: I18nLocale = {
                 all: "All",
             },
         },
+        competition: {
+            detail: {
+                error_loading: "Error loading competition details",
+                inactive_title: "Competition Inactive",
+                inactive_message: "This competition is currently not active. It may have been cancelled or the URL may have changed. Please check the official website for more information.",
+                type: {
+                    REGIONAL: "Regional Competition",
+                    QUALIFICATION: "Qualification Competition",
+                    FINAL: "DACH-Final",
+                },
+                tabs: {
+                    teams: "Teams ({{teamCount}})",
+                    awards: "Overall Ranking",
+                    robotgame: "Robot-Game",
+                },
+                season: "{{seasonName}} - {{seasonId}}",
+                official_link: "Official Competition Page",
+                date: "Date",
+                location: "Location",
+                contact: "Contact",
+            },
+            teams: {
+                title: "Registered Teams ({{registeredCount}}/{{maxCount}})",
+                empty: "There are no teams registered for this competition yet.",
+                country: {
+                    DE: "Germany",
+                    AT: "Austria",
+                    CH: "Switzerland",
+                },
+                tooltip: {
+                    links: "Links",
+                    grid: "Cards",
+                    table: "List",
+                    city: "City",
+                    institution: "Institution",
+                },
+                table: {
+                    id: "ID",
+                    country: "Country",
+                    name: "Team Name",
+                    institution: "Institution",
+                    city: "City",
+                    links: "Links",
+                },
+            },
+            }
     }
 }

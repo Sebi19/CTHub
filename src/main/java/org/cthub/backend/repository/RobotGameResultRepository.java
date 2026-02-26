@@ -23,4 +23,6 @@ public interface RobotGameResultRepository extends JpaRepository<RobotGameResult
         "WHERE r.competition.season.id = :seasonId")
     List<Object[]> findAllBySeasonIdWithQualification(@Param("seasonId") String seasonId);
     void deleteByCompetition(Competition competition);
+
+    List<RobotGameResult> findAllByCompetitionId(Long compId);
 }

@@ -1,7 +1,7 @@
 package org.cthub.backend.service;
 
 import lombok.RequiredArgsConstructor;
-import org.cthub.backend.dto.OverallRobotGameEntryDto;
+import org.cthub.backend.dto.robotgame.OverallRobotGameEntryDto;
 import org.cthub.backend.model.RobotGameResult;
 import org.cthub.backend.repository.RobotGameResultRepository;
 import org.cthub.backend.repository.SeasonRepository;

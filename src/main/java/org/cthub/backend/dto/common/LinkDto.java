@@ -1,4 +1,4 @@
-package org.cthub.backend.dto.auth;
+package org.cthub.backend.dto.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserDto {
-    private Long id;
-    private String email;
-    private String role;
+public class LinkDto {
+    private String label;
+    private String url;
 }

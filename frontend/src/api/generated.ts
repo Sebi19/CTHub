@@ -22,6 +22,116 @@ export interface UserDto {
   role?: string;
 }
 
+export interface CompetitionContactInfoDto {
+  contactName?: string;
+  contactEmail?: string;
+}
+
+export interface CompetitionDetailDto {
+  /** @format int64 */
+  id?: number;
+  season?: SeasonDto;
+  name?: string;
+  urlPart?: string;
+  type?: "REGIONAL" | "QUALIFICATION" | "FINAL";
+  active?: boolean;
+  country?: string;
+  /** @format date */
+  date?: string;
+  contactInfo?: CompetitionContactInfoDto;
+  location?: string;
+  links?: LinkDto[];
+  registeredTeams?: SeasonTeamDto[];
+  results?: CompetitionResultsDto;
+  /** @format int32 */
+  registeredTeamCount?: number;
+  /** @format int32 */
+  maxTeamCount?: number;
+}
+
+export interface CompetitionNominationDto {
+  /** @format int64 */
+  teamId?: number;
+  category?:
+    | "CHAMPION"
+    | "RESEARCH"
+    | "CORE_VALUES"
+    | "ROBOT_DESIGN"
+    | "COACHING"
+    | "ROBOT_GAME";
+  winner?: boolean;
+}
+
+export interface CompetitionPlaceDto {
+  /** @format int64 */
+  teamId?: number;
+  /** @format int32 */
+  place?: number;
+  advancing?: boolean;
+}
+
+export interface CompetitionResultsDto {
+  places?: CompetitionPlaceDto[];
+  nominations?: CompetitionNominationDto[];
+  robotGameEntries?: CompetitionRobotGameEntryDto[];
+}
+
+export interface CompetitionRobotGameEntryDto {
+  /** @format int64 */
+  teamId?: number;
+  /** @format int32 */
+  rank?: number;
+  /** @format int32 */
+  pr1?: number;
+  /** @format int32 */
+  pr2?: number;
+  /** @format int32 */
+  pr3?: number;
+  /** @format int32 */
+  bestPr?: number;
+  /** @format int32 */
+  r16?: number;
+  /** @format int32 */
+  qf?: number;
+  /** @format int32 */
+  sf?: number;
+  /** @format int32 */
+  f1?: number;
+  /** @format int32 */
+  f2?: number;
+}
+
+export interface LinkDto {
+  label?: string;
+  url?: string;
+}
+
+export interface SeasonDto {
+  id?: string;
+  name?: string;
+  /** @format int32 */
+  startYear?: number;
+  active?: boolean;
+}
+
+export interface SeasonTeamDto {
+  /** @format int64 */
+  id?: number;
+  active?: boolean;
+  fllId?: string;
+  name?: string;
+  institution?: string;
+  city?: string;
+  country?: string;
+  links?: LinkDto[];
+  profile?: TeamProfileDto;
+}
+
+export interface TeamProfileDto {
+  profileName?: string;
+  profileUrl?: string;
+}
+
 export interface OverallRobotGameEntryDto {
   /** @format int32 */
   rank?: number;
@@ -276,6 +386,24 @@ export class Api<
     /**
      * No description
      *
+     * @tags competition-controller
+     * @name GetCompetitionDetails
+     * @request GET:/api/seasons/{seasonId}/competitions/{urlPart}
+     */
+    getCompetitionDetails: (
+      seasonId: string,
+      urlPart: string,
+      params: RequestParams = {},
+    ) =>
+      this.request<CompetitionDetailDto, any>({
+        path: `/api/seasons/${seasonId}/competitions/${urlPart}`,
+        method: "GET",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
      * @tags scraper-test-controller
      * @name Test
      * @request GET:/api/scraper/test
@@ -294,16 +422,10 @@ export class Api<
      * @name ForceQuickSync
      * @request GET:/api/scraper/force-quick
      */
-    forceQuickSync: (
-      query: {
-        pw: string;
-      },
-      params: RequestParams = {},
-    ) =>
+    forceQuickSync: (params: RequestParams = {}) =>
       this.request<string, any>({
         path: `/api/scraper/force-quick`,
         method: "GET",
-        query: query,
         ...params,
       }),
 
@@ -315,8 +437,7 @@ export class Api<
      * @request GET:/api/scraper/force-full
      */
     forceFullSync: (
-      query: {
-        pw: string;
+      query?: {
         /** @default false */
         ignoreHashes?: boolean;
       },

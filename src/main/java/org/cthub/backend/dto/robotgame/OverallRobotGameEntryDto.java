@@ -1,4 +1,4 @@
-package org.cthub.backend.dto;
+package org.cthub.backend.dto.robotgame;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

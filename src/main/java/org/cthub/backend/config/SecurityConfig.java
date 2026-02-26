@@ -31,6 +31,9 @@ public class SecurityConfig {
     @Value("${cors.allowed-origins}")
     private String corsAllowedOrigins;
 
+    @Value("${cors.allowed-patterns:}")
+    private String corsAllowedPatterns;
+
     @Value("${app.security.remember-me-key}")
     private String rememberMeKey;
 
@@ -76,9 +79,14 @@ public class SecurityConfig {
         List<String> origins = Arrays.stream(corsAllowedOrigins.split(","))
             .map(String::trim)
             .toList();
-
-        // 1. Enter your exact Frontend URL here (no trailing slash!)
         configuration.setAllowedOrigins(origins);
+
+        if (corsAllowedPatterns != null && !corsAllowedPatterns.isBlank()) {
+            List<String> patterns = Arrays.stream(corsAllowedPatterns.split(","))
+                .map(String::trim)
+                .toList();
+            configuration.setAllowedOriginPatterns(patterns);
+        }
 
         // 2. Allow all standard methods
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));

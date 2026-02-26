@@ -1,5 +1,6 @@
 cors:
   allowed-origins: "http://localhost:5173"
+  allowed-patterns: "http://192.168.*.*:5173"
 app:
   security:
     remember-me-key: "local-remember-me-key"

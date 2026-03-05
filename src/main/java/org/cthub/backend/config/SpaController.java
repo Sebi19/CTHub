@@ -1,36 +1,17 @@
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.Resource;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import org.springframework.web.servlet.resource.PathResourceResolver;
+package org.cthub.backend.config;
 
-import java.io.IOException;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
 
-@Configuration
-public class SpaController implements WebMvcConfigurer {
+@Controller
+public class SpaController {
 
-    @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/**")
-                .addResourceLocations("classpath:/static/")
-                .resourceChain(true)
-                .addResolver(new PathResourceResolver() {
-                    @Override
-                    protected Resource getResource(String resourcePath, Resource location) throws IOException {
-                        Resource requestedResource = location.createRelative(resourcePath);
-
-                        // If the file exists (like style.css or logo.png), serve it!
-                        if (requestedResource.exists() && requestedResource.isReadable()) {
-                            return requestedResource;
-                        }
-
-                        // If it's NOT a real file and NOT an API call, send index.html
-                        if (!resourcePath.startsWith("api/")) {
-                            return location.createRelative("index.html");
-                        }
-
-                        return null;
-                    }
-                });
+    // Diese Regex fängt alles ab, was KEINEN Punkt im Pfad hat.
+    // 1. Echte API-Endpunkte (z.B. @GetMapping("/api/users")) haben Vorrang.
+    // 2. Dateien (z.B. /assets/style.css) werden ignoriert (wegen des Punkts).
+    // 3. Alles andere (z.B. /dashboard, /login) landet hier -> index.html.
+    @RequestMapping(value = "/**/{path:[^\\.]*}")
+    public String forward() {
+        return "forward:/index.html";
     }
 }

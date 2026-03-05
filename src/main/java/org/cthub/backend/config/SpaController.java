@@ -1,18 +1,36 @@
-package org.cthub.backend.config;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.Resource;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.resource.PathResourceResolver;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
+import java.io.IOException;
 
-@Controller
-public class SpaController {
+@Configuration
+public class SpaController implements WebMvcConfigurer {
 
-    /**
-     * Forwards all non-API and non-static-asset routes to index.html.
-     * (?!api|static|assets|favicon.ico) = "Does NOT start with these strings"
-     * .* = "Match everything else, including dots"
-     */
-    @RequestMapping(value = "{path:(?!api|static|assets|favicon\\.ico).*+}")
-    public String forward() {
-        return "forward:/index.html";
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/**")
+                .addResourceLocations("classpath:/static/")
+                .resourceChain(true)
+                .addResolver(new PathResourceResolver() {
+                    @Override
+                    protected Resource getResource(String resourcePath, Resource location) throws IOException {
+                        Resource requestedResource = location.createRelative(resourcePath);
+
+                        // If the file exists (like style.css or logo.png), serve it!
+                        if (requestedResource.exists() && requestedResource.isReadable()) {
+                            return requestedResource;
+                        }
+
+                        // If it's NOT a real file and NOT an API call, send index.html
+                        if (!resourcePath.startsWith("api/")) {
+                            return location.createRelative("index.html");
+                        }
+
+                        return null;
+                    }
+                });
     }
 }

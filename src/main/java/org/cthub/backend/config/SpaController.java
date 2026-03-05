@@ -6,11 +6,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 public class SpaController {
 
-    // Diese Regex fängt alles ab, was KEINEN Punkt im Pfad hat.
-    // 1. Echte API-Endpunkte (z.B. @GetMapping("/api/users")) haben Vorrang.
-    // 2. Dateien (z.B. /assets/style.css) werden ignoriert (wegen des Punkts).
-    // 3. Alles andere (z.B. /dashboard, /login) landet hier -> index.html.
-    @RequestMapping(value = "/**/{path:[^\\.]*}")
+    /**
+     * Forwards all non-API and non-static-asset routes to index.html.
+     * (?!api|static|assets|favicon.ico) = "Does NOT start with these strings"
+     * .* = "Match everything else, including dots"
+     */
+    @RequestMapping(value = "{path:(?!api|static|assets|favicon\\.ico).*+}")
     public String forward() {
         return "forward:/index.html";
     }

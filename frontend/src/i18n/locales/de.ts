@@ -55,18 +55,21 @@ export const de = {
         },
         competition: {
             detail: {
+                doc_title: "{{competitionName}} - {{seasonId}} | CTH",
                 error_loading: "Fehler beim Laden der Wettbewerbsdetails",
                 inactive_title: "Wettbewerb inaktiv",
                 inactive_message: "Dieser Wettbewerb ist derzeit nicht aktiv. Es könnte sein dass er abgesagt wurde oder sich die URL geändert hat. Überprüfen sie die offizielle Website für weitere Informationen.",
-                type: {
-                    REGIONAL: "Regionalwettbewerb",
-                    QUALIFICATION: "Qualifikationswettbewerb",
-                    FINAL: "DACH-Finale",
-                },
+                type: "Wettbewerb",
+                type_REGIONAL: "Regionalwettbewerb",
+                type_QUALIFICATION: "Qualifikationswettbewerb",
+                type_FINAL: "DACH-Finale",
                 tabs: {
                     teams: "Teams ({{teamCount}})",
                     awards: "Gesamtwertung",
                     robotgame: "Robot-Game",
+                    previous_competitions: "Zugehörige Wettbewerbe",
+                    previous_competitions_QUALIFICATION: "Regionalwettbewerbe",
+                    previous_competitions_FINAL: "Qualifikationswettbewerbe",
                 },
                 season: "{{seasonName}} - {{seasonId}}",
                 official_link: "Offizielle Wettbewerbsseite",
@@ -77,11 +80,10 @@ export const de = {
             teams: {
                 title: "Registrierte Teams ({{registeredCount}}/{{maxCount}})",
                 empty: "Es sind noch keine Teams für diesen Wettbewerb registriert.",
-                country: {
-                    DE: "Deutschland",
-                    AT: "Österreich",
-                    CH: "Schweiz",
-                },
+                country: "Unbekanntes Land",
+                country_DE: "Deutschland",
+                country_AT: "Österreich",
+                country_CH: "Schweiz",
                 tooltip: {
                     links: "Links",
                     grid: "Kacheln",
@@ -98,6 +100,64 @@ export const de = {
                     links: "Links",
                 },
             },
+            awards: {
+                title: "Gesamtwertung",
+                title_awards: "Auszeichnungen",
+                empty: "Es sind noch keine Ergebnisse für diesen Wettbewerb verfügbar.",
+                category: "Kategorie",
+                category_CHAMPION: "Champion",
+                category_RESEARCH: "Forschung",
+                category_CORE_VALUES: "Grundwerte",
+                category_ROBOT_DESIGN: "Roboterdesign",
+                category_ROBOT_GAME: "Robot-Game",
+                category_COACHING: "Coaching",
+                table: {
+                    header_team: "Team",
+                    header_place: "Platz",
+                },
+                tooltip: {
+                    winner: "Pokal",
+                    winner_RESEARCH: "Pokal Forschung",
+                    winner_CORE_VALUES: "Pokal Grundwerte",
+                    winner_ROBOT_DESIGN: "Pokal Roboterdesign",
+                    winner_ROBOT_GAME: "Pokal Robot-Game",
+                    winner_COACHING: "Pokal Coaching",
+                    nominated: "Nominiert",
+                    nominated_RESEARCH: "Nominiert Forschung",
+                    nominated_CORE_VALUES: "Nominiert Grundwerte",
+                    nominated_ROBOT_DESIGN: "Nominiert Roboterdesign",
+                    place_ROBOT_GAME: "{{place}} Robot-Game",
+                    view: {
+                        categories: "Übersicht",
+                        teams: "Kacheln",
+                        matrix: "Tabelle",
+                    }
+                },
+                qualified: "Qualifiziert",
+                winner: "Pokal",
+                nominated: "Nominiert",
+                additional_nominations: "Weitere Nominierungen",
+                additional_places: "Weitere Platzierungen",
+                place_1: "Pokal Champion",
+                place_ordinal_one: "{{count}}. Platz",
+                place_ordinal_two: "{{count}}. Platz",
+                place_ordinal_few: "{{count}}. Platz",
+                place_ordinal_other: "{{count}}. Platz",
+            },
+            previous: {
+                empty: "Es konnten keine vorherigen Wettbewerbe gefunden werden.",
+                empty_QUALIFICATION: "Es konnten keine zugehörigen Regionalwettbewerbe gefunden werden.",
+                empty_FINAL: "Es konnten keine zugehörigen Qualifikationswettbewerbe gefunden werden.",
+                tooltip: {
+                    grid: "Kacheln",
+                    table: "Liste",
+                },
+                header: {
+                    name: "Name",
+                    date: "Datum",
+                    type: "Typ",
+                }
+            }
         }
     },
 } as const;

@@ -11,6 +11,8 @@
     "gen:api": "npx swagger-typescript-api generate -p \"http://localhost:8080/v3/api-docs\" -o ./src/api -n generated.ts --axios"
   },
   "dependencies": {
+    "@fontsource/geist-mono": "^5.2.7",
+    "@fontsource/geist-sans": "^5.2.5",
     "@mantine/charts": "^7.10.0",
     "@mantine/core": "^7.10.0",
     "@mantine/dates": "^7.10.0",

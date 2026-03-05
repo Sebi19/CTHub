@@ -24,6 +24,9 @@ public class CompetitionDetailDto {
     private CompetitionType type;
     boolean active;
 
+    private CompetitionShortInfoDto nextCompetition;
+    private List<CompetitionShortInfoDto> previousCompetitions;
+
     private String country;
     private LocalDate date;
     private CompetitionContactInfoDto contactInfo;

@@ -54,11 +54,13 @@ public class ScraperService {
         // 2. Sync The Overview List
         List<Competition> activeCompetitions = syncOverview(season, ignoreHashes);
 
+        String finalUrlPart = activeCompetitions.stream().filter(c -> c.getType().equals(Competition.CompetitionType.FINAL)).findFirst().map(Competition::getUrlPart).orElse("");
+
         // 3. Sync Details for Each Competition
         int updatedCount = 0;
         for (Competition comp : activeCompetitions) {
             /*try {*/
-                if (processSingleCompetition(comp, ignoreHashes)) {
+                if (processSingleCompetition(comp, ignoreHashes, finalUrlPart)) {
                     updatedCount++;
                 }
             /*} catch (Exception e) {
@@ -121,7 +123,7 @@ public class ScraperService {
     /**
      * @return true if any data was updated in the DB
      */
-    private boolean processSingleCompetition(Competition comp, boolean ignoreHashes) {
+    private boolean processSingleCompetition(Competition comp, boolean ignoreHashes, String finalUrlPart) {
         log.info("🔍 Processing competition: {}", comp.getName());
         boolean dataChanged = false;
 
@@ -153,6 +155,16 @@ public class ScraperService {
                     // All good, accept the data
                     log.info("📝 Parsing Details for: {}", comp.getName());
                     detailsDto = candidateDto;
+                    // Fix qualification URL
+                    if (comp.getType().equals(Competition.CompetitionType.REGIONAL)) {
+                        if (detailsDto.getQualificationUrlPart().equals(finalUrlPart)) {
+                            detailsDto.setQualificationUrlPart(null); // Clear it - we don't want regionals linking to the final
+                        }
+                    } else if (comp.getType().equals(Competition.CompetitionType.QUALIFICATION)) {
+                        detailsDto.setQualificationUrlPart(finalUrlPart); // Ensure qualification competitions always links to the final
+                    } else {
+                        detailsDto.setQualificationUrlPart(null); // Clear it - only qualification competitions should link to the final
+                    }
                     detailsDto.setContentHash(newDetailHash);
                     dataChanged = true;
                 }
@@ -253,7 +265,7 @@ public class ScraperService {
             // 2. If valid, trigger the full parse logic for this competition
             // We temporarily set the URL part on the object so processSingleCompetition uses it
             comp.setResultsUrlPart(urlPart);
-            processSingleCompetition(comp, false);
+            processSingleCompetition(comp, false, "");
             return true;
         }
         return false;

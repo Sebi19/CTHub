@@ -35,6 +35,8 @@ export interface CompetitionDetailDto {
   urlPart?: string;
   type?: "REGIONAL" | "QUALIFICATION" | "FINAL";
   active?: boolean;
+  nextCompetition?: CompetitionShortInfoDto;
+  previousCompetitions?: CompetitionShortInfoDto[];
   country?: string;
   /** @format date */
   date?: string;
@@ -101,6 +103,19 @@ export interface CompetitionRobotGameEntryDto {
   f2?: number;
 }
 
+export interface CompetitionShortInfoDto {
+  /** @format int64 */
+  id?: number;
+  season?: SeasonDto;
+  name?: string;
+  urlPart?: string;
+  type?: "REGIONAL" | "QUALIFICATION" | "FINAL";
+  active?: boolean;
+  country?: string;
+  /** @format date */
+  date?: string;
+}
+
 export interface LinkDto {
   label?: string;
   url?: string;
@@ -117,6 +132,7 @@ export interface SeasonDto {
 export interface SeasonTeamDto {
   /** @format int64 */
   id?: number;
+  season?: SeasonDto;
   active?: boolean;
   fllId?: string;
   name?: string;
@@ -137,8 +153,7 @@ export interface OverallRobotGameEntryDto {
   rank?: number;
   teamName?: string;
   teamId?: string;
-  competition?: string;
-  competitionUrlPart?: string;
+  competition?: CompetitionShortInfoDto;
   country?: string;
   qualified?: boolean;
   /** @format int32 */

@@ -5,6 +5,7 @@ import org.cthub.backend.dto.competition.CompetitionDetailDto;
 import org.cthub.backend.dto.competition.CompetitionNominationDto;
 import org.cthub.backend.dto.competition.CompetitionPlaceDto;
 import org.cthub.backend.dto.competition.CompetitionRobotGameEntryDto;
+import org.cthub.backend.dto.competition.CompetitionShortInfoDto;
 import org.cthub.backend.model.Competition;
 import org.cthub.backend.model.Nomination;
 import org.cthub.backend.model.Place;
@@ -18,7 +19,11 @@ public interface CompetitionMapper {
     @Mapping(target = "results", ignore = true)
     @Mapping(target = "registeredTeams", ignore = true)
     @Mapping(target = "contactInfo", source = "contact")
+    @Mapping(target = "nextCompetition", ignore = true)
+    @Mapping(target = "previousCompetitions", ignore = true)
     CompetitionDetailDto toBaseDetailDto(Competition competition);
+
+    CompetitionShortInfoDto toShortInfoDto(Competition competition);
 
     @Mapping(target = "teamId", source = "seasonTeam.id")
     CompetitionPlaceDto toPlaceDto(Place place);

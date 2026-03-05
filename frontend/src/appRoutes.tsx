@@ -2,8 +2,8 @@ import {useAuth} from "./features/auth/AuthContext.tsx";
 import {Navigate, Route, Routes} from "react-router-dom";
 import App from "./App.tsx";
 import {LoginPage} from "./features/auth/LoginPage.tsx";
-import {LeaderboardPage} from "./pages/LeaderboardPage.tsx";
 import {CompetitionDetailPage} from "./features/competition/CompetitionDetailPage.tsx";
+import {RobotGameLeaderboardPage} from "./features/robotGameLeaderboard/RobotGameLeaderboardPage.tsx";
 
 export function AppRoutes() {
     const {isAuthenticated} = useAuth();
@@ -21,7 +21,7 @@ export function AppRoutes() {
                 <Route path="/login" element={!isAuthenticated ? <LoginPage/> : <Navigate to="/robotgame"/>}/>
 
                 {/* Public Pages */}
-                <Route path="robotgame" element={<LeaderboardPage/>}/>
+                <Route path="robotgame" element={<RobotGameLeaderboardPage/>}/>
 
                 <Route path="competition/:seasonId/:urlPart" element={<CompetitionDetailPage/>}/>
 

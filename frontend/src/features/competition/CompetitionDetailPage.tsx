@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import {Link, useParams} from 'react-router-dom';
 import {
     Container,
     Title,
@@ -13,7 +13,7 @@ import {
     Stack,
     Alert,
     Anchor,
-    Card, SimpleGrid, Box
+    Card, SimpleGrid, Box, ScrollArea
 } from '@mantine/core';
 import {
     IconCalendar,
@@ -22,15 +22,21 @@ import {
     IconRobot,
     IconTrophy,
     IconUsers,
-    IconInfoCircle, IconUser
+    IconInfoCircle, IconUser, IconArrowRight, IconSitemap
 } from '@tabler/icons-react';
 
 // Import our new tab components
 import type {CompetitionDetailDto} from "../../api/generated.ts";
 import {client} from "../../api.ts";
-import {CompetitionDetailTeamsTab} from "./CompetitionDetailTeamsTab.tsx";
+import {CompetitionTeamsTab} from "./CompetitionTeamsTab.tsx";
 import {useTranslation} from "react-i18next";
 import dayjs from "dayjs";
+import {CompetitionRobotGameTab} from "./CompetitionRobotGameTab.tsx";
+import {CompetitionAwardsTab} from "./CompetitionAwardsTab.tsx";
+import {useDocumentTitle, useSessionStorage} from "@mantine/hooks";
+import {CompetitionPreviousTab} from "./CompetitionPreviousTab.tsx";
+import {getCompetitionTypeColor} from "../../utils/competitionUtils.ts";
+import {getCompetitionLink} from "../../utils/routingUtils.ts";
 
 export const CompetitionDetailPage = () => {
     const { seasonId, urlPart } = useParams();
@@ -40,26 +46,40 @@ export const CompetitionDetailPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    const [activeTab, setActiveTab] = useSessionStorage<string | null>({
+        key: `competition-tab-${seasonId}-${urlPart}`,
+        defaultValue: 'teams',
+    });
+
+    useEffect(() => {
+        // A tiny timeout ensures Mantine has finished updating the DOM's data-active attribute
+        const timeoutId = setTimeout(() => {
+            // Find whichever tab Mantine currently marks as active
+            const activeElement = document.querySelector('[role="tab"][data-active="true"]');
+
+            if (activeElement) {
+                // Slide it smoothly into the center of the scroll area!
+                activeElement.scrollIntoView({
+                    behavior: 'smooth',
+                    inline: 'center',
+                    block: 'nearest'
+                });
+            }
+        }, 50);
+
+        return () => clearTimeout(timeoutId);
+    }, [activeTab, seasonId, urlPart]); // Runs every time the tab changes
+
+    useDocumentTitle(t('app.competition.detail.doc_title', {competitionName: competition?.name || '', seasonId: competition?.season?.id || ''}))
+
+
     const teamCount = competition?.registeredTeams ? competition.registeredTeams.length : 0;
 
-    const officialUrl = `https://www.first-lego-league.org/${i18n.language}/challenge-${seasonId}/${urlPart}`;
+    const officialUrl = `https://www.first-lego-league.org/${i18n.resolvedLanguage}/challenge-${seasonId}/${urlPart}`;
 
-    const getCompetitionTypeColor = (type: string) => {
-        switch (type.toLowerCase()) {
-            case 'regional':
-                return 'green';
-            case 'qualification':
-                return 'orange';
-            case 'final':
-                return 'red';
-            default:
-                return 'gray';
-        }
-    }
-
-    const cleanLocationString = (loc: string) => {
-        if (!loc) return '';
-        return loc
+    const cleanFormattedString = (str: string) => {
+        if (!str) return '';
+        return str
             .split('\n')                  // Split into an array at every newline
             .map((line: string) => line.trim())     // Remove leading/trailing spaces from each line
             .filter(Boolean)              // Drop any lines that are now empty strings
@@ -101,10 +121,10 @@ export const CompetitionDetailPage = () => {
 
             {/* Header Section */}
                 <Group justify="space-between" align="flex-start" mb="sm">
-                <Box style={{ flex: '1 1 min-content', minWidth: 0 }}>
+                <Box flex={{ base: '1 0 100%', xs: '1 1 min-content' }} miw={0}>
                     <Group gap="xs" mb="sm">
                         <Badge color={getCompetitionTypeColor(competition.type!)}>
-                            {t(`app.competition.detail.type.${competition.type!}`)}
+                            {t(`app.competition.detail.type`, {context: competition.type})}
                         </Badge>
 
                         {competition.country && (
@@ -141,7 +161,7 @@ export const CompetitionDetailPage = () => {
                                     <Text fw={500}>{t('app.competition.detail.location')}</Text>
                                 </Group>
                                 <Text style={{ whiteSpace: 'pre-line' }}>
-                                    {cleanLocationString(competition.location)}
+                                    {cleanFormattedString(competition.location)}
                                 </Text>
                             </Card>
                         )}
@@ -155,7 +175,7 @@ export const CompetitionDetailPage = () => {
                                 </Group>
                                 <Stack gap={0}>
                                     {competition.contactInfo.contactName && (
-                                        <Text>{competition.contactInfo.contactName}</Text>
+                                        <Text style={{ whiteSpace: 'pre-line' }}>{cleanFormattedString(competition.contactInfo.contactName)}</Text>
                                     )}
                                     {competition.contactInfo.contactEmail && (
                                         <Anchor href={`mailto:${competition.contactInfo.contactEmail}`} size="sm">
@@ -169,70 +189,98 @@ export const CompetitionDetailPage = () => {
                 </Box>
 
                 {/* External Links */}
-                {competition.links && competition.links.length > 0 && (
-                    <Stack
-                        gap={5}
-                        pos="sticky"
-                        top={80}
-                        flex={{base: '1', xs: 'initial'}}
-                        style={{ zIndex: 10}}
-                        mb="sm"
+                <Stack
+                    gap={8}
+                    pos="sticky"
+                    top={80}
+                    flex={{base: '1', xs: 'initial'}}
+                    style={{ zIndex: 10}}
+                    mb="sm"
+                >
+                    <Button
+                        component="a"
+                        href={officialUrl}
+                        target="_blank"
+                        variant="filled" // Stands out more than the 'light' ones below
+                        color={getCompetitionTypeColor(competition.type!)} // Optional: theme it to match the badge!
+                        rightSection={<IconExternalLink size={16}/>}
                     >
+                        {t('app.competition.detail.official_link')}
+                    </Button>
+
+                    {competition.links?.map((link, index) => (
                         <Button
+                            key={index}
                             component="a"
-                            href={officialUrl}
+                            href={link.url}
                             target="_blank"
-                            variant="filled" // Stands out more than the 'light' ones below
-                            color={getCompetitionTypeColor(competition.type!)} // Optional: theme it to match the badge!
+                            variant="light"
                             rightSection={<IconExternalLink size={16}/>}
                         >
-                            {t('app.competition.detail.official_link')}
+                            {link.label || link.url}
                         </Button>
-
-                        {competition.links.map((link, index) => (
-                            <Button
-                                key={index}
-                                component="a"
-                                href={link.url}
-                                target="_blank"
-                                variant="light"
-                                rightSection={<IconExternalLink size={16}/>}
-                            >
-                                {link.label || link.url}
-                            </Button>
-                        ))}
-                    </Stack>
-                )}
+                    ))}
+                    {competition.nextCompetition && (
+                        <Button
+                            component={Link}
+                            to={getCompetitionLink(competition.nextCompetition)} // Adjust to your actual route!
+                            variant="outline"
+                            color={getCompetitionTypeColor(competition.nextCompetition.type!)}
+                            leftSection={<IconArrowRight size={16} />}
+                        >
+                            {competition.nextCompetition.name}
+                        </Button>
+                    )}
+                </Stack>
             </Group>
 
             {/* Tabs Section */}
-            <Tabs defaultValue="teams" mt="lg">
-                <Tabs.List>
-                    <Tabs.Tab value="teams" leftSection={<IconUsers size={16} />}>
-                        {t('app.competition.detail.tabs.teams', {teamCount})}
-                    </Tabs.Tab>
-                    <Tabs.Tab value="awards" leftSection={<IconTrophy size={16} />} disabled={!competition.results}>
-                        {t('app.competition.detail.tabs.awards')}
-                    </Tabs.Tab>
-                    <Tabs.Tab value="robot-game" leftSection={<IconRobot size={16} />} disabled={!competition.results}>
-                        {t('app.competition.detail.tabs.robotgame')}
-                    </Tabs.Tab>
-                </Tabs.List>
+            <Tabs value={activeTab} onChange={setActiveTab} mt="lg">
+                <ScrollArea type="never">
+                    <Tabs.List style={{
+                        flexWrap: 'nowrap',
+                        width: 'max-content',
+                        minWidth: '100%'
+                    }}>
+                        <Tabs.Tab value="teams" leftSection={<IconUsers size={16} />} style={{ whiteSpace: 'nowrap' }}>
+                            {t('app.competition.detail.tabs.teams', {teamCount})}
+                        </Tabs.Tab>
+                        {competition.results && (
+                            <>
+                                <Tabs.Tab value="awards" leftSection={<IconTrophy size={16} />} style={{ whiteSpace: 'nowrap' }}>
+                                    {t('app.competition.detail.tabs.awards')}
+                                </Tabs.Tab>
+                                <Tabs.Tab value="robot-game" leftSection={<IconRobot size={16} />} style={{ whiteSpace: 'nowrap' }}>
+                                    {t('app.competition.detail.tabs.robotgame')}
+                                </Tabs.Tab>
+                            </>
+                        )}
+
+                        {competition.previousCompetitions && competition.previousCompetitions.length > 0 && (
+                            <Tabs.Tab value="previous-competitions" leftSection={<IconSitemap size={16} />} style={{ whiteSpace: 'nowrap' }}>
+                                {t('app.competition.detail.tabs.previous_competitions', {context: competition.type})}
+                            </Tabs.Tab>
+                        )}
+                    </Tabs.List>
+                </ScrollArea>
 
                 {/* Tab Panels */}
                 <Tabs.Panel value="teams" pt="md">
-                    <CompetitionDetailTeamsTab competition={competition} />
+                    <CompetitionTeamsTab competition={competition} />
                 </Tabs.Panel>
 
                 <Tabs.Panel value="awards" pt="md">
-                    {/* <CompetitionAwardsTab competition={competition} /> */}
-                    <Text>This is the awards tab. All the overall results are here!</Text>
+                    <CompetitionAwardsTab competition={competition}></CompetitionAwardsTab>
                 </Tabs.Panel>
 
                 <Tabs.Panel value="robot-game" pt="md">
-                    {/* <CompetitionRobotGameTab competition={competition} /> */}
-                    <Text>This is the robotgame tab. Here you would see the detailed robotgame results.</Text>
+                    <CompetitionRobotGameTab teams={competition.registeredTeams ?? []} scores={competition.results?.robotGameEntries ?? []}></CompetitionRobotGameTab>
                 </Tabs.Panel>
+                {competition.previousCompetitions && competition.previousCompetitions.length > 0 && (
+                    <Tabs.Panel value="previous-competitions" pt="md">
+                        <CompetitionPreviousTab competition={competition}></CompetitionPreviousTab>
+                    </Tabs.Panel>
+                )}
             </Tabs>
         </Container>
     );

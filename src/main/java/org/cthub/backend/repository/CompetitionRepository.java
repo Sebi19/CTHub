@@ -28,6 +28,11 @@ public interface CompetitionRepository extends JpaRepository<Competition, Long> 
         @Param("urlPart") String urlPart,
         @Param("seasonId") String seasonId);
 
+    @Query("SELECT c FROM Competition c " +
+        "WHERE c.active = true " +
+        "AND c.qualificationUrlPart = :qualificationUrlPart")
+    List<Competition> findAllByQualificationUrlPart(String qualificationUrlPart);
+
 
     int countBySeasonAndActiveTrue(Season season);
 }

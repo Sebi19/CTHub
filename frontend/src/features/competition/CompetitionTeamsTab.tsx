@@ -23,13 +23,13 @@ import {
 import {useTranslation} from "react-i18next";
 import {useState} from "react";
 import {useNavigate} from "react-router-dom";
-import type {ParseKeys} from "i18next";
+import {getTeamLink} from "../../utils/routingUtils.ts";
 
 interface Props {
     competition: CompetitionDetailDto;
 }
 
-export const CompetitionDetailTeamsTab = ({ competition }: Props) => {
+export const CompetitionTeamsTab = ({ competition }: Props) => {
     const { t } = useTranslation();
 
     const navigate = useNavigate();
@@ -38,23 +38,11 @@ export const CompetitionDetailTeamsTab = ({ competition }: Props) => {
 
     // Safety check just in case
     const teams = competition.registeredTeams || [];
-    const seasonId = competition.season?.id;
 
     const teamCount = teams.length;
 
     if (teamCount === 0) {
         return <Text c="dimmed" ta="center" py="xl">{t("app.competition.teams.empty")}</Text>;
-    }
-
-    const getPrimaryTeamLink = (team: SeasonTeamDto) => {
-        if (team.profile?.profileUrl) {
-            return `/${team.profile.profileUrl}`; // Adjust baseurl if needed
-        }
-        return `/team/${seasonId}/${team.fllId}`;
-    };
-
-    function getCountryKey(country: string) {
-        return `app.competition.teams.country.${country}` as ParseKeys;
     }
 
     const TeamExtraLinksMenu = ({ team }: { team: SeasonTeamDto }) => {
@@ -140,7 +128,7 @@ export const CompetitionDetailTeamsTab = ({ competition }: Props) => {
                                 padding="lg"
                                 radius="md"
                                 withBorder
-                                onClick={() => navigate(getPrimaryTeamLink(team))} // <-- The Magic
+                                onClick={() => navigate(getTeamLink(team))} // <-- The Magic
                                 style={{
                                     cursor: 'pointer',
                                     transition: 'transform 0.2s ease, box-shadow 0.2s ease'
@@ -161,7 +149,7 @@ export const CompetitionDetailTeamsTab = ({ competition }: Props) => {
                                     </Group>
                                     <Group gap="xs">
                                         {competition.type === 'FINAL' && team.country && (
-                                            <Tooltip label={t(getCountryKey(team.country))}>
+                                            <Tooltip label={t("app.competition.teams.country", {context: team.country})}>
                                                 <Badge color='gray' variant='light'>
                                                     {team.country}
                                                 </Badge>
@@ -217,13 +205,13 @@ export const CompetitionDetailTeamsTab = ({ competition }: Props) => {
                                 <TooltipGroup openDelay={500} closeDelay={100} key={team.id}>
                                     <Table.Tr
                                         key={team.id}
-                                        onClick={() => navigate(getPrimaryTeamLink(team))}
+                                        onClick={() => navigate(getTeamLink(team))}
                                         style={{ cursor: 'pointer' }}
                                     >
                                         <Table.Td><Text fw={500} c="dimmed">{team.fllId}</Text></Table.Td>
                                         {competition.type === 'FINAL' && team.country && (
                                             <Table.Td>
-                                                <Tooltip label={t(getCountryKey(team.country))}>
+                                                <Tooltip label={t("app.competition.teams.country", {context: team.country})}>
                                                     <Badge color='gray' variant='light'>
                                                         {team.country}
                                                     </Badge>

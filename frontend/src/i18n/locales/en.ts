@@ -1,4 +1,4 @@
-import type {I18nLocale} from "./de.ts";
+import type { I18nLocale} from "./de.ts";
 
 export const en: I18nLocale = {
     app: {
@@ -55,18 +55,21 @@ export const en: I18nLocale = {
         },
         competition: {
             detail: {
+                doc_title: "{{competitionName}} - {{seasonId}} | CTH",
                 error_loading: "Error loading competition details",
                 inactive_title: "Competition Inactive",
                 inactive_message: "This competition is currently not active. It may have been cancelled or the URL may have changed. Please check the official website for more information.",
-                type: {
-                    REGIONAL: "Regional Competition",
-                    QUALIFICATION: "Qualification Competition",
-                    FINAL: "DACH-Final",
-                },
+                type: "Competitions",
+                type_REGIONAL: "Regional Competition",
+                type_QUALIFICATION: "Qualification Competition",
+                type_FINAL: "DACH-Final",
                 tabs: {
                     teams: "Teams ({{teamCount}})",
                     awards: "Overall Ranking",
                     robotgame: "Robot-Game",
+                    previous_competitions: "Related Competitions",
+                    previous_competitions_QUALIFICATION: "Regional Competitions",
+                    previous_competitions_FINAL: "Qualification Competitions",
                 },
                 season: "{{seasonName}} - {{seasonId}}",
                 official_link: "Official Competition Page",
@@ -77,11 +80,10 @@ export const en: I18nLocale = {
             teams: {
                 title: "Registered Teams ({{registeredCount}}/{{maxCount}})",
                 empty: "There are no teams registered for this competition yet.",
-                country: {
-                    DE: "Germany",
-                    AT: "Austria",
-                    CH: "Switzerland",
-                },
+                country: "Unknown Country",
+                country_DE: "Germany",
+                country_AT: "Austria",
+                country_CH: "Switzerland",
                 tooltip: {
                     links: "Links",
                     grid: "Cards",
@@ -98,6 +100,65 @@ export const en: I18nLocale = {
                     links: "Links",
                 },
             },
+            awards: {
+                title: "Overall Ranking",
+                title_awards: "Awards",
+                empty: "There are no awards for this competition yet",
+                category: "Category",
+                category_CHAMPION: "Champion",
+                category_RESEARCH: "Research",
+                category_CORE_VALUES: "Core Values",
+                category_ROBOT_DESIGN: "Robot Design",
+                category_ROBOT_GAME: "Robot-Game",
+                category_COACHING: "Coaching",
+                table: {
+                    header_team: "Team",
+                    header_place: "Place",
+                },
+                tooltip: {
+                    winner: "Award",
+                    winner_RESEARCH: "Award Research",
+                    winner_CORE_VALUES: "Award Core Values",
+                    winner_ROBOT_DESIGN: "Award Robot Design",
+                    winner_ROBOT_GAME: "Award Robot-Game",
+                    winner_COACHING: "Award Coaching",
+                    nominated: "Nominated",
+                    nominated_RESEARCH: "Nominated Research",
+                    nominated_CORE_VALUES: "Nominated Core Values",
+                    nominated_ROBOT_DESIGN: "Nominated Robot Design",
+                    place_ROBOT_GAME: "{{place}} Robot-Game",
+                    view: {
+                        categories: "Overview",
+                        teams: "Cards",
+                        matrix: "Table",
+                    }
+                },
+                qualified: "Qualified",
+                winner: "Award",
+                nominated: "Nominated",
+                additional_nominations: "Addtional Nominations",
+                additional_places: "Additional Places",
+                place_1: "Award Champion",
+                place_ordinal_one: "{{count}}st Place",
+                place_ordinal_two: "{{count}}nd Place",
+                place_ordinal_few: "{{count}}rd Place",
+                place_ordinal_other: "{{count}}th Place",
+            },
+            previous: {
+                empty: "There are no related competitions for this competition.",
+                empty_QUALIFICATION: "There are no related regional competitions for this competition.",
+                empty_FINAL: "There are no related qualification competitions for this competition.",
+                tooltip: {
+                    grid: "Cards",
+                    table: "List",
+                },
+                header: {
+                    name: "Name",
+                    date: "Date",
+                    type: "Type",
+                }
             }
+        },
+
     }
 }

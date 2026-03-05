@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.cthub.backend.dto.common.LinkDto;
+import org.cthub.backend.dto.season.SeasonDto;
 
 import java.util.List;
 
@@ -14,6 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 public class SeasonTeamDto {
     private Long id;
+    private SeasonDto season;
     private boolean active;
     private String fllId;
 

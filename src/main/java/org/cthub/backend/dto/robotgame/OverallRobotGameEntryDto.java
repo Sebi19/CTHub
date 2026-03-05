@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.cthub.backend.dto.competition.CompetitionShortInfoDto;
 
 @Data
 @Builder
@@ -14,8 +15,7 @@ public class OverallRobotGameEntryDto {
     private int rank;           // Overall Rank (#Best)
     private String teamName;
     private String teamId;      // e.g. "1395"
-    private String competition;    // "Ortenau", "Windisch"
-    private String competitionUrlPart; // "ortenau" (for links)
+    private CompetitionShortInfoDto competition;
     private String country;     // "DE", "CH"
     private boolean qualified;  // For the Green/Red styling
 

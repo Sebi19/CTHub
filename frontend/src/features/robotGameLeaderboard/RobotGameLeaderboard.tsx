@@ -1,11 +1,13 @@
 import { useMemo, useEffect, useState } from 'react';
 import { MantineReactTable, useMantineReactTable, type MRT_ColumnDef } from 'mantine-react-table';
 import {Badge, Text, Anchor, Box, useMantineColorScheme } from '@mantine/core';
-import { type OverallRobotGameEntryDto } from '../api/generated';
-import { client } from '../api';
+import { type OverallRobotGameEntryDto } from '../../api/generated';
+import { client } from '../../api';
 import {useTranslation} from "react-i18next";
 import { MRT_Localization_EN } from 'mantine-react-table/locales/en/index.cjs';
 import { MRT_Localization_DE } from 'mantine-react-table/locales/de/index.cjs';
+import {getCompetitionLink} from "../../utils/routingUtils.ts";
+import {Link} from "react-router-dom";
 
 const tableLocales = {
     en: MRT_Localization_EN,
@@ -37,10 +39,6 @@ export const RobotGameLeaderboard = () => {
             })
             .catch(() => setIsLoading(false));
     }, []);
-
-    const getLink = (urlPart: string) => {
-        return `https://www.first-lego-league.org/de/challenge-2025-26/${urlPart}`;
-    };
 
     const formatName = (entry: OverallRobotGameEntryDto): string => {
         return `${entry.teamName} [${entry.teamId}]`;
@@ -109,18 +107,20 @@ export const RobotGameLeaderboard = () => {
                 accessorFn: (row) => row.competition,
                 header: t('app.overall_robotgame.table.location'),
                 size: 150,
-                Cell: ({ row }) => (
-                    <Anchor
-                        href={getLink(row.original.competitionUrlPart ?? "")}
-                        target="_blank"
-                        rel="noreferrer"
-                        size="sm"
-                        underline="hover"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {row.original.competition}
-                    </Anchor>
-                ),
+                Cell: ({ row }) => {
+                    const competition = row.original.competition;
+                    return (
+                        <Anchor
+                            component={Link}
+                            to={getCompetitionLink(competition!)}
+                            size="sm"
+                            underline="hover"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {competition?.name}
+                        </Anchor>
+                    );
+                },
             },
             // --- SCORE COLUMNS ---
             {

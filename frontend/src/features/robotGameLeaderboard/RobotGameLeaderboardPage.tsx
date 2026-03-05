@@ -1,10 +1,9 @@
-// pages/LeaderboardPage.tsx
 import { Title, Box } from '@mantine/core';
-import { RobotGameLeaderboard } from '../components/RobotGameLeaderboard';
 import { useDocumentTitle } from "@mantine/hooks";
 import {useTranslation} from "react-i18next";
+import {RobotGameLeaderboard} from "./RobotGameLeaderboard.tsx";
 
-export const LeaderboardPage = () => {
+export const RobotGameLeaderboardPage = () => {
     const { t } = useTranslation();
     useDocumentTitle(t('app.overall_robotgame.doc_title'))
     return (

@@ -49,6 +49,22 @@ public class CompetitionService {
         List<SeasonTeam> seasonTeams = seasonTeamRepository.findRegisteredTeamsByCompetitionId(compId);
         detailDto.setRegisteredTeams(teamMapper.toTeamDtoList(seasonTeams));
 
+        // Fetch next competition
+        if (competition.getQualificationUrlPart() != null) {
+            Competition nextComp = competitionRepository.findByUrlPartAndSeasonId(competition.getQualificationUrlPart(), seasonId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Next competition not found for qualificationUrlPart: " + competition.getQualificationUrlPart()));
+            detailDto.setNextCompetition(competitionMapper.toShortInfoDto(nextComp));
+        }
+
+        // Fetch previous competitions
+        if (competition.getType() != Competition.CompetitionType.REGIONAL) {
+            List<Competition> relatedComps = competitionRepository.findAllByQualificationUrlPart(competition.getUrlPart());
+            detailDto.setPreviousCompetitions(relatedComps.stream()
+                .filter(c -> !c.getId().equals(compId)) // Exclude current comp
+                .map(competitionMapper::toShortInfoDto)
+                .toList());
+        }
+
         if (competition.isResultsAvailable()) {
             List<Place> places = placeRepository.findAllByCompetitionId(compId);
             List<Nomination> nominations = nominationRepository.findAllByCompetitionId(compId);

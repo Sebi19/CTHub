@@ -111,7 +111,7 @@ export default function App() {
 
                     {/* LEFT: Logo & Burger */}
                     <Group>
-                        <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
+                        <Burger opened={opened} onClick={toggle} hiddenFrom="lg" size="sm" />
                         <Group gap="sm" style={{ cursor: 'pointer' }} onClick={() => navigate('/')}>
                             <Image src={logo} h={32} w="auto" fit="contain" />
                             {/* Hide full text on tiny screens */}

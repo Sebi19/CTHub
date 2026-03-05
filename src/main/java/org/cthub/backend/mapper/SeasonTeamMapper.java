@@ -11,7 +11,7 @@ import org.mapstruct.Mapping;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {SeasonMapper.class})
 public interface SeasonTeamMapper {
     @Mapping(target = "profile", source = "teamProfile")
     SeasonTeamDto toTeamDto(SeasonTeam seasonTeam);

@@ -378,7 +378,7 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
                             </Group>
                         );
                     })}
-                    {rgPlace && rgPlace >= 2 && rgPlace <= 4 && (
+                    {rgPlace && rgPlace >= 2 && rgPlace <= 3 && (
                         <Group key={"ROBOT_GAME"} gap="sm" wrap="nowrap">
                             <ThemeIcon size={28} radius="xl" color={categoryConfig["ROBOT_GAME"].color} variant={"subtle"}>
                                 <IconMedal size={16} />

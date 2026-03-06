@@ -156,14 +156,16 @@ public class ScraperService {
                     log.info("📝 Parsing Details for: {}", comp.getName());
                     detailsDto = candidateDto;
                     // Fix qualification URL
-                    if (comp.getType().equals(Competition.CompetitionType.REGIONAL)) {
-                        if (detailsDto.getQualificationUrlPart().equals(finalUrlPart)) {
-                            detailsDto.setQualificationUrlPart(null); // Clear it - we don't want regionals linking to the final
+                    if (finalUrlPart != null && !finalUrlPart.isEmpty()) {
+                        if (comp.getType().equals(Competition.CompetitionType.REGIONAL)) {
+                            if (detailsDto.getQualificationUrlPart().equals(finalUrlPart)) {
+                                detailsDto.setQualificationUrlPart(null); // Clear it - we don't want regionals linking to the final
+                            }
+                        } else if (comp.getType().equals(Competition.CompetitionType.QUALIFICATION)) {
+                            detailsDto.setQualificationUrlPart(finalUrlPart); // Ensure qualification competitions always links to the final
+                        } else {
+                            detailsDto.setQualificationUrlPart(null); // Clear it - only qualification competitions should link to the final
                         }
-                    } else if (comp.getType().equals(Competition.CompetitionType.QUALIFICATION)) {
-                        detailsDto.setQualificationUrlPart(finalUrlPart); // Ensure qualification competitions always links to the final
-                    } else {
-                        detailsDto.setQualificationUrlPart(null); // Clear it - only qualification competitions should link to the final
                     }
                     detailsDto.setContentHash(newDetailHash);
                     dataChanged = true;
@@ -265,7 +267,7 @@ public class ScraperService {
             // 2. If valid, trigger the full parse logic for this competition
             // We temporarily set the URL part on the object so processSingleCompetition uses it
             comp.setResultsUrlPart(urlPart);
-            processSingleCompetition(comp, false, "");
+            processSingleCompetition(comp, false, null);
             return true;
         }
         return false;

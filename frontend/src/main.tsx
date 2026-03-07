@@ -14,6 +14,7 @@ import '@fontsource/geist-sans/600.css';
 import '@fontsource/geist-sans/700.css';
 import '@fontsource/geist-mono/400.css'
 import 'mantine-react-table/styles.css';
+import '@mantine/carousel/styles.css';
 import { Notifications } from "@mantine/notifications";
 import { AuthProvider } from "./features/auth/AuthContext.tsx";
 import { AppRoutes } from "./appRoutes.tsx";

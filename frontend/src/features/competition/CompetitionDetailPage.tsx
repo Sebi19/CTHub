@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import {Link, useParams} from 'react-router-dom';
 import {
     Container,
@@ -37,6 +37,7 @@ import {useDocumentTitle, useSessionStorage} from "@mantine/hooks";
 import {CompetitionPreviousTab} from "./CompetitionPreviousTab.tsx";
 import {getCompetitionTypeColor} from "../../utils/competitionUtils.ts";
 import {getCompetitionLink} from "../../utils/routingUtils.ts";
+import {Carousel, type Embla} from "@mantine/carousel";
 
 export const CompetitionDetailPage = () => {
     const { seasonId, urlPart } = useParams();
@@ -51,24 +52,101 @@ export const CompetitionDetailPage = () => {
         defaultValue: 'teams',
     });
 
+    const [embla, setEmbla] = useState<Embla | null>(null);
+    const isInitialMount = useRef(true);
+    const tabsViewportRef = useRef<HTMLDivElement>(null);
+
+    const availableTabs = useMemo(() => {
+        if (!competition) return [];
+        const tabs = ['teams'];
+        if (competition.results) tabs.push('awards', 'robot-game');
+        if (competition.previousCompetitions?.length) tabs.push('previous-competitions');
+        return tabs;
+    }, [competition]);
+
+    useEffect(() => {
+        if (!embla) return;
+
+        // 1. The core function to sync height
+        const syncHeight = () => {
+            const index = embla.selectedScrollSnap();
+            const activeSlide = embla.slideNodes()[index];
+            const viewport = embla.rootNode();
+
+            if (activeSlide && viewport) {
+                const contentHeight = activeSlide.getBoundingClientRect().height;
+                viewport.style.height = `${contentHeight}px`;
+                viewport.style.transition = 'height 0.3s ease-in-out';
+            }
+        };
+
+        // 2. The Smart Observer: Watches for internal layout changes
+        const observer = new ResizeObserver(() => {
+            // This fires whenever any slide changes size (e.g., toggling Matrix/Cards)
+            syncHeight();
+        });
+
+        // Start observing every slide
+        embla.slideNodes().forEach((slide) => observer.observe(slide));
+
+        // 3. Keep the original 'select' event for tab-syncing and initial height
+        const onSelect = () => {
+            const index = embla.selectedScrollSnap();
+            setActiveTab(availableTabs[index]);
+            syncHeight();
+        };
+
+        embla.on('select', onSelect);
+
+        // Initial set
+        setTimeout(syncHeight, 100);
+
+        return () => {
+            embla.off('select', onSelect);
+            observer.disconnect(); // Clean up the observer
+        };
+    }, [embla, availableTabs, setActiveTab]);
+
+
     useEffect(() => {
         // A tiny timeout ensures Mantine has finished updating the DOM's data-active attribute
+        const index = availableTabs.indexOf(activeTab || 'teams');
+        if (embla && index !== -1) {
+            if (isInitialMount.current) {
+                // 2. On first load: Jump instantly to the saved tab without animation
+                embla.scrollTo(index, true);
+                isInitialMount.current = false;
+            } else {
+                // 3. On user clicks: Animate smoothly!
+                embla.scrollTo(index);
+            }
+        }
         const timeoutId = setTimeout(() => {
             // Find whichever tab Mantine currently marks as active
-            const activeElement = document.querySelector('[role="tab"][data-active="true"]');
+            const activeElement = document.querySelector('[role="tab"][data-active="true"]') as HTMLElement;
+            const viewport = tabsViewportRef.current;
 
-            if (activeElement) {
-                // Slide it smoothly into the center of the scroll area!
-                activeElement.scrollIntoView({
-                    behavior: 'smooth',
-                    inline: 'center',
-                    block: 'nearest'
+            if (activeElement && viewport) {
+                // Get the physical dimensions and positions of both the tab and the scroll container
+                const tabRect = activeElement.getBoundingClientRect();
+                const viewportRect = viewport.getBoundingClientRect();
+
+                // Calculate how far the tab is from the left edge of the visible scroll area
+                const tabLeftRelativeToViewport = tabRect.left - viewportRect.left;
+
+                // Calculate where the tab *should* be to be perfectly centered
+                const centerOffset = (viewportRect.width / 2) - (tabRect.width / 2);
+
+                // Scroll the container horizontally by the difference!
+                viewport.scrollBy({
+                    left: tabLeftRelativeToViewport - centerOffset,
+                    behavior: 'smooth'
                 });
             }
         }, 50);
 
         return () => clearTimeout(timeoutId);
-    }, [activeTab, seasonId, urlPart]); // Runs every time the tab changes
+    }, [activeTab, seasonId, urlPart, embla]); // Runs every time the tab changes
 
     useDocumentTitle(t('app.competition.detail.doc_title', {competitionName: competition?.name || '', seasonId: competition?.season?.id || ''}))
 
@@ -112,7 +190,7 @@ export const CompetitionDetailPage = () => {
                     variant="light"
                     color="red"
                     title={t('app.competition.detail.inactive_title')}
-                    icon={<IconInfoCircle />}
+                    icon={<IconInfoCircle/>}
                     mb="xl"
                 >
                     {t('app.competition.detail.inactive_message')}
@@ -120,8 +198,8 @@ export const CompetitionDetailPage = () => {
             )}
 
             {/* Header Section */}
-                <Group justify="space-between" align="flex-start" mb="sm">
-                <Box flex={{ base: '1 0 100%', xs: '1 1 min-content' }} miw={0}>
+            <Group justify="space-between" align="flex-start" mb="sm">
+                <Box flex={{base: '1 0 100%', xs: '1 1 min-content'}} miw={0}>
                     <Group gap="xs" mb="sm">
                         <Badge color={getCompetitionTypeColor(competition.type!)}>
                             {t(`app.competition.detail.type`, {context: competition.type})}
@@ -135,19 +213,23 @@ export const CompetitionDetailPage = () => {
 
                         {competition.season && competition.season.active === false && (
                             <Badge color="gray" variant="outline">
-                                {t('app.competition.detail.season', {seasonName: competition.season.name, seasonId: competition.season.id})}
+                                {t('app.competition.detail.season', {
+                                    seasonName: competition.season.name,
+                                    seasonId: competition.season.id
+                                })}
                             </Badge>
                         )}
                     </Group>
 
                     <Title order={1} mb="sm">{competition.name}</Title>
 
-                    <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md" mb="sm" w={{ base: '100%', xs: 'fit-content' }}>
+                    <SimpleGrid cols={{base: 1, sm: 2, md: 3}} spacing="md" mb="sm"
+                                w={{base: '100%', xs: 'fit-content'}}>
 
                         {/* Date Card */}
                         <Card withBorder radius="md" p="md" bg="transparent">
                             <Group gap="xs" mb="xs" c="dimmed">
-                                <IconCalendar size={20} />
+                                <IconCalendar size={20}/>
                                 <Text fw={500}>{t('app.competition.detail.date')}</Text>
                             </Group>
                             <Text>{dayjs(competition.date).format('L')}</Text>
@@ -157,10 +239,10 @@ export const CompetitionDetailPage = () => {
                         {competition.location && (
                             <Card withBorder radius="md" p="md" bg="transparent">
                                 <Group gap="xs" mb="xs" c="dimmed">
-                                    <IconMapPin size={20} />
+                                    <IconMapPin size={20}/>
                                     <Text fw={500}>{t('app.competition.detail.location')}</Text>
                                 </Group>
-                                <Text style={{ whiteSpace: 'pre-line' }}>
+                                <Text style={{whiteSpace: 'pre-line'}}>
                                     {cleanFormattedString(competition.location)}
                                 </Text>
                             </Card>
@@ -170,12 +252,13 @@ export const CompetitionDetailPage = () => {
                         {competition.contactInfo && (competition.contactInfo.contactName || competition.contactInfo.contactEmail) && (
                             <Card withBorder radius="md" p="md" bg="transparent">
                                 <Group gap="xs" mb="xs" c="dimmed">
-                                    <IconUser size={20} />
+                                    <IconUser size={20}/>
                                     <Text fw={500}>{t('app.competition.detail.contact')}</Text>
                                 </Group>
                                 <Stack gap={0}>
                                     {competition.contactInfo.contactName && (
-                                        <Text style={{ whiteSpace: 'pre-line' }}>{cleanFormattedString(competition.contactInfo.contactName)}</Text>
+                                        <Text
+                                            style={{whiteSpace: 'pre-line'}}>{cleanFormattedString(competition.contactInfo.contactName)}</Text>
                                     )}
                                     {competition.contactInfo.contactEmail && (
                                         <Anchor href={`mailto:${competition.contactInfo.contactEmail}`} size="sm">
@@ -194,7 +277,7 @@ export const CompetitionDetailPage = () => {
                     pos="sticky"
                     top={80}
                     flex={{base: '1', xs: 'initial'}}
-                    style={{ zIndex: 10}}
+                    style={{zIndex: 10}}
                     mb="sm"
                 >
                     <Button
@@ -226,7 +309,7 @@ export const CompetitionDetailPage = () => {
                             to={getCompetitionLink(competition.nextCompetition)} // Adjust to your actual route!
                             variant="outline"
                             color={getCompetitionTypeColor(competition.nextCompetition.type!)}
-                            leftSection={<IconArrowRight size={16} />}
+                            leftSection={<IconArrowRight size={16}/>}
                         >
                             {competition.nextCompetition.name}
                         </Button>
@@ -234,30 +317,42 @@ export const CompetitionDetailPage = () => {
                 </Stack>
             </Group>
 
+            <style>{`
+                @media (hover: none), (pointer: coarse) {
+                    .mantine-Tabs-tab:hover {
+                        background-color: transparent !important;
+                    }
+                }
+            `}</style>
+
             {/* Tabs Section */}
             <Tabs value={activeTab} onChange={setActiveTab} mt="lg">
-                <ScrollArea type="never">
+                <ScrollArea type="never" viewportRef={tabsViewportRef}>
                     <Tabs.List style={{
                         flexWrap: 'nowrap',
                         width: 'max-content',
                         minWidth: '100%'
                     }}>
-                        <Tabs.Tab value="teams" leftSection={<IconUsers size={16} />} style={{ whiteSpace: 'nowrap' }}>
+                        <Tabs.Tab value="teams"
+                                  leftSection={<IconUsers size={16}/>} style={{whiteSpace: 'nowrap'}}>
                             {t('app.competition.detail.tabs.teams', {teamCount})}
                         </Tabs.Tab>
                         {competition.results && (
                             <>
-                                <Tabs.Tab value="awards" leftSection={<IconTrophy size={16} />} style={{ whiteSpace: 'nowrap' }}>
+                                <Tabs.Tab value="awards" leftSection={<IconTrophy size={16}/>}
+                                          style={{whiteSpace: 'nowrap'}}>
                                     {t('app.competition.detail.tabs.awards')}
                                 </Tabs.Tab>
-                                <Tabs.Tab value="robot-game" leftSection={<IconRobot size={16} />} style={{ whiteSpace: 'nowrap' }}>
+                                <Tabs.Tab value="robot-game" leftSection={<IconRobot size={16}/>}
+                                          style={{whiteSpace: 'nowrap'}}>
                                     {t('app.competition.detail.tabs.robotgame')}
                                 </Tabs.Tab>
                             </>
                         )}
 
                         {competition.previousCompetitions && competition.previousCompetitions.length > 0 && (
-                            <Tabs.Tab value="previous-competitions" leftSection={<IconSitemap size={16} />} style={{ whiteSpace: 'nowrap' }}>
+                            <Tabs.Tab value="previous-competitions" leftSection={<IconSitemap size={16}/>}
+                                      style={{whiteSpace: 'nowrap'}}>
                                 {t('app.competition.detail.tabs.previous_competitions', {context: competition.type})}
                             </Tabs.Tab>
                         )}
@@ -265,22 +360,37 @@ export const CompetitionDetailPage = () => {
                 </ScrollArea>
 
                 {/* Tab Panels */}
-                <Tabs.Panel value="teams" pt="md">
-                    <CompetitionTeamsTab competition={competition} />
-                </Tabs.Panel>
-
-                <Tabs.Panel value="awards" pt="md">
-                    <CompetitionAwardsTab competition={competition}></CompetitionAwardsTab>
-                </Tabs.Panel>
-
-                <Tabs.Panel value="robot-game" pt="md">
-                    <CompetitionRobotGameTab teams={competition.registeredTeams ?? []} scores={competition.results?.robotGameEntries ?? []}></CompetitionRobotGameTab>
-                </Tabs.Panel>
-                {competition.previousCompetitions && competition.previousCompetitions.length > 0 && (
-                    <Tabs.Panel value="previous-competitions" pt="md">
-                        <CompetitionPreviousTab competition={competition}></CompetitionPreviousTab>
-                    </Tabs.Panel>
-                )}
+                <Carousel
+                    getEmblaApi={setEmbla}
+                    withIndicators={false}
+                    withControls={false}
+                    draggable={true}
+                    align={'start'}
+                    containScroll={'keepSnaps'}
+                    mt={"md"}
+                    slideGap="lg"
+                    styles={{container: {alignItems: 'flex-start'}}}
+                >
+                    <Carousel.Slide miw={0}>
+                        <CompetitionTeamsTab competition={competition}/>
+                    </Carousel.Slide>
+                    {competition.results && (
+                        <Carousel.Slide miw={0}>
+                            <CompetitionAwardsTab competition={competition}></CompetitionAwardsTab>
+                        </Carousel.Slide>
+                    )}
+                    {competition.results && (
+                        <Carousel.Slide miw={0}>
+                            <CompetitionRobotGameTab teams={competition.registeredTeams ?? []}
+                                                     scores={competition.results?.robotGameEntries ?? []}></CompetitionRobotGameTab>
+                        </Carousel.Slide>
+                    )}
+                    {competition.previousCompetitions && competition.previousCompetitions.length > 0 && (
+                        <Carousel.Slide miw={0}>
+                            <CompetitionPreviousTab competition={competition}></CompetitionPreviousTab>
+                        </Carousel.Slide>
+                    )}
+                </Carousel>
             </Tabs>
         </Container>
     );

@@ -159,7 +159,6 @@ export const RobotGameLeaderboard = () => {
 
         mantinePaginationProps: {
             rowsPerPageOptions: ['5', '10', '25', '50', '100', { value: String(MAX_ROWS), label: t('app.overall_robotgame.table.all') }] as unknown as string[],
-            hideWithOnePage: true,
         },
 
         initialState: {

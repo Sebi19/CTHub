@@ -1,8 +1,10 @@
 import {useEffect, useMemo, useRef} from 'react';
 import { MantineReactTable, useMantineReactTable, type MRT_ColumnDef } from 'mantine-react-table';
-import {Text, Stack, ThemeIcon, Box} from '@mantine/core';
+import {Text, Stack, ThemeIcon, Box, Anchor} from '@mantine/core';
 import { IconTrophy, IconMedal } from '@tabler/icons-react';
 import { type CompetitionRobotGameEntryDto, type SeasonTeamDto } from '../../api/generated';
+import {Link} from "react-router-dom";
+import {getTeamLink} from "../../utils/routingUtils.ts";
 
 interface Props {
     scores: CompetitionRobotGameEntryDto[];
@@ -11,6 +13,7 @@ interface Props {
 
 // We create a combined type for the table row
 type TableRowData = CompetitionRobotGameEntryDto & {
+    team: SeasonTeamDto | null;
     teamName: string;
     fllId: number | string;
 };
@@ -24,6 +27,7 @@ export const CompetitionRobotGameTab = ({ scores, teams }: Props) => {
             const team = teams.find(t => t.id === score.teamId);
             return {
                 ...score,
+                team: team || null, // Keep the full team object if we need it later
                 teamName: team?.name || 'Unbekanntes Team',
                 fllId: team?.fllId || '-',
             };
@@ -61,7 +65,15 @@ export const CompetitionRobotGameTab = ({ scores, teams }: Props) => {
                 accessorFn: (row) => `${row.teamName} ${row.fllId}`, // For sorting/searching
                 Cell: ({ row }) => (
                     <Stack gap={0}>
-                        <Text fw={600}>{row.original.teamName}</Text>
+                        <Anchor
+                            component={Link}
+                            to={getTeamLink(row.original.team!)}
+                            c="inherit" // Inherit text color so it doesn't look like a standard blue link
+                            underline="hover" // Only underline when they hover exactly over the text
+                            fw={600}
+                        >
+                            {row.original.teamName}
+                        </Anchor>
                         <Text size="xs" c="dimmed">[{row.original.fllId}]</Text>
                     </Stack>
                 ),

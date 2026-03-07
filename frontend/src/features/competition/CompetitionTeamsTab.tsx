@@ -9,7 +9,7 @@ import {
     ActionIcon,
     Menu,
     Center,
-    SegmentedControl, Table, Box, TooltipGroup
+    SegmentedControl, Table, Box, TooltipGroup, Anchor
 } from '@mantine/core';
 import { type CompetitionDetailDto, type SeasonTeamDto } from '../../api/generated';
 import {
@@ -22,7 +22,7 @@ import {
 } from '@tabler/icons-react';
 import {useTranslation} from "react-i18next";
 import {useState} from "react";
-import {useNavigate} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import {getTeamLink} from "../../utils/routingUtils.ts";
 
 interface Props {
@@ -128,7 +128,8 @@ export const CompetitionTeamsTab = ({ competition }: Props) => {
                                 padding="lg"
                                 radius="md"
                                 withBorder
-                                onClick={() => navigate(getTeamLink(team))} // <-- The Magic
+                                component={Link}
+                                to={getTeamLink(team)}
                                 style={{
                                     cursor: 'pointer',
                                     transition: 'transform 0.2s ease, box-shadow 0.2s ease'
@@ -218,7 +219,17 @@ export const CompetitionTeamsTab = ({ competition }: Props) => {
                                                 </Tooltip>
                                             </Table.Td>
                                         )}
-                                        <Table.Td><Text fw={600}>{team.name}</Text></Table.Td>
+                                        <Table.Td>
+                                            <Anchor
+                                                component={Link}
+                                                to={getTeamLink(team)}
+                                                c="inherit" // Inherit text color so it doesn't look like a standard blue link
+                                                underline="hover" // Only underline when they hover exactly over the text
+                                                fw={600}
+                                            >
+                                                {team.name}
+                                            </Anchor>
+                                        </Table.Td>
                                         <Table.Td>{team.institution}</Table.Td>
                                         <Table.Td>{team.city}</Table.Td>
                                         <Table.Td>

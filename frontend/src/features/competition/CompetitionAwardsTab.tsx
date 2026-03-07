@@ -10,7 +10,7 @@ import {
     Divider,
     Box,
     Center,
-    Tooltip, TooltipGroup, SegmentedControl, Table
+    Tooltip, TooltipGroup, SegmentedControl, Table, Anchor
 } from '@mantine/core';
 import {
     IconTrophy,
@@ -28,7 +28,7 @@ import {
     IconSettings, IconLayoutBoard
 } from '@tabler/icons-react';
 import {
-    type CompetitionDetailDto,
+    type CompetitionDetailDto, type CompetitionNominationDto,
     type CompetitionPlaceDto,
     type SeasonTeamDto
 } from '../../api/generated';
@@ -49,6 +49,10 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
     const teams = competition.registeredTeams || [];
     const [viewMode, setViewMode] = useState<ViewMode>('categories');
     const navigate = useNavigate();
+
+    const relevantCategories = ['RESEARCH', 'ROBOT_DESIGN', 'CORE_VALUES'];
+    const categoryScores = {'RESEARCH': 3, 'ROBOT_DESIGN': 2, 'CORE_VALUES': 1, 'ROBOT_GAME': 0.5};
+
 
     // Helper: Safely get team data
     const getTeam = (teamId?: number) => teams.find(t => t.id === teamId);
@@ -117,7 +121,18 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
                             <ThemeIcon color={config.color} variant={"outline"} radius="xl" size={28}>
                                 <IconTrophy size={16}/>
                             </ThemeIcon>
-                            <Text fw={600}>{winner.name} <Text span c="dimmed" size="sm" fw={400}>[{winner.fllId}]</Text></Text>
+                            <Group gap={4} align={"baseline"}>
+                                <Anchor
+                                    component={Link}
+                                    to={getTeamLink(winner)}
+                                    c="inherit"
+                                    underline="hover"
+                                    fw={600}
+                                >
+                                    {winner.name}
+                                </Anchor>
+                                <Text span c="dimmed" size="sm" fw={400}>[{winner.fllId}]</Text>
+                            </Group>
                         </Group>
                     </Box>
                 ) : (
@@ -134,9 +149,19 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
                                     <ThemeIcon color={config.color} variant={"subtle"} radius="xl">
                                         <IconStar size={16}/>
                                     </ThemeIcon>
-                                    <Text key={nom.id} size="sm">
-                                        {nom.name} <Text span c="dimmed" size="xs">[{nom.fllId}]</Text>
-                                    </Text>
+                                    <Group key={nom.id} gap={4} align="baseline">
+                                        <Anchor
+                                            component={Link}
+                                            to={getTeamLink(nom)}
+                                            c="inherit"
+                                            underline="hover"
+                                            size={'sm'}
+                                        >
+                                            {nom.name}
+                                        </Anchor>
+                                        <Text span c="dimmed" size="xs">[{nom.fllId}]</Text>
+                                    </Group>
+
                                 </Group>
 
                             ))}
@@ -156,9 +181,18 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
                                             2
                                         </Badge>
                                     </Tooltip>
-                                    <Text size="sm">
-                                        {rgSecondPlace?.name} <Text span c="dimmed" size="xs">[{rgSecondPlace?.fllId}]</Text>
-                                    </Text>
+                                    <Group gap={4} align="baseline">
+                                        <Anchor
+                                            component={Link}
+                                            to={getTeamLink(rgSecondPlace)}
+                                            c="inherit"
+                                            underline="hover"
+                                            size={'sm'}
+                                        >
+                                            {rgSecondPlace.name}
+                                        </Anchor>
+                                        <Text span c="dimmed" size="xs">[{rgSecondPlace.fllId}]</Text>
+                                    </Group>
                                 </Group>
                             )}
                             {rgThirdPlace && (
@@ -168,9 +202,18 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
                                             3
                                         </Badge>
                                     </Tooltip>
-                                    <Text size="sm">
-                                        {rgThirdPlace?.name} <Text span c="dimmed" size="xs">[{rgSecondPlace?.fllId}]</Text>
-                                    </Text>
+                                    <Group gap={4} align="baseline">
+                                        <Anchor
+                                            component={Link}
+                                            to={getTeamLink(rgThirdPlace)}
+                                            c="inherit"
+                                            underline="hover"
+                                            size={'sm'}
+                                        >
+                                            {rgThirdPlace.name}
+                                        </Anchor>
+                                        <Text span c="dimmed" size="xs">[{rgThirdPlace.fllId}]</Text>
+                                    </Group>
                                 </Group>
                             )}
                         </Stack>
@@ -193,15 +236,40 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
             const placeB = results?.places?.find(p => p.teamId === b.id)?.place || 999;
             if (placeA !== placeB) return placeA - placeB;
 
-            // Secondary sort: Number of Wins
-            const winsA = results?.nominations?.filter(n => n.teamId === a.id && n.winner).length || 0;
-            const winsB = results?.nominations?.filter(n => n.teamId === b.id && n.winner).length || 0;
+            // #2 sort: Number of Nominations in key categories
+            const nomsA = results?.nominations?.filter(n => n.teamId === a.id && relevantCategories.includes(n.category!)).length || 0;
+            const nomsB = results?.nominations?.filter(n => n.teamId === b.id && relevantCategories.includes(n.category!)).length || 0;
+            if (nomsA !== nomsB) return nomsB - nomsA;
+
+            // #3 sort: Number of Wins in key categories
+            const winsA = results?.nominations?.filter(n => n.teamId === a.id && relevantCategories.includes(n.category!) && n.winner).length || 0;
+            const winsB = results?.nominations?.filter(n => n.teamId === b.id && relevantCategories.includes(n.category!) && n.winner).length || 0;
             if (winsA !== winsB) return winsB - winsA;
 
-            // Tertiary sort: Number of Nominations
-            const nomsA = results?.nominations?.filter(n => n.teamId === a.id && !n.winner).length || 0;
-            const nomsB = results?.nominations?.filter(n => n.teamId === b.id && !n.winner).length || 0;
-            return nomsB - nomsA;
+            // #4 sort: Robot Game Rank (only top 3 matter, and lower is better)
+            const rgRankA = results?.robotGameEntries?.find(e => e.teamId === a.id && e.rank && e.rank <= 3)?.rank || 999;
+            const rgRankB = results?.robotGameEntries?.find(e => e.teamId === b.id && e.rank && e.rank <= 3)?.rank || 999;
+            if (rgRankA !== rgRankB) return rgRankA - rgRankB;
+
+            // #5 sort: Coaching Award
+            const coachingA = results?.nominations?.find(n => n.teamId === a.id && n.category === 'COACHING' && n.winner) ? 1 : 0;
+            const coachingB = results?.nominations?.find(n => n.teamId === b.id && n.category === 'COACHING' && n.winner) ? 1 : 0;
+            if (coachingA !== coachingB) return coachingB - coachingA;
+
+            // #6 sort: nomination score
+            const scoreA = results?.nominations?.filter(n => n.teamId === a.id).reduce((sum, n) => sum + (categoryScores[n.category as keyof typeof categoryScores] || 0), 0) || 0;
+            const scoreB = results?.nominations?.filter(n => n.teamId === b.id).reduce((sum, n) => sum + (categoryScores[n.category as keyof typeof categoryScores] || 0), 0) || 0;
+            if (scoreA !== scoreB) return scoreB - scoreA;
+
+            // #7 sort: winner scores awards only
+            const winnerScoreA = results?.nominations?.filter(n => n.teamId === a.id && n.winner).reduce((sum, n) => sum + (categoryScores[n.category as keyof typeof categoryScores] || 0), 0) || 0;
+            const winnerScoreB = results?.nominations?.filter(n => n.teamId === b.id && n.winner).reduce((sum, n) => sum + (categoryScores[n.category as keyof typeof categoryScores] || 0), 0) || 0;
+            if (winnerScoreA !== winnerScoreB) return winnerScoreB - winnerScoreA;
+
+            // Final tiebreaker: FLL ID (lower is better)
+            const fllA = parseInt(a.fllId as any) || 9999;
+            const fllB = parseInt(b.fllId as any) || 9999;
+            return fllA - fllB;
         });
     }, [teams, results]);
 
@@ -307,9 +375,59 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
 
     const TeamAwardCard = ({ team }: { team: SeasonTeamDto }) => {
         const { place, awards } = getTeamAchievements(team.id!);
-        const winnerAwards = awards.filter(a => a.winner);
-        const nominations = awards.filter(a => !a.winner);
+
+        const relevantNominations = awards.filter(a => relevantCategories.includes(a.category!) || a.category === 'ROBOT_GAME').sort(
+            (a, b) => {
+                const winnerA = a.winner && a.category !== "ROBOT_GAME" ? 1 : 0;
+                const winnerB = b.winner && b.category !== "ROBOT_GAME" ? 1 : 0;
+                if (winnerA !== winnerB) return winnerB - winnerA; // Winners first
+
+                const scoreA = categoryScores[a.category as keyof typeof categoryScores] || 0;
+                const scoreB = categoryScores[b.category as keyof typeof categoryScores] || 0;
+                return scoreB - scoreA; // Higher score first
+            }
+        );
+
         const rgPlace = results?.robotGameEntries?.find(e => e.teamId === team.id)?.rank;
+
+        const coachingAward = awards.find(a => a.winner && a.category === 'COACHING');
+
+        // extract rendering of group for award & nomination
+        const renderAwardGroup = (nomination: CompetitionNominationDto) => {
+            const categoryName = nomination.category!;
+            const winner = nomination.winner;
+            const icon = winner ? <IconTrophy size={16} /> : <IconStar size={16} />;
+            const variant = winner ? "outline" : "subtle";
+            const translation = winner ? t("app.competition.awards.winner") : t("app.competition.awards.nominated");
+            return renderTeamCardItem(categoryName, icon, variant, translation);
+        }
+
+        const renderRobotGamePlace = (rgPlace: number) => {
+            const categoryName = "ROBOT_GAME";
+            const icon = <IconMedal size={16} />;
+            const variant = "subtle";
+            const translation = t("app.competition.awards.place", { count: rgPlace, ordinal: true })
+            return renderTeamCardItem(categoryName, icon, variant, translation);
+        }
+
+        const renderTeamCardItem = (categoryName: string, icon: React.ReactNode, variant: string, translation: string) => {
+            const config = categoryConfig[categoryName];
+            return (
+                <Group key={categoryName} gap="sm" wrap="nowrap">
+                    <ThemeIcon size={28} radius="xl" color={config.color} variant={variant}>
+                        {icon}
+                    </ThemeIcon>
+                    <Box>
+                        <Text size="sm" fw={600} lh={1.2} c={config.color}>
+                            {t('app.competition.awards.category', {context: categoryName})}
+                        </Text>
+                        <Text size="xs" c={'dimmed'} fw={700}>
+                            {translation}
+                        </Text>
+                    </Box>
+                </Group>
+            );
+        }
 
         return (
             <Card
@@ -317,7 +435,8 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
                 radius="md"
                 p="md"
                 shadow="sm"
-                onClick={() => navigate(getTeamLink(team))}
+                component={Link}
+                to={getTeamLink(team)}
                 style={{ cursor: 'pointer', transition: 'transform 0.2s ease, box-shadow 0.2s ease' }}
                 onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'translateY(-2px)';
@@ -342,56 +461,14 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
                 <Divider my="sm" variant="dashed" />
 
                 <Stack gap="xs">
-                    {winnerAwards.map(nom => {
-                        const config = categoryConfig[nom.category!];
-                        return (
-                            <Group key={nom.category} gap="sm" wrap="nowrap">
-                                <ThemeIcon size={28} radius="xl" color={config.color} variant="outline">
-                                    <IconTrophy size={16} />
-                                </ThemeIcon>
-                                <Box>
-                                    <Text size="sm" fw={600} lh={1.2} c={config.color}>
-                                        {t('app.competition.awards.category', {context: nom.category})}
-                                    </Text>
-                                    <Text size="xs" c={'dimmed'} fw={700}>
-                                        {t("app.competition.awards.winner")}
-                                    </Text>
-                                </Box>
-                            </Group>
-                        );
-                    })}
-                    {nominations.map(nom => {
-                        const config = categoryConfig[nom.category!];
-                        return (
-                            <Group key={nom.category} gap="sm" wrap="nowrap">
-                                <ThemeIcon size={28} radius="xl" color={config.color} variant="subtle">
-                                     <IconStar size={16} />
-                                </ThemeIcon>
-                                <Box>
-                                    <Text size="sm" fw={600} lh={1.2} c={config.color}>
-                                        {t('app.competition.awards.category', {context: nom.category})}
-                                    </Text>
-                                    <Text size="xs" c={ 'dimmed'}  fw={700}>
-                                        {t("app.competition.awards.nominated")}
-                                    </Text>
-                                </Box>
-                            </Group>
-                        );
+                    {relevantNominations.map(nom => {
+                        return renderAwardGroup(nom);
                     })}
                     {rgPlace && rgPlace >= 2 && rgPlace <= 3 && (
-                        <Group key={"ROBOT_GAME"} gap="sm" wrap="nowrap">
-                            <ThemeIcon size={28} radius="xl" color={categoryConfig["ROBOT_GAME"].color} variant={"subtle"}>
-                                <IconMedal size={16} />
-                            </ThemeIcon>
-                            <Box>
-                                <Text size="sm" fw={600} lh={1.2} c={categoryConfig["ROBOT_GAME"].color}>
-                                    {t('app.competition.awards.category', {context: "ROBOT_GAME"})}
-                                </Text>
-                                <Text size="xs" c={'dimmed'} fw={700}>
-                                    {t("app.competition.awards.place", { count: rgPlace, ordinal: true })}
-                                </Text>
-                            </Box>
-                        </Group>
+                        renderRobotGamePlace(rgPlace)
+                    )}
+                    {coachingAward && (
+                        renderAwardGroup(coachingAward)
                     )}
                 </Stack>
             </Card>
@@ -494,18 +571,25 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
                                             {renderTablePlaceCell(p, "compact", 22)}
 
                                             {/* 2. Team Info & Badge Grouped Tightly */}
-                                            <Box style={{ flex: 1, minWidth: 0 }}> {/* minWidth: 0 prevents long text from breaking the card layout on mobile */}
-                                                <Box lh={1.4} mb={2}>
-                                                    {/* component="span" forces the text to flow like words in a paragraph */}
-                                                    <Text component="span" fw={600} size="md" mr="sm">
-                                                        {team.name}
-                                                    </Text>
-                                                    {/* display: 'inline-block' allows the badge to act like a giant word that can wrap safely to the next line */}
-                                                    <span style={{ display: 'inline-block', verticalAlign: 'middle' }}>
-                                                        <AdvancingBadge advancing={p.advancing} />
-                                                    </span>
-                                                </Box>
-                                                <Text size="sm" c="dimmed">Team #{team.fllId}</Text>
+                                            <Box style={{ flex: 1, minWidth: 0 }}>
+                                                {/* Line 1: Team Name (Forced to act as a block, taking its own line) */}
+                                                <Anchor
+                                                    component={Link}
+                                                    to={getTeamLink(team)}
+                                                    c="inherit"
+                                                    underline="hover"
+                                                    fw={600}
+                                                    size="md"
+                                                    style={{ display: 'block', lineHeight: 1.4, marginBottom: 4 }}
+                                                >
+                                                    {team.name}
+                                                </Anchor>
+
+                                                {/* Line 2: ID and Badge paired together */}
+                                                <Group gap="xs" align="center">
+                                                    <Text size="sm" c="dimmed">[{team.fllId}]</Text>
+                                                    <AdvancingBadge advancing={p.advancing} />
+                                                </Group>
                                             </Box>
                                         </Group>
                                     );
@@ -518,8 +602,8 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
                         <Title order={3} mb="md">{t("app.competition.awards.title_awards")}</Title>
                         <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
                             <AwardCard category="RESEARCH" />
-                            <AwardCard category="CORE_VALUES" />
                             <AwardCard category="ROBOT_DESIGN" />
+                            <AwardCard category="CORE_VALUES" />
                             <AwardCard category="ROBOT_GAME" />
                             <AwardCard category="COACHING" />
                         </SimpleGrid>
@@ -548,8 +632,8 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
                                     <Table.Th>{t("app.competition.awards.table.header_team")}</Table.Th>
                                     <Table.Th ta="center">{t("app.competition.awards.table.header_place")}</Table.Th>
                                     <Table.Th ta="center">{t("app.competition.awards.category", {context: "RESEARCH"})}</Table.Th>
-                                    <Table.Th ta="center">{t("app.competition.awards.category", {context: "CORE_VALUES"})}</Table.Th>
                                     <Table.Th ta="center">{t("app.competition.awards.category", {context: "ROBOT_DESIGN"})}</Table.Th>
+                                    <Table.Th ta="center">{t("app.competition.awards.category", {context: "CORE_VALUES"})}</Table.Th>
                                     <Table.Th ta="center">{t("app.competition.awards.category", {context: "ROBOT_GAME"})}</Table.Th>
                                     <Table.Th ta="center">{t("app.competition.awards.category", {context: "COACHING"})}</Table.Th>
                                 </Table.Tr>
@@ -565,7 +649,16 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
                                             style={{ cursor: 'pointer' }}
                                         >
                                             <Table.Td>
-                                                <Text fw={600}>{team.name}</Text>
+                                                <Anchor
+                                                    component={Link}
+                                                    to={getTeamLink(team)}
+                                                    c="inherit" // Inherit text color so it doesn't look like a standard blue link
+                                                    underline="hover" // Only underline when they hover exactly over the text
+                                                    fw={600}
+                                                >
+                                                    {team.name}
+                                                </Anchor>
+
                                                 <Group gap="xs" align="center">
                                                     <Text size="xs" c="dimmed">[{team.fllId}]</Text>
                                                     <AdvancingBadge advancing={placeObj?.advancing} size="xs" />
@@ -579,8 +672,8 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
                                             </Table.Td>
 
                                             <Table.Td><Center>{renderTableCell(team.id!, 'RESEARCH')}</Center></Table.Td>
-                                            <Table.Td><Center>{renderTableCell(team.id!, 'CORE_VALUES')}</Center></Table.Td>
                                             <Table.Td><Center>{renderTableCell(team.id!, 'ROBOT_DESIGN')}</Center></Table.Td>
+                                            <Table.Td><Center>{renderTableCell(team.id!, 'CORE_VALUES')}</Center></Table.Td>
                                             <Table.Td><Center>{renderTableCell(team.id!, 'ROBOT_GAME')}</Center></Table.Td>
                                             <Table.Td><Center>{renderTableCell(team.id!, 'COACHING')}</Center></Table.Td>
                                         </Table.Tr>

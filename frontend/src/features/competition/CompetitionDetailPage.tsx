@@ -364,11 +364,11 @@ export const CompetitionDetailPage = () => {
                     getEmblaApi={setEmbla}
                     withIndicators={false}
                     withControls={false}
-                    draggable={true}
                     align={'start'}
                     containScroll={'keepSnaps'}
                     mt={"md"}
                     slideGap="lg"
+                    draggable={typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches}
                     styles={{container: {alignItems: 'flex-start'}}}
                 >
                     <Carousel.Slide miw={0}>

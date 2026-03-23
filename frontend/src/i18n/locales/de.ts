@@ -2,6 +2,14 @@ import type {DeepReplace} from "../utils.ts";
 
 export const de = {
     app: {
+        common: {
+            team: {
+                avatar: {
+                    noImage: "Kein Bild verfügbar",
+                    noProfile: "Kein Profil verfügbar",
+                }
+            }
+        },
         header: {
             leaderboard: "Rangliste",
             login: "Anmelden",
@@ -56,6 +64,7 @@ export const de = {
         competition: {
             detail: {
                 doc_title: "{{competitionName}} - {{seasonId}} | CTH",
+                back: "Zurück",
                 error_loading: "Fehler beim Laden der Wettbewerbsdetails",
                 inactive_title: "Wettbewerb inaktiv",
                 inactive_message: "Dieser Wettbewerb ist derzeit nicht aktiv. Es könnte sein dass er abgesagt wurde oder sich die URL geändert hat. Überprüfen sie die offizielle Website für weitere Informationen.",
@@ -71,7 +80,7 @@ export const de = {
                     previous_competitions_QUALIFICATION: "Regionalwettbewerbe",
                     previous_competitions_FINAL: "Qualifikationswettbewerbe",
                 },
-                season: "{{seasonName}} - {{seasonId}}",
+                season: "{{seasonId}} ({{seasonName}})",
                 official_link: "Offizielle Wettbewerbsseite",
                 date: "Datum",
                 location: "Austragungsort",
@@ -144,6 +153,9 @@ export const de = {
                 place_ordinal_few: "{{count}}. Platz",
                 place_ordinal_other: "{{count}}. Platz",
             },
+            robot_game: {
+                empty: "Es sind noch keine Ergebnisse für diesen Wettbewerb verfügbar.",
+            },
             previous: {
                 empty: "Es konnten keine vorherigen Wettbewerbe gefunden werden.",
                 empty_QUALIFICATION: "Es konnten keine zugehörigen Regionalwettbewerbe gefunden werden.",
@@ -156,7 +168,59 @@ export const de = {
                     name: "Name",
                     date: "Datum",
                     type: "Typ",
+                    country: "Land",
                 }
+            }
+        },
+        season_team: {
+            detail: {
+                doc_title: "{{teamName}} - {{seasonId}} | CTH",
+                back: "Zurück",
+                results_not_available: "Noch keine Ergebnisse vorhanden.",
+                season_journey: "Saisonverlauf",
+                no_competitions: "Es konnten keine Wettbewerbe für diese Saison gefunden werden.",
+                awards: {
+                    title: "Pokale und Nominierungen",
+                    none: "Keine Pokale oder Nominierungen für diesen Wettbewerb.",
+                },
+                robot_game: {
+                    title: "Robot-Game",
+                    none: "Keine Robot-Game Ergebnisse für diesen Wettbewerb.",
+                    best_pr: "Beste Vorrunde",
+                    points: "{{round}}: {{points}}",
+                    points_empty: "{{round}}: -",
+                    playoff_rank: "Playoff-Rang:",
+                    prelim_rank: "Vorrunden-Rang:",
+                    playoff_points: "{{round}}: {{points}}",
+                    playoff_points_final: "{{round}}: {{points}}+{{additionalPoints}}",
+                    pr1: "VR1",
+                    pr2: "VR2",
+                    pr3: "VR3",
+                    r16: "AF",
+                    qf: "VF",
+                    sf: "HF",
+                    f: "F",
+                    no_playoffs: "Nicht für Playoffs qualifiziert",
+                    points_tooltip: {
+                        pr1: "Vorrunde 1",
+                        pr2: "Vorrunde 2",
+                        pr3: "Vorrunde 3",
+                        r16: "Achtelfinale",
+                        qf: "Viertelfinale",
+                        sf: "Halbfinale",
+                        f: "Finale",
+                    }
+                }
+            }
+        },
+        team_profile: {
+            detail: {
+                doc_title: "{{profileName}} | CTH",
+                back: "Zurück",
+                profile_tab: "Profil",
+                seasons_on_record_one: "{{count}} Saison verknüpft",
+                seasons_on_record_other: "{{count}} Saisons verknüpft",
+                competition_name_change: "Angetreten als <bold>{{seasonName}}</bold>",
             }
         }
     },

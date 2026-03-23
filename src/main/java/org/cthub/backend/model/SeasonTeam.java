@@ -1,6 +1,7 @@
 package org.cthub.backend.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -23,22 +24,29 @@ public class SeasonTeam {
     @SequenceGenerator(name = "team_seq_gen", sequenceName = "team_seq")
     private Long id;
 
+    @NotNull
     @ManyToOne(optional = false)
     private Season season;
 
+    @NotNull
+    @Column(nullable = false)
     private boolean active;
 
+    @NotNull
     @Column(nullable = false)
     private String fllId; // "1011" - Not unique globally!
 
+    @NotNull
+    @Column(nullable = false)
     private String name; // Name used IN THIS SEASON
     private String institution;
     private String city;
     private String country; // "AT"
 
-    // Link to the "Brand". Null when first scraped.
-    @ManyToOne
-    private TeamProfile teamProfile;
+    @OneToOne(mappedBy = "seasonTeam", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private SeasonTeamProfile seasonTeamProfile;
 
     @ElementCollection
     @Builder.Default

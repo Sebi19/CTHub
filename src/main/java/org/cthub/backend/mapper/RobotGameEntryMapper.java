@@ -8,10 +8,9 @@ import org.mapstruct.Mapping;
 import java.util.ArrayList;
 import java.util.List;
 
-@Mapper(componentModel = "spring", uses = {CompetitionMapper.class})
+@Mapper(componentModel = "spring", uses = {CompetitionMapper.class, SeasonTeamMapper.class})
 public interface RobotGameEntryMapper {
-    @Mapping(target = "teamName", source = "result.seasonTeam.name")
-    @Mapping(target = "teamId", source = "result.seasonTeam.fllId")
+    @Mapping(target = "team", source = "result.seasonTeam")
     @Mapping(target = "competition", source = "result.competition")
     @Mapping(target = "country", source = "result.seasonTeam.country")
     @Mapping(target = "bestScore", expression = "java(calculateBestScore(result))")

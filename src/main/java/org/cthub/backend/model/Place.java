@@ -1,6 +1,7 @@
 package org.cthub.backend.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Entity
@@ -14,13 +15,19 @@ public class Place {
     @SequenceGenerator(name = "place_seq_gen", sequenceName = "place_seq")
     private Long id;
 
+    @NotNull
     @ManyToOne(optional = false)
     private SeasonTeam seasonTeam;
 
+    @NotNull
     @ManyToOne(optional = false)
     private Competition competition;
 
+    @NotNull
+    @Column(nullable = false)
     private int place; // 1st, 2nd, 3rd overall
 
+    @NotNull
+    @Column(nullable = false)
     private boolean advancing;
 }

@@ -1,41 +1,33 @@
 import {
-    SimpleGrid,
-    Card,
-    Text,
-    Title,
-    Group,
-    Stack,
+    Anchor,
     Badge,
-    ThemeIcon,
-    Divider,
     Box,
+    Card,
     Center,
-    Tooltip, TooltipGroup, SegmentedControl, Table, Anchor
+    Divider,
+    Group,
+    SegmentedControl,
+    SimpleGrid,
+    Stack,
+    Table,
+    Text,
+    ThemeIcon,
+    Title,
+    Tooltip,
+    TooltipGroup
 } from '@mantine/core';
-import {
-    IconTrophy,
-    IconMedal,
-    IconArrowUpRight,
-    IconBulb,
-    IconRobot,
-    IconUser,
-    IconLayoutGrid,
-    IconList,
-    IconStar,
-    IconHash,
-    IconUsers,
-    IconHeartHandshake,
-    IconSettings, IconLayoutBoard
-} from '@tabler/icons-react';
-import {
-    type CompetitionDetailDto, type CompetitionNominationDto,
-    type CompetitionPlaceDto,
-    type SeasonTeamDto
-} from '../../api/generated';
+import {IconLayoutBoard, IconLayoutGrid, IconList, IconMedal, IconStar, IconTrophy} from '@tabler/icons-react';
+import {CompetitionAwardCategoryDto, type CompetitionDetailDto, type SeasonTeamDto} from '../../api/generated';
 import {Link, useNavigate} from "react-router-dom";
-import React, {useMemo, useState} from "react";
+import {useMemo} from "react";
 import {useTranslation} from "react-i18next";
-import {getCompetitionLink, getTeamLink} from "../../utils/routingUtils.ts";
+import {getTeamLink} from "../../utils/routingUtils.ts";
+import {PlaceBadge} from "../common/team/PlaceBadge.tsx";
+import {useSessionStorage} from "@mantine/hooks";
+import {TeamAchievementsStack} from "../common/team/TeamAchievementsStack.tsx";
+import {getCategoryConfig, getTeamAchievements} from "../../utils/competitionUtils.ts";
+import {AdvancingBadge} from "../common/team/AdvancingBadge.tsx";
+import {SeasonTeamAvatar} from "../common/team/avatar/SeasonTeamAvatar.tsx";
 
 interface Props {
     competition: CompetitionDetailDto
@@ -46,59 +38,52 @@ type ViewMode = 'categories' | 'teams' | 'matrix';
 export const CompetitionAwardsTab = ({ competition }: Props) => {
     const { t } = useTranslation();
     const results = competition.results;
-    const teams = competition.registeredTeams || [];
-    const [viewMode, setViewMode] = useState<ViewMode>('categories');
+    const teams = competition.registeredTeams;
     const navigate = useNavigate();
 
-    const relevantCategories = ['RESEARCH', 'ROBOT_DESIGN', 'CORE_VALUES'];
+    if (!results) {
+        return <Text c="dimmed" ta="center" py="xl">{t("app.competition.awards.empty")}</Text>;
+    }
+
+    const [viewMode, setViewMode] = useSessionStorage<string | undefined>({
+        key: `competition-awards-view-${competition.season.id}-${competition.urlPart}`,
+        defaultValue: 'categories',
+    });
+
+
+    const relevantCategories = ['RESEARCH', 'ROBOT_DESIGN', 'CORE_VALUES', 'CHAMPION'];
     const categoryScores = {'RESEARCH': 3, 'ROBOT_DESIGN': 2, 'CORE_VALUES': 1, 'ROBOT_GAME': 0.5};
 
 
     // Helper: Safely get team data
-    const getTeam = (teamId?: number) => teams.find(t => t.id === teamId);
+    const getTeam = (teamId: number) => teams.find(t => t.id === teamId);
 
     // Helper: Get winner for a specific category
     const getWinner = (category: string) => {
-        const nom = results?.nominations?.find(n => n.category === category && n.winner);
+        const nom = results.nominations.find(n => n.category === category && n.winner);
         return nom ? getTeam(nom.teamId) : null;
-    };
-
-    const getTeamAchievements = (teamId: number) => {
-        const place = results?.places?.find(p => p.teamId === teamId);
-        const awards = results?.nominations?.filter(n => n.teamId === teamId) || [];
-        return { place, awards };
     };
 
     // Helper: Get the other nominees (who didn't win) for a category
     const getNominees = (category: string) => {
-        return results?.nominations
-            ?.filter(n => n.category === category && !n.winner)
+        return results.nominations
+            .filter(n => n.category === category && !n.winner)
             .map(n => getTeam(n.teamId))
             .filter(Boolean) as SeasonTeamDto[];
     };
 
     const getRobotGameRank = (rank: number) => {
-        return results?.robotGameEntries
-            ?.filter(e => e.rank === rank)
+        return results.robotGameEntries
+            .filter(e => e.rank === rank)
             .map(n => getTeam(n.teamId))
             .filter(Boolean)[0] as SeasonTeamDto | undefined;
     }
 
-    // Category styling metadata
-    const categoryConfig: Record<string, { icon: React.ReactNode, color: string }> = {
-        CHAMPION: { icon: <IconTrophy size={24} />, color: 'red' },
-        RESEARCH: { icon: <IconBulb size={24} />, color: 'green' },
-        ROBOT_DESIGN: { icon: <IconSettings size={24} />, color: 'orange' },
-        CORE_VALUES: { icon: <IconUsers size={24} />, color: 'grape' },
-        ROBOT_GAME: { icon: <IconRobot size={24} />, color: 'blue' },
-        COACHING: { icon: <IconHeartHandshake size={24} />, color: 'lime' },
-    };
-
     // Reusable Card Component for the Grid
-    const AwardCard = ({ category }: { category: keyof typeof categoryConfig }) => {
+    const AwardCard = ({ category }: { category: CompetitionAwardCategoryDto }) => {
         const winner = getWinner(category);
         const nominees = getNominees(category);
-        const config = categoryConfig[category];
+        const config = getCategoryConfig(category);
 
         const rgSecondPlace = getRobotGameRank(2);
         const rgThirdPlace = getRobotGameRank(3);
@@ -109,7 +94,7 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
             <Card withBorder radius="md" p="md" shadow="sm">
                 <Group gap="sm" mb="md">
                     <ThemeIcon size={40} radius="md" color={config.color} variant="light">
-                        {config.icon}
+                        <config.CategoryIcon size={24} />
                     </ThemeIcon>
                     <Text fw={700} size="lg">{t('app.competition.awards.category', {context: category})}</Text>
                 </Group>
@@ -224,7 +209,7 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
     };
 
     // Ensure places are sorted 1, 2, 3...
-    const sortedPlaces = [...(results?.places || [])].sort((a, b) => (a.place || 99) - (b.place || 99));
+    const sortedPlaces = [...(results.places || [])].sort((a, b) => (a.place || 99) - (b.place || 99));
 
     // --- TABLE VIEW LOGIC --- //
 
@@ -232,38 +217,38 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
     const tableTeams = useMemo(() => {
         return [...teams].sort((a, b) => {
             // Primary sort: Overall Place
-            const placeA = results?.places?.find(p => p.teamId === a.id)?.place || 999;
-            const placeB = results?.places?.find(p => p.teamId === b.id)?.place || 999;
+            const placeA = results.places.find(p => p.teamId === a.id)?.place || 999;
+            const placeB = results.places.find(p => p.teamId === b.id)?.place || 999;
             if (placeA !== placeB) return placeA - placeB;
 
             // #2 sort: Number of Nominations in key categories
-            const nomsA = results?.nominations?.filter(n => n.teamId === a.id && relevantCategories.includes(n.category!)).length || 0;
-            const nomsB = results?.nominations?.filter(n => n.teamId === b.id && relevantCategories.includes(n.category!)).length || 0;
+            const nomsA = results.nominations.filter(n => n.teamId === a.id && relevantCategories.includes(n.category)).length || 0;
+            const nomsB = results.nominations.filter(n => n.teamId === b.id && relevantCategories.includes(n.category)).length || 0;
             if (nomsA !== nomsB) return nomsB - nomsA;
 
             // #3 sort: Number of Wins in key categories
-            const winsA = results?.nominations?.filter(n => n.teamId === a.id && relevantCategories.includes(n.category!) && n.winner).length || 0;
-            const winsB = results?.nominations?.filter(n => n.teamId === b.id && relevantCategories.includes(n.category!) && n.winner).length || 0;
+            const winsA = results.nominations.filter(n => n.teamId === a.id && relevantCategories.includes(n.category) && n.winner).length || 0;
+            const winsB = results.nominations.filter(n => n.teamId === b.id && relevantCategories.includes(n.category) && n.winner).length || 0;
             if (winsA !== winsB) return winsB - winsA;
 
             // #4 sort: Robot Game Rank (only top 3 matter, and lower is better)
-            const rgRankA = results?.robotGameEntries?.find(e => e.teamId === a.id && e.rank && e.rank <= 3)?.rank || 999;
-            const rgRankB = results?.robotGameEntries?.find(e => e.teamId === b.id && e.rank && e.rank <= 3)?.rank || 999;
+            const rgRankA = results.robotGameEntries.find(e => e.teamId === a.id && e.rank && e.rank <= 3)?.rank || 999;
+            const rgRankB = results.robotGameEntries.find(e => e.teamId === b.id && e.rank && e.rank <= 3)?.rank || 999;
             if (rgRankA !== rgRankB) return rgRankA - rgRankB;
 
             // #5 sort: Coaching Award
-            const coachingA = results?.nominations?.find(n => n.teamId === a.id && n.category === 'COACHING' && n.winner) ? 1 : 0;
-            const coachingB = results?.nominations?.find(n => n.teamId === b.id && n.category === 'COACHING' && n.winner) ? 1 : 0;
+            const coachingA = results.nominations.find(n => n.teamId === a.id && n.category === 'COACHING' && n.winner) ? 1 : 0;
+            const coachingB = results.nominations.find(n => n.teamId === b.id && n.category === 'COACHING' && n.winner) ? 1 : 0;
             if (coachingA !== coachingB) return coachingB - coachingA;
 
             // #6 sort: nomination score
-            const scoreA = results?.nominations?.filter(n => n.teamId === a.id).reduce((sum, n) => sum + (categoryScores[n.category as keyof typeof categoryScores] || 0), 0) || 0;
-            const scoreB = results?.nominations?.filter(n => n.teamId === b.id).reduce((sum, n) => sum + (categoryScores[n.category as keyof typeof categoryScores] || 0), 0) || 0;
+            const scoreA = results.nominations.filter(n => n.teamId === a.id).reduce((sum, n) => sum + (categoryScores[n.category as keyof typeof categoryScores] || 0), 0) || 0;
+            const scoreB = results.nominations.filter(n => n.teamId === b.id).reduce((sum, n) => sum + (categoryScores[n.category as keyof typeof categoryScores] || 0), 0) || 0;
             if (scoreA !== scoreB) return scoreB - scoreA;
 
             // #7 sort: winner scores awards only
-            const winnerScoreA = results?.nominations?.filter(n => n.teamId === a.id && n.winner).reduce((sum, n) => sum + (categoryScores[n.category as keyof typeof categoryScores] || 0), 0) || 0;
-            const winnerScoreB = results?.nominations?.filter(n => n.teamId === b.id && n.winner).reduce((sum, n) => sum + (categoryScores[n.category as keyof typeof categoryScores] || 0), 0) || 0;
+            const winnerScoreA = results.nominations.filter(n => n.teamId === a.id && n.winner).reduce((sum, n) => sum + (categoryScores[n.category as keyof typeof categoryScores] || 0), 0) || 0;
+            const winnerScoreB = results.nominations.filter(n => n.teamId === b.id && n.winner).reduce((sum, n) => sum + (categoryScores[n.category as keyof typeof categoryScores] || 0), 0) || 0;
             if (winnerScoreA !== winnerScoreB) return winnerScoreB - winnerScoreA;
 
             // Final tiebreaker: FLL ID (lower is better)
@@ -276,58 +261,30 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
     // Filter teams to ONLY those who actually won or were nominated for something (for the Team Cards)
     const cookingTeams = useMemo(() => {
         return tableTeams.filter(team => {
-            const hasPlace = results?.places?.some(p => p.teamId === team.id);
-            const hasNom = results?.nominations?.some(n => n.teamId === team.id);
-            const hasRobotGame = results?.robotGameEntries?.some(e => e.teamId === team.id && e.rank && e.rank <= 3);
+            const hasPlace = results.places.some(p => p.teamId === team.id);
+            const hasNom = results.nominations.some(n => n.teamId === team.id);
+            const hasRobotGame = results.robotGameEntries.some(e => e.teamId === team.id && e.rank && e.rank <= 3);
             return hasPlace || hasNom || hasRobotGame;
         });
     }, [tableTeams, results]);
 
-    const AdvancingBadge = ({ advancing, size = 'md' }: { advancing?: boolean, size?: any }) => {
-        if (!advancing) return null;
-
-        if (competition.nextCompetition) {
-            return (
-                <Badge
-                    component={Link}
-                    to={getCompetitionLink(competition.nextCompetition)}
-                    color="green"
-                    variant="light"
-                    size={size}
-                    rightSection={<IconArrowUpRight size={14} />}
-                    style={{ cursor: 'pointer' }}
-                    onClick={(e) => e.stopPropagation()} // <-- Crucial: stops the Row/Card from also being clicked!
-                >
-                    {t("app.competition.awards.qualified")}
-                </Badge>
-            );
-        }
-
-        return (
-            <Badge color="green" variant="light" size={size} rightSection={<IconArrowUpRight size={14} />}>
-                {t("app.competition.awards.qualified")}
-            </Badge>
-        );
-    };
-
     // Helper to render the correct icon in the table cell
-    const renderTableCell = (teamId: number, category: string) => {
-        const nom = results?.nominations?.find(n => n.teamId === teamId && n.category === category);
+    const renderTableCell = (teamId: number, category: CompetitionAwardCategoryDto) => {
+        const color = getCategoryConfig(category).color;
         if (category === 'ROBOT_GAME') {
-            const rgEntry = results?.robotGameEntries?.find(e => e.teamId === teamId);
+            const rgEntry = results.robotGameEntries.find(e => e.teamId === teamId);
             if (rgEntry && rgEntry.rank && rgEntry.rank >= 2 && rgEntry.rank <= 3) {
                 return (
                     <Tooltip label={t("app.competition.awards.tooltip.place_ROBOT_GAME", {place: t("app.competition.awards.place", { count: rgEntry.rank, ordinal: true })})}>
-                        <Badge size={"lg"} leftSection={<IconMedal size={16}></IconMedal>} color={categoryConfig[category].color} variant={"light"}>
+                        <Badge size={"lg"} leftSection={<IconMedal size={16}></IconMedal>} color={color} variant={"light"}>
                             {rgEntry.rank}
                         </Badge>
                     </Tooltip>
                 );
             }
         }
+        const nom = results.nominations.find(n => n.teamId === teamId && n.category === category);
         if (!nom) return null;
-
-        const color = categoryConfig[category].color;
 
         if (nom.winner) {
             return (
@@ -348,86 +305,8 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
         );
     };
 
-    const renderTablePlaceCell = (placeObj: CompetitionPlaceDto | undefined, style: 'full' | 'compact' = 'compact', size: number = 16) => {
-        if (!placeObj) return <Text c="dimmed">-</Text>;
-
-        const color = placeObj.place === 1 ? 'red' : placeObj.place === 2 ? 'gray' : placeObj.place === 3 ? 'orange' : 'gray';
-        const icon = placeObj.place === 1 ? <IconTrophy size={size} /> : placeObj.place === 2 || placeObj.place === 3 ? <IconMedal size={size} /> : <IconHash size={size} />;
-        const variant = placeObj.place === 1 ? "outline" : "light"
-        const badgeSize = size > 16 ? "xl" : "lg";
-
-        if (style === 'full') {
-            return (
-                <Badge size={badgeSize} leftSection={icon} color={color} variant={variant} tt={"none"}>
-                    {t("app.competition.awards.place", {count: placeObj.place, ordinal: true})}
-                </Badge>
-            );
-        }
-
-        return (
-            <Tooltip label={t("app.competition.awards.place", { count: placeObj.place, ordinal: true, context: placeObj.place })}>
-                <Badge size={badgeSize} leftSection={icon} color={color} variant={variant}>
-                   {placeObj.place}
-                </Badge>
-            </Tooltip>
-        );
-    }
-
     const TeamAwardCard = ({ team }: { team: SeasonTeamDto }) => {
-        const { place, awards } = getTeamAchievements(team.id!);
-
-        const relevantNominations = awards.filter(a => relevantCategories.includes(a.category!) || a.category === 'ROBOT_GAME').sort(
-            (a, b) => {
-                const winnerA = a.winner && a.category !== "ROBOT_GAME" ? 1 : 0;
-                const winnerB = b.winner && b.category !== "ROBOT_GAME" ? 1 : 0;
-                if (winnerA !== winnerB) return winnerB - winnerA; // Winners first
-
-                const scoreA = categoryScores[a.category as keyof typeof categoryScores] || 0;
-                const scoreB = categoryScores[b.category as keyof typeof categoryScores] || 0;
-                return scoreB - scoreA; // Higher score first
-            }
-        );
-
-        const rgPlace = results?.robotGameEntries?.find(e => e.teamId === team.id)?.rank;
-
-        const coachingAward = awards.find(a => a.winner && a.category === 'COACHING');
-
-        // extract rendering of group for award & nomination
-        const renderAwardGroup = (nomination: CompetitionNominationDto) => {
-            const categoryName = nomination.category!;
-            const winner = nomination.winner;
-            const icon = winner ? <IconTrophy size={16} /> : <IconStar size={16} />;
-            const variant = winner ? "outline" : "subtle";
-            const translation = winner ? t("app.competition.awards.winner") : t("app.competition.awards.nominated");
-            return renderTeamCardItem(categoryName, icon, variant, translation);
-        }
-
-        const renderRobotGamePlace = (rgPlace: number) => {
-            const categoryName = "ROBOT_GAME";
-            const icon = <IconMedal size={16} />;
-            const variant = "subtle";
-            const translation = t("app.competition.awards.place", { count: rgPlace, ordinal: true })
-            return renderTeamCardItem(categoryName, icon, variant, translation);
-        }
-
-        const renderTeamCardItem = (categoryName: string, icon: React.ReactNode, variant: string, translation: string) => {
-            const config = categoryConfig[categoryName];
-            return (
-                <Group key={categoryName} gap="sm" wrap="nowrap">
-                    <ThemeIcon size={28} radius="xl" color={config.color} variant={variant}>
-                        {icon}
-                    </ThemeIcon>
-                    <Box>
-                        <Text size="sm" fw={600} lh={1.2} c={config.color}>
-                            {t('app.competition.awards.category', {context: categoryName})}
-                        </Text>
-                        <Text size="xs" c={'dimmed'} fw={700}>
-                            {translation}
-                        </Text>
-                    </Box>
-                </Group>
-            );
-        }
+        const { place, awards, robotGameEntry } = getTeamAchievements(team.id, results);
 
         return (
             <Card
@@ -435,8 +314,7 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
                 radius="md"
                 p="md"
                 shadow="sm"
-                component={Link}
-                to={getTeamLink(team)}
+                onClick={() => navigate(getTeamLink(team))}
                 style={{ cursor: 'pointer', transition: 'transform 0.2s ease, box-shadow 0.2s ease' }}
                 onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'translateY(-2px)';
@@ -449,36 +327,39 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
             >
                 <Group justify="space-between" mb="xs" wrap="nowrap" align="flex-start">
                     <Box style={{ flex: 1 }}>
-                        <Text fw={700} lineClamp={1} size={"lg"}>{team.name}</Text>
-                        <Group gap="xs" align="center" mt={2}>
-                            <Text size="xs" c="dimmed">#{team.fllId}</Text>
-                            <AdvancingBadge advancing={place?.advancing} size="xs" />
+                        <Group gap="xs">
+                            <SeasonTeamAvatar team={team}/>
+                            <Stack gap={0}>
+                                <Anchor
+                                    component={Link}
+                                    to={getTeamLink(team)}
+                                    c="inherit"
+                                    underline="hover"
+                                    // Prevent the Anchor click from bubbling up and triggering the Card's onClick twice
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <Text fw={700} lineClamp={1} size={"lg"}>{team.name}</Text>
+                                </Anchor>
+                                <Group gap="xs" align="center" mt={2}>
+                                    <Text size="xs" c="dimmed">#{team.fllId}</Text>
+                                    <AdvancingBadge competitionType={competition.type} advancing={place?.advancing} size="xs" nextCompetition={competition.nextCompetition} />
+                                </Group>
+                            </Stack>
                         </Group>
+
+
                     </Box>
-                    {place && renderTablePlaceCell(place, "full")}
+                    {place && (
+                        <PlaceBadge placeObj={place} displayStyle={'full'} />
+                    )}
                 </Group>
 
                 <Divider my="sm" variant="dashed" />
 
-                <Stack gap="xs">
-                    {relevantNominations.map(nom => {
-                        return renderAwardGroup(nom);
-                    })}
-                    {rgPlace && rgPlace >= 2 && rgPlace <= 3 && (
-                        renderRobotGamePlace(rgPlace)
-                    )}
-                    {coachingAward && (
-                        renderAwardGroup(coachingAward)
-                    )}
-                </Stack>
+                <TeamAchievementsStack awards={awards} robotGameEntry={robotGameEntry} />
             </Card>
         )
     };
-
-    if (!results) {
-        return <Text c="dimmed" ta="center" py="xl">{t("app.competition.awards.empty")}</Text>;
-    }
-
 
     return (
         <Stack gap="xl" mt="md">
@@ -533,9 +414,9 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
                             {
                                 value: 'categories',
                                 label: (
-                                    <Tooltip label="Kachelansicht">
+                                    <Tooltip label={t("app.competition.awards.tooltip.view.categories")}>
                                         <Box px="xs" py="calc(var(--mantine-spacing-xs) / 2)" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                                            <Center><IconLayoutGrid size={18} /></Center>
+                                            <Center><IconLayoutBoard size={18} /></Center>
                                         </Box>
                                     </Tooltip>
                                 )
@@ -543,9 +424,9 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
                             {
                                 value: 'teams',
                                 label: (
-                                    <Tooltip label="Matrixansicht">
+                                    <Tooltip label={t("app.competition.awards.tooltip.view.teams")}>
                                         <Box px="xs" py="calc(var(--mantine-spacing-xs) / 2)" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                                            <Center><IconUser size={18} /></Center>
+                                            <Center><IconLayoutGrid size={18} /></Center>
                                         </Box>
                                     </Tooltip>
                                 )
@@ -568,7 +449,7 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
 
                                     return (
                                         <Group key={p.teamId} gap={"lg"} wrap="nowrap" align={"center"}>
-                                            {renderTablePlaceCell(p, "compact", 22)}
+                                            <PlaceBadge placeObj={p} displayStyle={'compact'} size="xl" />
 
                                             {/* 2. Team Info & Badge Grouped Tightly */}
                                             <Box style={{ flex: 1, minWidth: 0 }}>
@@ -588,7 +469,7 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
                                                 {/* Line 2: ID and Badge paired together */}
                                                 <Group gap="xs" align="center">
                                                     <Text size="sm" c="dimmed">[{team.fllId}]</Text>
-                                                    <AdvancingBadge advancing={p.advancing} />
+                                                    <AdvancingBadge competitionType={competition.type} advancing={p.advancing} nextCompetition={competition.nextCompetition} />
                                                 </Group>
                                             </Box>
                                         </Group>
@@ -601,11 +482,11 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
                     <Box mt={"md"}>
                         <Title order={3} mb="md">{t("app.competition.awards.title_awards")}</Title>
                         <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
-                            <AwardCard category="RESEARCH" />
-                            <AwardCard category="ROBOT_DESIGN" />
-                            <AwardCard category="CORE_VALUES" />
-                            <AwardCard category="ROBOT_GAME" />
-                            <AwardCard category="COACHING" />
+                            <AwardCard category={CompetitionAwardCategoryDto.RESEARCH} />
+                            <AwardCard category={CompetitionAwardCategoryDto.ROBOT_DESIGN} />
+                            <AwardCard category={CompetitionAwardCategoryDto.CORE_VALUES} />
+                            <AwardCard category={CompetitionAwardCategoryDto.ROBOT_GAME} />
+                            <AwardCard category={CompetitionAwardCategoryDto.COACHING} />
                         </SimpleGrid>
                     </Box>
                 </Box>
@@ -640,7 +521,7 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
                             </Table.Thead>
                             <Table.Tbody>
                                 {cookingTeams.map((team) => {
-                                    const placeObj = results.places?.find(p => p.teamId === team.id);
+                                    const placeObj = results.places.find(p => p.teamId === team.id);
 
                                     return (
                                         <Table.Tr
@@ -649,33 +530,38 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
                                             style={{ cursor: 'pointer' }}
                                         >
                                             <Table.Td>
-                                                <Anchor
-                                                    component={Link}
-                                                    to={getTeamLink(team)}
-                                                    c="inherit" // Inherit text color so it doesn't look like a standard blue link
-                                                    underline="hover" // Only underline when they hover exactly over the text
-                                                    fw={600}
-                                                >
-                                                    {team.name}
-                                                </Anchor>
+                                                <Group gap="xs">
+                                                    <SeasonTeamAvatar team={team}/>
+                                                    <Stack gap={0}>
+                                                        <Anchor
+                                                            component={Link}
+                                                            to={getTeamLink(team)}
+                                                            c="inherit" // Inherit text color so it doesn't look like a standard blue link
+                                                            underline="hover" // Only underline when they hover exactly over the text
+                                                            fw={600}
+                                                        >
+                                                            {team.name}
+                                                        </Anchor>
 
-                                                <Group gap="xs" align="center">
-                                                    <Text size="xs" c="dimmed">[{team.fllId}]</Text>
-                                                    <AdvancingBadge advancing={placeObj?.advancing} size="xs" />
+                                                        <Group gap="xs" align="center">
+                                                            <Text size="xs" c="dimmed">[{team.fllId}]</Text>
+                                                            <AdvancingBadge competitionType={competition.type} advancing={placeObj?.advancing} size="xs" nextCompetition={competition.nextCompetition} />
+                                                        </Group>
+                                                    </Stack>
                                                 </Group>
                                             </Table.Td>
 
                                             <Table.Td>
                                                 <Center>
-                                                    {renderTablePlaceCell(placeObj, "compact")}
+                                                    <PlaceBadge placeObj={placeObj} displayStyle={'compact'} />
                                                 </Center>
                                             </Table.Td>
 
-                                            <Table.Td><Center>{renderTableCell(team.id!, 'RESEARCH')}</Center></Table.Td>
-                                            <Table.Td><Center>{renderTableCell(team.id!, 'ROBOT_DESIGN')}</Center></Table.Td>
-                                            <Table.Td><Center>{renderTableCell(team.id!, 'CORE_VALUES')}</Center></Table.Td>
-                                            <Table.Td><Center>{renderTableCell(team.id!, 'ROBOT_GAME')}</Center></Table.Td>
-                                            <Table.Td><Center>{renderTableCell(team.id!, 'COACHING')}</Center></Table.Td>
+                                            <Table.Td><Center>{renderTableCell(team.id, CompetitionAwardCategoryDto.RESEARCH)}</Center></Table.Td>
+                                            <Table.Td><Center>{renderTableCell(team.id, CompetitionAwardCategoryDto.ROBOT_DESIGN)}</Center></Table.Td>
+                                            <Table.Td><Center>{renderTableCell(team.id, CompetitionAwardCategoryDto.CORE_VALUES)}</Center></Table.Td>
+                                            <Table.Td><Center>{renderTableCell(team.id, CompetitionAwardCategoryDto.ROBOT_GAME)}</Center></Table.Td>
+                                            <Table.Td><Center>{renderTableCell(team.id, CompetitionAwardCategoryDto.COACHING)}</Center></Table.Td>
                                         </Table.Tr>
                                     );
                                 })}

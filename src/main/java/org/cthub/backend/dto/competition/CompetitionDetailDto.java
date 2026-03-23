@@ -1,5 +1,6 @@
 package org.cthub.backend.dto.competition;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,12 +17,18 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CompetitionDetailDto {
+    @NotNull
     private Long id;
+    @NotNull
     private SeasonDto season;
+    @NotNull
     private String name;
+    @NotNull
     private String urlPart;
 
+    @NotNull
     private CompetitionType type;
+    @NotNull
     boolean active;
 
     private CompetitionShortInfoDto nextCompetition;
@@ -29,11 +36,14 @@ public class CompetitionDetailDto {
 
     private String country;
     private LocalDate date;
+    private LocalDate endDate; // null means same as date
     private CompetitionContactInfoDto contactInfo;
     private String location;
 
+    @NotNull
     private List<LinkDto> links;
 
+    @NotNull
     private List<SeasonTeamDto> registeredTeams;
     private CompetitionResultsDto results; // null if results not published yet
 

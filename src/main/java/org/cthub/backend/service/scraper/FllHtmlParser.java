@@ -146,7 +146,9 @@ public class FllHtmlParser {
         String location = findMetadata(doc, "Veranstaltungsort");
         String contactName = findMetadata(doc, "Kontakt");
         String contactEmail = findEmail(doc);
-        LocalDate date = parseDate(doc);
+        EventDates dates = parseDate(doc);
+        LocalDate date = dates != null ? dates.startDate : null;
+        LocalDate endDate = dates != null ? dates.endDate : null;
         List<ScrapedLinkDto> webLinks = findLinks(doc, "Weblinks");
         String qualificationUrlPart = null;
 
@@ -173,6 +175,7 @@ public class FllHtmlParser {
         return ScrapedEventDetailsDto.builder()
             .location(location)
             .date(date)
+            .endDate(endDate)
             .contactName(contactName)
             .contactEmail(contactEmail)
             .webLinks(webLinks)
@@ -425,6 +428,17 @@ public class FllHtmlParser {
                     }
                 }
 
+                if (country == null && type == Competition.CompetitionType.QUALIFICATION) {
+                    // For qualifications, country is often in the name (e.g., "Qualifikation Deutschland")
+                    if (name.toLowerCase().contains("deutschland")) {
+                        country = "DE";
+                    } else if (name.toLowerCase().contains("österreich")) {
+                        country = "AT";
+                    } else if (name.toLowerCase().contains("schweiz")) {
+                        country = "CH";
+                    }
+                }
+
                 results.add(ScrapedEventOverviewDto.builder()
                     .name(name)
                     .urlPart(urlPart)
@@ -537,14 +551,51 @@ public class FllHtmlParser {
         return input == null ? null : input.replaceAll("[:\\t]+", " ").trim();
     }
 
-    private LocalDate parseDate(Document doc) {
+    public record EventDates(LocalDate startDate, LocalDate endDate) {}
+
+    private EventDates parseDate(Document doc) {
         String dateStr = findMetadata(doc, "Termin");
-        if (dateStr != null) {
-            try {
-                return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-            } catch (Exception ignored) {}
+
+        if (dateStr == null || dateStr.isBlank()) {
+            return null;
         }
-        return null;
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+        if (dateStr.contains("/")) {
+            String[] parts = dateStr.split("/", 2);
+            String startPart = parts[0].trim(); // e.g., "18", "30.04", or "31.12.2025"
+            String endPart = parts[1].trim();   // Always a full date, e.g., "01.05.2026"
+
+            // 1. The end part will always contain the full date context
+            LocalDate endDate = LocalDate.parse(endPart, formatter);
+
+            // 2. Count the dots in the start part to see what is missing
+            int dotCount = startPart.length() - startPart.replace(".", "").length();
+            String fullStartStr;
+
+            if (dotCount == 0) {
+                // Case: "18" (Missing month and year)
+                // Append everything from the first dot onwards: ".04.2026"
+                fullStartStr = startPart + endPart.substring(endPart.indexOf("."));
+
+            } else if (dotCount == 1) {
+                // Case: "30.04" (Missing year)
+                // Append everything from the last dot onwards: ".2026"
+                fullStartStr = startPart + endPart.substring(endPart.lastIndexOf("."));
+
+            } else {
+                // Case: "31.12.2025" (Nothing missing, spans a new year)
+                fullStartStr = startPart;
+            }
+
+            LocalDate startDate = LocalDate.parse(fullStartStr, formatter);
+            return new EventDates(startDate, endDate);
+        }
+
+        // Handle the standard single-day format: "18.04.2026"
+        LocalDate singleDate = LocalDate.parse(dateStr, formatter);
+        return new EventDates(singleDate, null);
     }
 
     private String findEmail(Document doc) {

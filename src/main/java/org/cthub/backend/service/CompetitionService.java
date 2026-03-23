@@ -58,7 +58,7 @@ public class CompetitionService {
 
         // Fetch previous competitions
         if (competition.getType() != Competition.CompetitionType.REGIONAL) {
-            List<Competition> relatedComps = competitionRepository.findAllByQualificationUrlPart(competition.getUrlPart());
+            List<Competition> relatedComps = competitionRepository.findAllBySeasonIdAndQualificationUrlPart(seasonId, competition.getUrlPart());
             detailDto.setPreviousCompetitions(relatedComps.stream()
                 .filter(c -> !c.getId().equals(compId)) // Exclude current comp
                 .map(competitionMapper::toShortInfoDto)

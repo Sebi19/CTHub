@@ -11,6 +11,7 @@ public class ScrapedEventDetailsDto {
     private String contentHash;
     private String name;
     private LocalDate date;
+    private LocalDate endDate;
     private String location;
     private String contactName;
     private String contactEmail;

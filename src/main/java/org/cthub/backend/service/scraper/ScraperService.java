@@ -81,8 +81,10 @@ public class ScraperService {
     public void runQuickResultSync() {
         log.info("⚡ STARTING QUICK RESULT SYNC...");
 
+        Season season = seasonRepository.findByActiveTrue().orElseThrow(() -> new IllegalStateException("No active season found for quick sync"));
+
         // Find competitions that happened (or are happening) but have no results yet
-        List<Competition> pending = competitionRepository.findPendingResults(LocalDate.now());
+        List<Competition> pending = competitionRepository.findPendingResults(LocalDate.now(), season.getId());
         int foundCount = 0;
 
         log.info("⚡ Found {} competitions without results. Checking for updates...", pending.size());
@@ -114,6 +116,47 @@ public class ScraperService {
             }
         }
         log.info("⚡ QUICK SYNC DONE. Found new results for {} events.", foundCount);
+    }
+
+    private boolean isPresent(String s) {
+        return s != null && !s.isBlank();
+    }
+
+
+    @Async
+    public void fetchOldSeasonData(String seasonId, boolean ignoreHashes, boolean skipWithHashes) {
+        log.info("🌒 STARTING FULL SYNC for old season {}...", seasonId);
+        long start = System.currentTimeMillis();
+
+        // 1. Get Active Season (or create default)
+        Season season = seasonRepository.findById(seasonId).orElseThrow(() -> new IllegalStateException("Season " + seasonId + " not found"));
+
+        List<Competition> activeCompetitions = competitionRepository.findAllBySeason(season);
+
+        String finalUrlPart = activeCompetitions.stream().filter(c -> c.getType().equals(Competition.CompetitionType.FINAL)).findFirst().map(Competition::getUrlPart).orElse("");
+
+        // 3. Sync Details for Each Competition
+        int updatedCount = 0;
+        for (Competition comp : activeCompetitions) {
+            if (skipWithHashes && isPresent(comp.getDetailHash())) {
+                if (!comp.isResultsAvailable() || (isPresent(comp.getAwardsHash()) && isPresent(comp.getRobotGameHash()))) {
+                    log.info("⏭️ Skipping {} because it already has hashes and skipWithHashes=true", comp.getName());
+                    continue;
+                }
+            }
+
+            /*try {*/
+            if (processSingleCompetition(comp, ignoreHashes, finalUrlPart)) {
+                updatedCount++;
+            }
+            /*} catch (Exception e) {
+                log.error("❌ Failed to process competition '{}': {}", comp.getName(), e.getMessage());
+                // Continue loop - don't let one failure stop the night
+            }*/
+        }
+
+        long duration = (System.currentTimeMillis() - start) / 1000;
+        log.info("✅ FULL SYNC for season {} COMPLETE in {}s. Updated {} competitions.", seasonId, duration, updatedCount);
     }
 
     // ==========================================
@@ -220,7 +263,11 @@ public class ScraperService {
     }
 
     private List<Competition> syncOverview(Season season, boolean ignoreHashes) {
-        String html = fetchOrNull(LOCATIONS_URL);
+        return syncOverview(season, ignoreHashes, LOCATIONS_URL);
+    }
+
+    public List<Competition> syncOverview(Season season, boolean ignoreHashes, String locationsUrl) {
+        String html = fetchOrNull(locationsUrl);
         if (html == null) return new ArrayList<>();
 
         String newHash = parser.computeOverviewHash(html);

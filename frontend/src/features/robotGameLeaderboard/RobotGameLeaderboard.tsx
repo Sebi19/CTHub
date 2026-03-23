@@ -1,12 +1,12 @@
 import { useMemo, useEffect, useState } from 'react';
 import { MantineReactTable, useMantineReactTable, type MRT_ColumnDef } from 'mantine-react-table';
 import {Badge, Text, Anchor, Box, useMantineColorScheme } from '@mantine/core';
-import { type OverallRobotGameEntryDto } from '../../api/generated';
+import {type OverallRobotGameEntryDto, type SeasonTeamDto} from '../../api/generated';
 import { client } from '../../api';
 import {useTranslation} from "react-i18next";
 import { MRT_Localization_EN } from 'mantine-react-table/locales/en/index.cjs';
 import { MRT_Localization_DE } from 'mantine-react-table/locales/de/index.cjs';
-import {getCompetitionLink} from "../../utils/routingUtils.ts";
+import {getCompetitionLink, getTeamLink} from "../../utils/routingUtils.ts";
 import {Link} from "react-router-dom";
 
 const tableLocales = {
@@ -40,8 +40,8 @@ export const RobotGameLeaderboard = () => {
             .catch(() => setIsLoading(false));
     }, []);
 
-    const formatName = (entry: OverallRobotGameEntryDto): string => {
-        return `${entry.teamName} [${entry.teamId}]`;
+    const formatName = (team: SeasonTeamDto): string => {
+        return `${team.name} [${team.fllId}]`;
     }
 
     // 1. Helper for Score Columns 📏
@@ -83,13 +83,25 @@ export const RobotGameLeaderboard = () => {
                 ),
             },
             {
-                accessorFn: (row) => formatName(row),
+                accessorFn: (row) => row.team,
                 header: t('app.overall_robotgame.table.team'),
                 size: 220, // Give the name some room
                 minSize: 150,
-                Cell: ({ row }) => (
-                    <Text fw={600} size="sm" truncate>{formatName(row.original)}</Text>
-                )
+                Cell: ({ row }) => {
+                    const team = row.original.team;
+                    return (
+                        <Anchor
+                            component={Link}
+                            to={getTeamLink(team)}
+                            size="sm"
+                            underline="hover"
+                            c="inherit"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <Text fw={600} size="sm" truncate>{formatName(team)}</Text>
+                        </Anchor>
+                    );
+                }
             },
             {
                 id: 'qualified',
@@ -112,12 +124,12 @@ export const RobotGameLeaderboard = () => {
                     return (
                         <Anchor
                             component={Link}
-                            to={getCompetitionLink(competition!)}
+                            to={getCompetitionLink(competition)}
                             size="sm"
                             underline="hover"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            {competition?.name}
+                            {competition.name}
                         </Anchor>
                     );
                 },

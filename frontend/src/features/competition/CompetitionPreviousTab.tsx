@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import {
     SimpleGrid,
     Card,
@@ -11,15 +11,16 @@ import {
     Center,
     Tooltip,
     TooltipGroup,
-    Table
+    Table, Anchor
 } from '@mantine/core';
-import { useNavigate } from 'react-router-dom';
+import {Link, useNavigate} from 'react-router-dom';
 import { IconCalendar, IconLayoutGrid, IconList } from '@tabler/icons-react';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import type {CompetitionDetailDto} from '../../api/generated.ts';
 import {getCompetitionLink} from "../../utils/routingUtils.ts";
 import {getCompetitionTypeColor} from "../../utils/competitionUtils.ts";
+import {useSessionStorage} from "@mantine/hooks";
 
 interface Props {
     competition: CompetitionDetailDto;
@@ -30,7 +31,10 @@ export const CompetitionPreviousTab = ({ competition }: Props) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
 
-    const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+    const [viewMode, setViewMode] = useSessionStorage<string | undefined>({
+        key: `competition-teams-view-${competition.season.id}-${competition.urlPart}`,
+        defaultValue: 'grid',
+    });
 
     // 1. Sort competitions chronologically by date!
     const sortedCompetitions = useMemo(() => {
@@ -138,6 +142,7 @@ export const CompetitionPreviousTab = ({ competition }: Props) => {
                                 <Table.Th>{t("app.competition.previous.header.name")}</Table.Th>
                                 <Table.Th>{t("app.competition.previous.header.date")}</Table.Th>
                                 <Table.Th>{t("app.competition.previous.header.type")}</Table.Th>
+                                <Table.Th>{t("app.competition.previous.header.country")}</Table.Th>
                             </Table.Tr>
                         </Table.Thead>
                         <Table.Tbody>
@@ -148,7 +153,15 @@ export const CompetitionPreviousTab = ({ competition }: Props) => {
                                     style={{ cursor: 'pointer' }}
                                 >
                                     <Table.Td>
-                                        <Text fw={600}>{comp.name}</Text>
+                                        <Anchor
+                                            component={Link}
+                                            to={getCompetitionLink(comp)}
+                                            c="inherit" // Inherit text color so it doesn't look like a standard blue link
+                                            underline="hover" // Only underline when they hover exactly over the text
+                                            fw={600}
+                                        >
+                                            {comp.name}
+                                        </Anchor>
                                     </Table.Td>
                                     <Table.Td>
                                         {comp.date ? (
@@ -164,6 +177,13 @@ export const CompetitionPreviousTab = ({ competition }: Props) => {
                                         <Badge color={getCompetitionTypeColor(comp.type)} variant="light">
                                             {t('app.competition.detail.type', {context: comp.type})}
                                         </Badge>
+                                    </Table.Td>
+                                    <Table.Td>
+                                        {comp.country ? (
+                                            <Badge variant="outline" color="gray">{comp.country}</Badge>
+                                        ) : (
+                                            <Text c="dimmed">-</Text>
+                                        )}
                                     </Table.Td>
                                 </Table.Tr>
                             ))}

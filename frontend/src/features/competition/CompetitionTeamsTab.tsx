@@ -21,9 +21,11 @@ import {
     IconList
 } from '@tabler/icons-react';
 import {useTranslation} from "react-i18next";
-import {useState} from "react";
 import {Link, useNavigate} from "react-router-dom";
 import {getTeamLink} from "../../utils/routingUtils.ts";
+import {useSessionStorage} from "@mantine/hooks";
+import {parseTeamLink} from "../../utils/linkUtils.tsx";
+import {SeasonTeamAvatar} from "../common/team/avatar/SeasonTeamAvatar.tsx";
 
 interface Props {
     competition: CompetitionDetailDto;
@@ -34,10 +36,13 @@ export const CompetitionTeamsTab = ({ competition }: Props) => {
 
     const navigate = useNavigate();
 
-    const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+    const [viewMode, setViewMode] = useSessionStorage<string | undefined>({
+        key: `competition-teams-view-${competition.season.id}-${competition.urlPart}`,
+        defaultValue: 'grid',
+    });
 
     // Safety check just in case
-    const teams = competition.registeredTeams || [];
+    const teams = competition.registeredTeams;
 
     const teamCount = teams.length;
 
@@ -46,7 +51,7 @@ export const CompetitionTeamsTab = ({ competition }: Props) => {
     }
 
     const TeamExtraLinksMenu = ({ team }: { team: SeasonTeamDto }) => {
-        if (!team.links || team.links.length === 0) return null;
+        if (team.links.length === 0) return null;
 
         return (
             <Box onClick={(e) => e.stopPropagation()}>
@@ -61,19 +66,26 @@ export const CompetitionTeamsTab = ({ competition }: Props) => {
 
                     <Menu.Dropdown>
                         <Menu.Label>Team Links</Menu.Label>
-                        {team.links.map((link, index) => (
-                            <Menu.Item
-                                key={index}
-                                component="a"
-                                href={link.url}
-                                target="_blank"
-                                leftSection={<IconExternalLink size={14} />}
-                            >
-                                <Text size="sm" style={{ overflowWrap: 'anywhere' }}>
-                                    {link.label || link.url}
-                                </Text>
-                            </Menu.Item>
-                        ))}
+                        {team.links.map((link, index) => {
+                            const parsed = parseTeamLink(link.url, link.label);
+
+                            return (
+                                <Menu.Item
+                                    key={index}
+                                    component="a"
+                                    href={parsed.cleanUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    color={parsed.color !== "gray" ? parsed.color : undefined}
+                                    leftSection={parsed.icon}
+                                    rightSection={<IconExternalLink size={14} opacity={0.4} />}
+                                >
+                                    <Text size="sm" style={{overflowWrap: 'anywhere'}}>
+                                        {parsed.label}
+                                    </Text>
+                                </Menu.Item>
+                            )
+                        })}
                     </Menu.Dropdown>
                 </Menu>
             </Box>
@@ -128,8 +140,7 @@ export const CompetitionTeamsTab = ({ competition }: Props) => {
                                 padding="lg"
                                 radius="md"
                                 withBorder
-                                component={Link}
-                                to={getTeamLink(team)}
+                                onClick={() => navigate(getTeamLink(team))}
                                 style={{
                                     cursor: 'pointer',
                                     transition: 'transform 0.2s ease, box-shadow 0.2s ease'
@@ -143,24 +154,33 @@ export const CompetitionTeamsTab = ({ competition }: Props) => {
                                     e.currentTarget.style.boxShadow = 'var(--mantine-shadow-sm)';
                                 }}
                             >
-                                <Group justify="space-between" mb="xs">
+                                <Group justify="space-between" mb="xs" align="flex-start" wrap={"nowrap"}>
                                     <Group gap="xs">
-                                        <Text fw={600} truncate>{team.name}</Text>
-                                        <TeamExtraLinksMenu team={team} />
+                                        <SeasonTeamAvatar team={team} size={"md"}/>
+                                        <Stack gap={0}>
+                                            <Group gap={"xs"}>
+                                                <Anchor
+                                                    component={Link}
+                                                    to={getTeamLink(team)}
+                                                    c="inherit"
+                                                    underline="hover"
+                                                    // Prevent the Anchor click from bubbling up and triggering the Card's onClick twice
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <Text fw={600} truncate>{team.name}</Text>
+                                                </Anchor>
+                                                <TeamExtraLinksMenu team={team} />
+                                            </Group>
+                                            <Text size="xs" c="dimmed">#{team.fllId}</Text>
+                                        </Stack>
                                     </Group>
-                                    <Group gap="xs">
-                                        {competition.type === 'FINAL' && team.country && (
-                                            <Tooltip label={t("app.competition.teams.country", {context: team.country})}>
-                                                <Badge color='gray' variant='light'>
-                                                    {team.country}
-                                                </Badge>
-                                            </Tooltip>
-                                        )}
-
-                                        <Badge color={team.active ? 'blue' : 'gray'} variant="light">
-                                            #{team.fllId}
-                                        </Badge>
-                                    </Group>
+                                    {competition.type === 'FINAL' && team.country && (
+                                        <Tooltip label={t("app.competition.teams.country", {context: team.country})}>
+                                            <Badge color='gray' variant='light'>
+                                                {team.country}
+                                            </Badge>
+                                        </Tooltip>
+                                    )}
                                 </Group>
 
                                 {/* Institution (School/Club) */}
@@ -220,15 +240,18 @@ export const CompetitionTeamsTab = ({ competition }: Props) => {
                                             </Table.Td>
                                         )}
                                         <Table.Td>
-                                            <Anchor
-                                                component={Link}
-                                                to={getTeamLink(team)}
-                                                c="inherit" // Inherit text color so it doesn't look like a standard blue link
-                                                underline="hover" // Only underline when they hover exactly over the text
-                                                fw={600}
-                                            >
-                                                {team.name}
-                                            </Anchor>
+                                            <Group gap="xs">
+                                                <SeasonTeamAvatar team={team} size={32} />
+                                                <Anchor
+                                                    component={Link}
+                                                    to={getTeamLink(team)}
+                                                    c="inherit" // Inherit text color so it doesn't look like a standard blue link
+                                                    underline="hover" // Only underline when they hover exactly over the text
+                                                    fw={600}
+                                                >
+                                                    {team.name}
+                                                </Anchor>
+                                            </Group>
                                         </Table.Td>
                                         <Table.Td>{team.institution}</Table.Td>
                                         <Table.Td>{team.city}</Table.Td>

@@ -3,6 +3,7 @@ package org.cthub.backend.model;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Entity
@@ -14,13 +15,17 @@ public class Season {
     @Id
     private String id; // "2025-2026"
 
+    @NotNull
+    @Column(nullable = false)
     private String name; // "Unearthed"
 
-    @Column(unique = true)
+    @NotNull
+    @Column(unique = true, nullable = false)
     private Integer startYear; // 2025
 
     // only true once
-    @Column
+    @NotNull
+    @Column(nullable = false)
     private boolean active;
 
     private String overviewHash;

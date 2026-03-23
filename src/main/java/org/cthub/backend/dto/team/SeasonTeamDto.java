@@ -1,5 +1,6 @@
 package org.cthub.backend.dto.team;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,18 +15,23 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SeasonTeamDto {
+    @NotNull
     private Long id;
+    @NotNull
     private SeasonDto season;
+    @NotNull
     private boolean active;
+    @NotNull
     private String fllId;
 
+    @NotNull
     private String name;
     private String institution;
     private String city;
     private String country;
+
+    @NotNull
     private List<LinkDto> links;
 
-    private TeamProfileDto profile; // null if no profile exists
-
-
+    private SeasonTeamProfileDto seasonTeamProfile; // null if no profile exists
 }

@@ -6,6 +6,7 @@ import org.cthub.backend.service.scraper.ScraperService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -44,5 +45,16 @@ public class ScraperTestController {
     public ResponseEntity<String> forceQuickSync() {
         scraperService.runQuickResultSync();
         return ResponseEntity.ok("⚡ Quick Sync started in background.");
+    }
+
+    @GetMapping("/fetch-old/{seasonId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> fetchOldSeasonData(
+        @PathVariable String seasonId,
+        @RequestParam(defaultValue = "false") boolean ignoreHashes,
+        @RequestParam(defaultValue = "false") boolean skipWithHashes
+    ) {
+        scraperService.fetchOldSeasonData(seasonId, ignoreHashes, skipWithHashes);
+        return ResponseEntity.ok("📦 Fetching old season data for " + seasonId + " started in background.");
     }
 }

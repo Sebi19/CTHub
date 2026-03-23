@@ -4,3 +4,6 @@ cors:
 app:
   security:
     remember-me-key: "local-remember-me-key"
+spring:
+  jpa:
+    show-sql: false

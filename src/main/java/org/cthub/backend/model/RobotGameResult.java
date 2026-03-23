@@ -2,6 +2,7 @@ package org.cthub.backend.model;
 
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Entity
@@ -16,18 +17,27 @@ public class RobotGameResult {
     @SequenceGenerator(name = "rg_seq_gen", sequenceName = "rg_seq")
     private Long id;
 
+    @NotNull
     @ManyToOne(optional = false)
     private SeasonTeam seasonTeam; // The specific entry for this year
 
+    @NotNull
     @ManyToOne(optional = false)
     private Competition competition;
 
     // Preliminary Rounds
+    @NotNull
+    @Column(nullable = false)
     private int pr1;
+    @NotNull
+    @Column(nullable = false)
     private int pr2;
+    @NotNull
+    @Column(nullable = false)
     private int pr3;
 
-    // We can persist this to make sorting easier
+    @NotNull
+    @Column(nullable = false)
     private int bestPr;
 
     // Finals (Nullable because most won't reach them)
@@ -46,5 +56,10 @@ public class RobotGameResult {
     @Nullable
     private Integer f2;
 
-    private Integer rank; // 1, 2, 3... null if not ranked
+    @NotNull
+    @Column(nullable = false)
+    private int rank; // 1, 2, 3... null if not ranked
+
+    // TODO: Set not null once migrated
+    private Integer prelimRank;
 }

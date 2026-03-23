@@ -1,6 +1,7 @@
 package org.cthub.backend.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -22,9 +23,11 @@ public class User implements UserDetails {
     @SequenceGenerator(name = "user_seq_gen", sequenceName = "user_seq")
     private Long id;
 
+    @NotNull
     @Column(unique = true, nullable = false)
     private String email;
 
+    @NotNull
     @Column(nullable = false)
     private String password; // BCrypt hash
 

@@ -19,6 +19,9 @@ spring:
           batch_size: 50
         order_updates: true
         order_inserts: true
+springdoc:
+  writer-with-default-pretty-printer: true
+  remove-broken-reference-definitions: false
 management:
   endpoints:
     web:

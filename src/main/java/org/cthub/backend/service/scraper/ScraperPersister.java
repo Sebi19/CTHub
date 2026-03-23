@@ -17,11 +17,43 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ScraperPersister {
 
-    private final CompetitionRepository competitionRepo;
-    private final SeasonTeamRepository seasonTeamRepo;
-    private final RobotGameResultRepository resultRepo;
-    private final PlaceRepository placeRepo;
-    private final NominationRepository nominationRepo;
+    private final CompetitionRepository competitionRepository;
+    private final SeasonTeamRepository seasonTeamRepository;
+    private final RobotGameResultRepository robotGameResultRepository;
+    private final PlaceRepository placeRepository;
+    private final NominationRepository nominationRepository;
+
+    private record HistoricalTeam (String seasonId, String fllId, String name, String institution, String city) {}
+
+    private record NameChange(String seasonId, String fllId, String oldName) {}
+
+    private final List<HistoricalTeam> historicalTeams = List.of(
+        new HistoricalTeam("2023-24", "1626", "Wilhelm-Robotics", "Wilhelm-Gymnasium", "Braunschweig"),
+        new HistoricalTeam("2023-24", "1486", "Robobriks", "Schulzentrum am Sund", "Stralsund")
+    );
+
+    private final List<NameChange> nameChanges = List.of(
+        new NameChange("2024-25", "1692", "Sponge Bots"),
+        new NameChange("2024-25", "1356", "Festo2"),
+        new NameChange("2024-25", "1357", "Festo3"),
+
+        new NameChange("2023-24", "1745", "Roboterfreunde Kornelimünster e.V."),
+        new NameChange("2023-24", "1745", "Roboterfreunde Kornelimünster"),
+        new NameChange("2023-24", "1439", "MPDVeruEckTen"),
+        new NameChange("2023-24", "1474", "RoDotties"),
+        new NameChange("2023-24", "1113", "RoboWip"),
+        new NameChange("2023-24", "1218", "CaroAces"),
+        new NameChange("2023-24", "1305", "Future Stars"),
+        new NameChange("2023-24", "1308", "Ninja"),
+        new NameChange("2023-24", "1131", "SCUOLA DI ROBOTICA LUGANO - MASSAGNO 1"),
+        new NameChange("2023-24", "1132", "SCUOLA DI ROBOTICA LUGANO - ELVETICO 1"),
+        new NameChange("2023-24", "1133", "SCUOLA DI ROBOTICA LUGANO - ELVETICO 2"),
+        new NameChange("2023-24", "1134", "SCUOLA DI ROBOTICA LUGANO - MASSAGNO 2"),
+        new NameChange("2023-24", "1262", "GN-Creators"),
+        new NameChange("2023-24", "1518", "Integrastic Robots"),
+
+        new NameChange("2022-23", "1569", "NaWiKlasse6a(1)")
+    );
 
     // ==========================================
     // 1. PHASE 1: OVERVIEW SYNC (The "Master List") 🌍
@@ -37,7 +69,7 @@ public class ScraperPersister {
     @Transactional
     public List<Competition> syncCompetitionsFromOverview(Season season, List<ScrapedEventOverviewDto> dtos) {
         // 1. Fetch ALL existing competitions for this season (Map by URL Part)
-        Map<String, Competition> existingMap = competitionRepo.findAllBySeason(season)
+        Map<String, Competition> existingMap = competitionRepository.findAllBySeason(season)
             .stream()
             .collect(Collectors.toMap(Competition::getUrlPart, Function.identity()));
 
@@ -63,6 +95,7 @@ public class ScraperPersister {
 
             // Mark as Active (in case it was previously inactive)
             comp.setActive(true);
+            comp.setResultsAvailable(false);
 
             activeCompetitions.add(comp);
         }
@@ -84,7 +117,7 @@ public class ScraperPersister {
         allToSave.addAll(existingMap.values()); // This includes the inactive ones we just updated
 
         // Use saveAll to flush changes
-        competitionRepo.saveAll(allToSave);
+        competitionRepository.saveAll(allToSave);
 
         return activeCompetitions;
     }
@@ -117,7 +150,7 @@ public class ScraperPersister {
             teamMap = syncTeamsAndReturnMap(comp, details.getTeams());
         } else {
             // C. No Team changes -> Just fetch existing map for lookups
-            teamMap = seasonTeamRepo.findByRegisteredCompetitionsContains(comp)
+            teamMap = seasonTeamRepository.findByRegisteredCompetitionsContains(comp)
                 .stream()
                 .collect(Collectors.toMap(SeasonTeam::getFllId, Function.identity()));
         }
@@ -138,13 +171,14 @@ public class ScraperPersister {
 
         // 4. SAVE COMPETITION (Updates Hashes & Metadata)
         // The hashes should be set on the 'comp' object by the Service BEFORE calling this method.
-        competitionRepo.save(comp);
+        competitionRepository.save(comp);
     }
 
     // --- Helpers ---
 
     private void updateCompetitionMetadata(Competition comp, ScrapedEventDetailsDto details) {
         comp.setDate(details.getDate());
+        comp.setEndDate(details.getEndDate());
         comp.setLocation(details.getLocation());
         comp.setQualificationUrlPart(details.getQualificationUrlPart());
 
@@ -167,7 +201,7 @@ public class ScraperPersister {
      */
     private Map<String, SeasonTeam> syncTeamsAndReturnMap(Competition comp, List<ScrapedTeamDto> scrapedTeams) {
         // 1. Fetch Existing (Map by FLL ID)
-        Map<String, SeasonTeam> dbTeamsMap = seasonTeamRepo.findByRegisteredCompetitionsContains(comp)
+        Map<String, SeasonTeam> dbTeamsMap = seasonTeamRepository.findByRegisteredCompetitionsContains(comp)
             .stream()
             .collect(Collectors.toMap(SeasonTeam::getFllId, Function.identity()));
 
@@ -194,7 +228,7 @@ public class ScraperPersister {
         // 3. Handle New Candidates (Global Lookup)
         if (!newCandidates.isEmpty()) {
             List<String> newIds = newCandidates.stream().map(ScrapedTeamDto::getFllId).toList();
-            Map<String, SeasonTeam> seasonGlobalMap = seasonTeamRepo.findBySeasonIdAndFllIdIn(comp.getSeason().getId(), newIds)
+            Map<String, SeasonTeam> seasonGlobalMap = seasonTeamRepository.findBySeasonIdAndFllIdIn(comp.getSeason().getId(), newIds)
                 .stream()
                 .collect(Collectors.toMap(SeasonTeam::getFllId, Function.identity()));
 
@@ -242,63 +276,184 @@ public class ScraperPersister {
             }
         }
 
-        seasonTeamRepo.saveAll(teamsToSave);
+        seasonTeamRepository.saveAll(teamsToSave);
 
-        return seasonTeamRepo.findByRegisteredCompetitionsContains(comp)
+        return seasonTeamRepository.findByRegisteredCompetitionsContains(comp)
             .stream()
             .collect(Collectors.toMap(SeasonTeam::getFllId, Function.identity()));
     }
 
+    private SeasonTeam resolveSeasonTeamById(Competition comp, Map<String, SeasonTeam> teamMap, String fllId) {
+        SeasonTeam team = teamMap.get(fllId);
+        if (team != null) {
+            return team;
+        }
+
+        Optional<SeasonTeam> newTeam = seasonTeamRepository.findBySeasonIdAndFllIdWithDetails(comp.getSeason().getId(), fllId);
+        if (newTeam.isPresent()) {
+            team = newTeam.get();
+            log.info("🔍 Found new team for FLL ID '{}'. Adding to competition.", fllId);
+            teamMap.put(fllId, team);
+            team.getRegisteredCompetitions().add(comp); // Link the team to the competition
+            seasonTeamRepository.save(team); // Save the new association
+            return team;
+        }
+
+        HistoricalTeam historicalTeam = historicalTeams.stream()
+            .filter(ht -> ht.seasonId().equals(comp.getSeason().getId()) && ht.fllId().equals(fllId))
+            .findFirst()
+            .orElse(null);
+        if (historicalTeam != null) {
+            team = SeasonTeam.builder()
+                .season(comp.getSeason())
+                .fllId(historicalTeam.fllId())
+                .name(historicalTeam.name())
+                .institution(historicalTeam.institution())
+                .city(historicalTeam.city())
+                .registeredCompetitions(new HashSet<>(Set.of(comp)))
+                .active(false)
+                .build();
+            teamMap.put(fllId, team);
+            seasonTeamRepository.save(team);
+            log.info("📜 Created historical team for FLL ID '{}': {} ({}). Marked as inactive.", fllId, historicalTeam.name(), historicalTeam.institution());
+            return team;
+        }
+
+        log.warn("Could not find team for FLL ID '{}'. Skipping.", fllId);
+        return null;
+    }
+
+    private SeasonTeam resolveSeasonTeamByName(Competition comp, Map<String, SeasonTeam> teamMap, String teamName) {
+        // First try direct name match
+        Optional<SeasonTeam> directMatch = teamMap.values().stream()
+            .filter(t -> t.getName().trim().equalsIgnoreCase(teamName.trim()))
+            .findFirst();
+
+        if (directMatch.isPresent()) {
+            return directMatch.get();
+        }
+
+        // If no direct match, check for name changes
+        Optional<NameChange> nameChange = nameChanges.stream()
+            .filter(nc -> nc.seasonId().equals(comp.getSeason().getId()) && nc.oldName().trim().equalsIgnoreCase(teamName.trim()))
+            .findFirst();
+
+        if (nameChange.isPresent()) {
+            String fllId = nameChange.get().fllId();
+            SeasonTeam team = resolveSeasonTeamById(comp, teamMap, fllId);
+            if (team != null && teamName.isBlank()) {
+                team.setName(nameChange.get().oldName());
+                log.info("⚠️ Team with FLL ID '{}' has blank name. Using old name from name change record: '{}'", team.getFllId(), team.getName());
+                seasonTeamRepository.save(team);
+            }
+            return team;
+        }
+
+        log.warn("Could not find team for name '{}'. No direct match or name change found.", teamName);
+        return null;
+    }
+
     private void syncScores(Competition comp, ScrapedRobotGameResultsDto robotGameResults, Map<String, SeasonTeam> teamMap) {
-        resultRepo.deleteByCompetition(comp);
-        resultRepo.flush();
+        robotGameResultRepository.deleteByCompetition(comp);
+        robotGameResultRepository.flush();
 
         List<RobotGameResult> results = new ArrayList<>();
-        for (ScrapedRobotGameScoreDto dto : robotGameResults.getScores()) {
-            SeasonTeam team = teamMap.get(dto.getFllId());
+        List<ProcessedRobotGameScoreDto> processedScores = calculatePrelimRanks(robotGameResults.getScores());
+        for (ProcessedRobotGameScoreDto processedDto : processedScores) {
+            ScrapedRobotGameScoreDto dto = processedDto.getRobotGameScoreDto();
+            SeasonTeam team = resolveSeasonTeamById(comp, teamMap, dto.getFllId());
             if (team != null) {
                 results.add(RobotGameResult.builder().competition(comp).seasonTeam(team)
                     .pr1(dto.getRun1()).pr2(dto.getRun2()).pr3(dto.getRun3()).bestPr(dto.getBestRun())
                     .qf(dto.getQuarterFinal()).sf(dto.getSemiFinal()).f1(dto.getFinal1()).f2(dto.getFinal2())
-                    .rank(dto.getRank())
+                    .rank(dto.getRank()).prelimRank(processedDto.getPrelimRank())
                     .build());
             }
         }
-        resultRepo.saveAll(results);
+        robotGameResultRepository.saveAll(results);
+    }
+
+    private List<ProcessedRobotGameScoreDto> calculatePrelimRanks(List<ScrapedRobotGameScoreDto> dtos) {
+        // 1. Map the raw data into the wrappers and figure out the 1st, 2nd, and 3rd best runs
+        // We want highest scores first!
+        List<ProcessedRobotGameScoreDto> processedList = dtos.stream().map(dto -> {
+            // Put the runs in an array and sort them.
+            // Arrays.sort() sorts ascending, so runs[2] is the highest score.
+            int[] runs = {dto.getRun1(), dto.getRun2(), dto.getRun3()};
+            Arrays.sort(runs);
+
+            return ProcessedRobotGameScoreDto.builder()
+                .fllId(dto.getFllId())
+                .robotGameScoreDto(dto) // Your original raw data
+                .bestRun(runs[2])       // Highest
+                .secondBestRun(runs[1]) // Middle
+                .thirdBestRun(runs[0])  // Lowest
+                .build();
+        }).sorted(Comparator
+            .comparingInt(ProcessedRobotGameScoreDto::getBestRun)
+            .thenComparingInt(ProcessedRobotGameScoreDto::getSecondBestRun)
+            .thenComparingInt(ProcessedRobotGameScoreDto::getThirdBestRun)
+            .reversed()).collect(Collectors.toList());
+
+        // 2. Sort the list descending based on FLL tiebreaker rules
+
+        // 3. Apply Standard Competition Ranking (1, 2, 2, 4...)
+        for (int i = 0; i < processedList.size(); i++) {
+            ProcessedRobotGameScoreDto current = processedList.get(i);
+
+            if (i == 0) {
+                // The first team is always rank 1
+                current.setPrelimRank(1);
+            } else {
+                ProcessedRobotGameScoreDto previous = processedList.get(i - 1);
+
+                // Check for a perfect tie across all three runs
+                boolean isTied = current.getBestRun() == previous.getBestRun() &&
+                    current.getSecondBestRun() == previous.getSecondBestRun() &&
+                    current.getThirdBestRun() == previous.getThirdBestRun();
+
+                if (isTied) {
+                    // Give them the exact same rank as the team above them
+                    current.setPrelimRank(previous.getPrelimRank());
+                } else {
+                    // Not tied? Their rank is simply their index in the sorted list + 1.
+                    // (e.g., if they are at index 3, they are rank 4)
+                    current.setPrelimRank(i + 1);
+                }
+            }
+        }
+
+        return processedList;
     }
 
     private void syncNominations(Competition comp, ScrapedAwardsAndRanksDto data, Map<String, SeasonTeam> teamMap) {
-        // Name Lookup Helper
-        Map<String, SeasonTeam> nameMap = teamMap.values().stream()
-            .collect(Collectors.toMap(t -> t.getName().toLowerCase().trim(), Function.identity(), (a, b) -> a));
-
         // Delete Old
-        placeRepo.deleteByCompetition(comp);
-        placeRepo.flush();
-        nominationRepo.deleteByCompetition(comp);
-        nominationRepo.flush();
+        placeRepository.deleteByCompetition(comp);
+        placeRepository.flush();
+        nominationRepository.deleteByCompetition(comp);
+        nominationRepository.flush();
 
         // Save Places
         List<Place> places = new ArrayList<>();
         for (ScrapedPlaceDto dto : data.getPlaces()) {
-            SeasonTeam team = nameMap.get(dto.getTeamName().toLowerCase().trim());
+            SeasonTeam team = resolveSeasonTeamByName(comp, teamMap, dto.getTeamName());
             if (team != null) {
                 places.add(Place.builder().competition(comp).seasonTeam(team)
                     .place(dto.getPlace()).advancing(dto.isAdvancing()).build());
             }
         }
-        placeRepo.saveAll(places);
+        placeRepository.saveAll(places);
 
         // Save Nominations
         List<Nomination> nominations = new ArrayList<>();
         for (ScrapedNominationDto dto : data.getNominations()) {
-            SeasonTeam team = nameMap.get(dto.getTeamName().toLowerCase().trim());
+            SeasonTeam team = resolveSeasonTeamByName(comp, teamMap, dto.getTeamName());
             if (team != null) {
                 nominations.add(Nomination.builder().competition(comp).seasonTeam(team)
                     .category(dto.getCategory()).isAwardWinner(dto.isWinner()).build());
             }
         }
-        nominationRepo.saveAll(nominations);
+        nominationRepository.saveAll(nominations);
     }
 
     private void updateTeamFields(SeasonTeam team, ScrapedTeamDto dto) {
@@ -310,6 +465,18 @@ public class ScraperPersister {
         }
         if (dto.getLinks() != null) {
             team.setLinks(mapLinks(dto.getLinks()));
+        }
+
+        if (dto.getName().isBlank()) {
+            Optional<NameChange> nameChange = nameChanges.stream()
+                .filter(nc -> nc.seasonId().equals(team.getSeason().getId()) && nc.fllId().equals(team.getFllId()))
+                .findFirst();
+            if (nameChange.isPresent()) {
+                team.setName(nameChange.get().oldName());
+                log.info("⚠️ Team with FLL ID '{}' has blank name. Using old name from name change record: '{}'", team.getFllId(), team.getName());
+            } else {
+                log.warn("Team with FLL ID '{}' has blank name and no name change record. This may cause issues with score/award matching.", team.getFllId());
+            }
         }
     }
 

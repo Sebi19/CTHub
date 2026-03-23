@@ -1,10 +1,10 @@
-import type { CompetitionShortInfoDto, SeasonTeamDto } from '../api/generated';
+import type { Location, NavigateFunction } from 'react-router-dom';
+import type {CompetitionShortInfoDto, SeasonTeamDto} from '../api/generated';
 
 /**
  * Generates the standard router link for a competition.
  */
 export const getCompetitionLink = (comp: CompetitionShortInfoDto): string => {
-    if (!comp?.season?.id || !comp?.urlPart) return '#';
     return `/competition/${comp.season.id}/${comp.urlPart}`;
 };
 
@@ -14,12 +14,22 @@ export const getCompetitionLink = (comp: CompetitionShortInfoDto): string => {
  * @param team The team data
  */
 export const getTeamLink = (team: SeasonTeamDto): string => {
-    return '#'; // Placeholder until we have team pages
-    if (team.profile?.profileUrl) {
-        return `/${team.profile?.profileUrl}`; // e.g., /let-s-robot
+    if (team.seasonTeamProfile?.profile) {
+        return `/${team.seasonTeamProfile.profile.profileUrl}/${team.season.id}`;
     }
-    if (team.season?.id && team.fllId) {
-        return `/team/${team.season?.id}/${team.fllId}`; // e.g., /team/2025-26/1007
-    }
-    return '#';
+    return `/team/${team.season?.id}/${team.fllId}`; // e.g., /team/2025-26/1007
 };
+
+export const getCompetitionsListLink = (seasonId?: string | undefined): string => {
+    if (!seasonId) return '/competitions';
+    return `/competitions/${seasonId}`;
+}
+
+export const navigateBack = (location: Location<any>, navigate: NavigateFunction, fallback: string) => {
+    const isDirectVisit = location.key === 'default';
+    if (isDirectVisit) {
+        navigate(fallback); // Escape hatch to your main app hub
+    } else {
+        navigate(-1); // Normal back behavior
+    }
+}

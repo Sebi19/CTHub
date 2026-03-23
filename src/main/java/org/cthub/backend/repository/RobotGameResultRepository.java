@@ -25,4 +25,10 @@ public interface RobotGameResultRepository extends JpaRepository<RobotGameResult
     void deleteByCompetition(Competition competition);
 
     List<RobotGameResult> findAllByCompetitionId(Long compId);
+
+    @Query("SELECT rg FROM RobotGameResult rg JOIN FETCH rg.competition WHERE rg.seasonTeam.id = :teamId")
+    List<RobotGameResult> findBySeasonTeamIdWithCompetition(@Param("teamId") Long teamId);
+
+    @Query("SELECT rg FROM RobotGameResult rg JOIN FETCH rg.competition WHERE rg.seasonTeam.id IN :teamIds")
+    List<RobotGameResult> findBySeasonTeamIdInWithCompetition(@Param("teamIds") List<Long> teamIds);
 }

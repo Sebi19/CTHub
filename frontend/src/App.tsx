@@ -76,8 +76,8 @@ export default function App() {
                 <Menu.Target>
                     <Button variant="subtle" rightSection={<IconChevronDown size={14} />} px="xs">
                         <Group gap={8}>
-                            <Avatar src={user?.email} radius="xl" size={26} color="blue" />
-                            <Text visibleFrom="sm" size="sm" fw={500}>{user?.email}</Text>
+                            <Avatar radius="xl" size={26} color="blue" />
+                            <Text visibleFrom="sm" size="sm" fw={500}>{user.email}</Text>
                         </Group>
                     </Button>
                 </Menu.Target>
@@ -89,7 +89,7 @@ export default function App() {
                         style={{ opacity: 1, cursor: 'default', color: 'var(--mantine-color-text)' }}
                         // We use 'component="div"' so it doesn't behave like a button
                         component="div"
-                    >{user?.email}</Menu.Item>
+                    >{user.email}</Menu.Item>
                     <Menu.Label>Account</Menu.Label>
                     <Menu.Divider />
                     <Menu.Item
@@ -128,7 +128,7 @@ export default function App() {
                             {renderNavLinks(false)}
                         </Group>
 
-                        {!isAuthenticated ? (
+                        {!(isAuthenticated && user) ? (
                             <>
                                 <Button
                                     visibleFrom={"sm"}
@@ -143,7 +143,7 @@ export default function App() {
                             </>
 
                         ) : (
-                            <UserMenu user={user!} logout={handleLogout} />
+                            <UserMenu user={user} logout={handleLogout} />
                         )}
 
                         {/* Theme Toggle */}

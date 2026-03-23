@@ -10,87 +10,61 @@
  * ---------------------------------------------------------------
  */
 
+export enum CompetitionType {
+  REGIONAL = "REGIONAL",
+  QUALIFICATION = "QUALIFICATION",
+  FINAL = "FINAL",
+}
+
+export enum CompetitionAwardCategoryDto {
+  CHAMPION = "CHAMPION",
+  RESEARCH = "RESEARCH",
+  CORE_VALUES = "CORE_VALUES",
+  ROBOT_DESIGN = "ROBOT_DESIGN",
+  COACHING = "COACHING",
+  ROBOT_GAME = "ROBOT_GAME",
+}
+
 export interface LoginRequestDto {
-  email?: string;
-  password?: string;
+  email: string;
+  password: string;
 }
 
 export interface UserDto {
   /** @format int64 */
-  id?: number;
-  email?: string;
+  id: number;
+  email: string;
   role?: string;
-}
-
-export interface CompetitionContactInfoDto {
-  contactName?: string;
-  contactEmail?: string;
-}
-
-export interface CompetitionDetailDto {
-  /** @format int64 */
-  id?: number;
-  season?: SeasonDto;
-  name?: string;
-  urlPart?: string;
-  type?: "REGIONAL" | "QUALIFICATION" | "FINAL";
-  active?: boolean;
-  nextCompetition?: CompetitionShortInfoDto;
-  previousCompetitions?: CompetitionShortInfoDto[];
-  country?: string;
-  /** @format date */
-  date?: string;
-  contactInfo?: CompetitionContactInfoDto;
-  location?: string;
-  links?: LinkDto[];
-  registeredTeams?: SeasonTeamDto[];
-  results?: CompetitionResultsDto;
-  /** @format int32 */
-  registeredTeamCount?: number;
-  /** @format int32 */
-  maxTeamCount?: number;
 }
 
 export interface CompetitionNominationDto {
   /** @format int64 */
-  teamId?: number;
-  category?:
-    | "CHAMPION"
-    | "RESEARCH"
-    | "CORE_VALUES"
-    | "ROBOT_DESIGN"
-    | "COACHING"
-    | "ROBOT_GAME";
+  teamId: number;
+  category: CompetitionAwardCategoryDto;
   winner?: boolean;
 }
 
 export interface CompetitionPlaceDto {
   /** @format int64 */
-  teamId?: number;
+  teamId: number;
   /** @format int32 */
-  place?: number;
-  advancing?: boolean;
-}
-
-export interface CompetitionResultsDto {
-  places?: CompetitionPlaceDto[];
-  nominations?: CompetitionNominationDto[];
-  robotGameEntries?: CompetitionRobotGameEntryDto[];
+  place: number;
+  advancing: boolean;
 }
 
 export interface CompetitionRobotGameEntryDto {
   /** @format int64 */
-  teamId?: number;
+  teamId: number;
   /** @format int32 */
-  rank?: number;
+  rank: number;
   /** @format int32 */
-  pr1?: number;
+  pr1: number;
   /** @format int32 */
-  pr2?: number;
+  pr2: number;
   /** @format int32 */
-  pr3?: number;
+  pr3: number;
   /** @format int32 */
-  bestPr?: number;
+  bestPr: number;
   /** @format int32 */
   r16?: number;
   /** @format int32 */
@@ -101,77 +75,154 @@ export interface CompetitionRobotGameEntryDto {
   f1?: number;
   /** @format int32 */
   f2?: number;
+  /** @format int32 */
+  prelimRank?: number;
 }
 
 export interface CompetitionShortInfoDto {
   /** @format int64 */
-  id?: number;
-  season?: SeasonDto;
-  name?: string;
-  urlPart?: string;
-  type?: "REGIONAL" | "QUALIFICATION" | "FINAL";
-  active?: boolean;
+  id: number;
+  season: SeasonDto;
+  name: string;
+  urlPart: string;
+  type: CompetitionType;
+  active: boolean;
+  resultsAvailable: boolean;
   country?: string;
   /** @format date */
   date?: string;
+  /** @format date */
+  endDate?: string;
 }
 
 export interface LinkDto {
   label?: string;
-  url?: string;
+  url: string;
 }
 
 export interface SeasonDto {
-  id?: string;
-  name?: string;
+  id: string;
+  name: string;
   /** @format int32 */
-  startYear?: number;
-  active?: boolean;
+  startYear: number;
+  active: boolean;
+}
+
+export interface SeasonTeamDetailsDto {
+  /** @format int64 */
+  id: number;
+  season: SeasonDto;
+  active: boolean;
+  fllId: string;
+  name: string;
+  institution?: string;
+  city?: string;
+  country?: string;
+  links: LinkDto[];
+  seasonTeamProfile?: SeasonTeamProfileDto;
+  competitionRecords: TeamCompetitionRecordDto[];
+}
+
+export interface SeasonTeamProfileDto {
+  profile: TeamProfileDto;
+  seasonAvatarUrl?: string;
+}
+
+export interface TeamCompetitionRecordDto {
+  competition: CompetitionShortInfoDto;
+  place?: CompetitionPlaceDto;
+  nominations: CompetitionNominationDto[];
+  robotGame?: CompetitionRobotGameEntryDto;
+  nextCompetition?: CompetitionShortInfoDto;
+}
+
+export interface TeamProfileDto {
+  profileName: string;
+  profileUrl: string;
+  avatarUrl?: string;
+}
+
+export interface CompetitionContactInfoDto {
+  contactName?: string;
+  contactEmail?: string;
+}
+
+export interface CompetitionDetailDto {
+  /** @format int64 */
+  id: number;
+  season: SeasonDto;
+  name: string;
+  urlPart: string;
+  type: CompetitionType;
+  active: boolean;
+  nextCompetition?: CompetitionShortInfoDto;
+  previousCompetitions?: CompetitionShortInfoDto[];
+  country?: string;
+  /** @format date */
+  date?: string;
+  /** @format date */
+  endDate?: string;
+  contactInfo?: CompetitionContactInfoDto;
+  location?: string;
+  links: LinkDto[];
+  registeredTeams: SeasonTeamDto[];
+  results?: CompetitionResultsDto;
+  /** @format int32 */
+  registeredTeamCount?: number;
+  /** @format int32 */
+  maxTeamCount?: number;
+}
+
+export interface CompetitionResultsDto {
+  places: CompetitionPlaceDto[];
+  nominations: CompetitionNominationDto[];
+  robotGameEntries: CompetitionRobotGameEntryDto[];
 }
 
 export interface SeasonTeamDto {
   /** @format int64 */
-  id?: number;
-  season?: SeasonDto;
-  active?: boolean;
-  fllId?: string;
-  name?: string;
+  id: number;
+  season: SeasonDto;
+  active: boolean;
+  fllId: string;
+  name: string;
   institution?: string;
   city?: string;
   country?: string;
-  links?: LinkDto[];
-  profile?: TeamProfileDto;
+  links: LinkDto[];
+  seasonTeamProfile?: SeasonTeamProfileDto;
 }
 
-export interface TeamProfileDto {
-  profileName?: string;
-  profileUrl?: string;
+export interface TeamProfileDetailsDto {
+  profileName: string;
+  profileUrl: string;
+  avatarUrl?: string;
+  seasons: SeasonTeamDetailsDto[];
 }
 
 export interface OverallRobotGameEntryDto {
   /** @format int32 */
-  rank?: number;
-  teamName?: string;
-  teamId?: string;
-  competition?: CompetitionShortInfoDto;
+  rank: number;
+  team: SeasonTeamDto;
+  competition: CompetitionShortInfoDto;
   country?: string;
-  qualified?: boolean;
+  qualified: boolean;
   /** @format int32 */
-  bestScore?: number;
+  bestScore: number;
   /** @format double */
-  medianScore?: number;
+  medianScore: number;
   /** @format double */
-  averageScore?: number;
+  averageScore: number;
   /** @format int32 */
-  worstScore?: number;
+  worstScore: number;
   /** @format int32 */
-  preliminaryRound1?: number;
+  preliminaryRound1: number;
   /** @format int32 */
-  preliminaryRound2?: number;
+  preliminaryRound2: number;
   /** @format int32 */
-  preliminaryRound3?: number;
+  preliminaryRound3: number;
   /** @format int32 */
-  bestPreliminaryScore?: number;
+  bestPreliminaryScore: number;
   /** @format int32 */
   roundOf16?: number;
   /** @format int32 */
@@ -401,6 +452,24 @@ export class Api<
     /**
      * No description
      *
+     * @tags season-team-controller
+     * @name GetTeamDetails
+     * @request GET:/api/seasons/{seasonId}/teams/{fllId}
+     */
+    getTeamDetails: (
+      seasonId: string,
+      fllId: string,
+      params: RequestParams = {},
+    ) =>
+      this.request<SeasonTeamDetailsDto, any>({
+        path: `/api/seasons/${seasonId}/teams/${fllId}`,
+        method: "GET",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
      * @tags competition-controller
      * @name GetCompetitionDetails
      * @request GET:/api/seasons/{seasonId}/competitions/{urlPart}
@@ -468,6 +537,44 @@ export class Api<
     /**
      * No description
      *
+     * @tags scraper-test-controller
+     * @name FetchOldSeasonData
+     * @request GET:/api/scraper/fetch-old/{seasonId}
+     */
+    fetchOldSeasonData: (
+      seasonId: string,
+      query?: {
+        /** @default false */
+        ignoreHashes?: boolean;
+        /** @default false */
+        skipWithHashes?: boolean;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<string, any>({
+        path: `/api/scraper/fetch-old/${seasonId}`,
+        method: "GET",
+        query: query,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags team-profile-controller
+     * @name GetTeamProfileDetails
+     * @request GET:/api/profiles/{profileUrl}
+     */
+    getTeamProfileDetails: (profileUrl: string, params: RequestParams = {}) =>
+      this.request<TeamProfileDetailsDto, any>({
+        path: `/api/profiles/${profileUrl}`,
+        method: "GET",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
      * @tags leaderboard-controller
      * @name GetOverallRobotGameLeaderboard
      * @request GET:/api/leaderboard/overall-robot-game
@@ -482,6 +589,20 @@ export class Api<
         path: `/api/leaderboard/overall-robot-game`,
         method: "GET",
         query: query,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags image-controller
+     * @name DownloadImage
+     * @request GET:/api/images/{id}
+     */
+    downloadImage: (id: string, params: RequestParams = {}) =>
+      this.request<string[], any>({
+        path: `/api/images/${id}`,
+        method: "GET",
         ...params,
       }),
 

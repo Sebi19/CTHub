@@ -18,7 +18,7 @@ public interface CompetitionMapper {
 
     @Mapping(target = "results", ignore = true)
     @Mapping(target = "registeredTeams", ignore = true)
-    @Mapping(target = "contactInfo", source = "contact")
+    @Mapping(target = "contactInfo", source = "contact", ignore = true)
     @Mapping(target = "nextCompetition", ignore = true)
     @Mapping(target = "previousCompetitions", ignore = true)
     CompetitionDetailDto toBaseDetailDto(Competition competition);

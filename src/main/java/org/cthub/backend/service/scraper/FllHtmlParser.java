@@ -393,6 +393,7 @@ public class FllHtmlParser {
 
         for (Element row : rows) {
             String href = row.attr("href");
+            String rowCountry = country;
 
             // Filter: Make sure it belongs to THIS season
             if (href.contains(seasonPart)) {
@@ -428,21 +429,21 @@ public class FllHtmlParser {
                     }
                 }
 
-                if (country == null && type == Competition.CompetitionType.QUALIFICATION) {
+                if (rowCountry == null && type == Competition.CompetitionType.QUALIFICATION) {
                     // For qualifications, country is often in the name (e.g., "Qualifikation Deutschland")
                     if (name.toLowerCase().contains("deutschland")) {
-                        country = "DE";
+                        rowCountry = "DE";
                     } else if (name.toLowerCase().contains("österreich")) {
-                        country = "AT";
+                        rowCountry = "AT";
                     } else if (name.toLowerCase().contains("schweiz")) {
-                        country = "CH";
+                        rowCountry = "CH";
                     }
                 }
 
                 results.add(ScrapedEventOverviewDto.builder()
                     .name(name)
                     .urlPart(urlPart)
-                    .country(country)
+                    .country(rowCountry)
                     .type(type)
                     .registeredTeamCount(registered)
                     .maxTeamCount(max)

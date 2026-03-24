@@ -24,7 +24,7 @@ import {useDisclosure} from "@mantine/hooks";
 import {useAuth} from "./features/auth/AuthContext.tsx";
 import type {UserDto} from "./api/generated.ts";
 import {LanguageSwitcher} from "./features/navbar/LanguageSwitcher.tsx";
-import {useTranslation} from "react-i18next";
+import {Trans, useTranslation} from "react-i18next";
 
 
 
@@ -200,25 +200,50 @@ export default function App() {
                     {/* Footer Container */}
                     <Box component="footer" w="100%" mt="auto">
                         <Divider />
-                        {/* Container prevents the infinite stretch on wide monitors */}
                         <Container size="xl" p="md">
                             <Flex
                                 direction={{ base: 'column', md: 'row' }}
                                 justify="space-between"
-                                align="center"
-                                gap="md"
+                                align={{ base: 'center', md: 'flex-start' }}
+                                gap="xl"
                             >
-                                {/* Left Side: Disclaimer with stricter max-width to force text wrapping */}
-                                <Text size="xs" c="dimmed" ta={{ base: 'center', md: 'left' }} maw={600}>
-                                    <i>FIRST</i>® LEGO® League is a jointly held trademark of <i>FIRST</i>® (
-                                    <Anchor href="https://www.firstinspires.org" target="_blank" size="xs" c="dimmed" td="underline">
-                                        www.firstinspires.org
-                                    </Anchor>
-                                    ) and the LEGO Group, <i>neither of which is overseeing, involved with, or responsible for this activity, product, or service.</i>
-                                </Text>
+                                {/* Left Side: Information Stack */}
+                                <Stack gap="xs" maw={750} ta={{ base: 'center', md: 'left' }}>
+
+                                    {/* 1. App Identity & Copyright */}
+                                    <Text size="sm" fw={600} c="var(--mantine-color-text)">
+                                        {t("app.footer.app_name")} <Text component="span" fw={400} size="xs" c="dimmed">{t("app.footer.copyright", {year: new Date().getFullYear()})}</Text>
+                                    </Text>
+
+                                    {/* 2. Data Source */}
+                                    <Text size="xs" c="dimmed">
+                                        <Trans
+                                            i18nKey="app.footer.data_source"
+                                            t={t}
+                                            components={{
+                                                a: (
+                                                    <Anchor
+                                                        href={"https://www.first-lego-league.org/"}
+                                                        target="_blank"
+                                                        td="underline"
+                                                    />
+                                                )
+                                            }}
+                                        />
+                                    </Text>
+
+                                    {/* 3. FIRST Disclaimer (The actual fine print) */}
+                                    <Text c="dimmed" style={{ fontSize: '0.65rem', lineHeight: 1.4 }}>
+                                        <i>FIRST</i>® LEGO® League is a jointly held trademark of <i>FIRST</i>® (
+                                        <Anchor href="https://www.firstinspires.org" target="_blank" c="dimmed" td="underline" style={{ fontSize: 'inherit' }}>
+                                            www.firstinspires.org
+                                        </Anchor>
+                                        ) and the LEGO Group, <i>neither of which is overseeing, involved with, or responsible for this activity, product, or service.</i>
+                                    </Text>
+                                </Stack>
 
                                 {/* Right Side: Links */}
-                                <Group gap="xl">
+                                <Group gap="xl" pt={{ base: 0, md: 2 }}>
                                     <Anchor size="sm" c="dimmed" onClick={() => navigate('/impressum')}>
                                         {t("app.footer.imprint")}
                                     </Anchor>

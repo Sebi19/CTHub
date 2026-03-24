@@ -20,7 +20,9 @@ export const de = {
         footer: {
             imprint: "Impressum",
             privacy: "Datenschutz",
-
+            app_name: "Challenge Team Hub",
+            copyright: "©{{year}} von Sebastian Schreitter",
+            data_source: "Datenquelle: Öffentlich zugängliche Wettbewerbsergebnisse von HANDS on TECHNOLOGY e.V. (<a>www.first-lego-league.org</a>).",
         },
         sidebar: {
             menu: "Menü",

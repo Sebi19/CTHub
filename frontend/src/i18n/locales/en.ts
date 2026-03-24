@@ -20,6 +20,9 @@ export const en: I18nLocale = {
         footer: {
             imprint: "Imprint",
             privacy: "Privacy Policy",
+            app_name: "Challenge Team Hub",
+            copyright: "©{{year}} by Sebastian Schreitter",
+            data_source: "Data source: Publicly available competition results from HANDS on TECHNOLOGY e.V. (<a>www.first-lego-league.org</a>)."
         },
         sidebar: {
             menu: "Menu",

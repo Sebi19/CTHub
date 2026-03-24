@@ -128,10 +128,10 @@ export const SwipeableTabs = ({ value, onChange, items }: SwipeableTabsProps) =>
                 mt="md"
                 slideGap="lg"
                 draggable={typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches}
-                styles={{ container: { alignItems: 'flex-start' } }}
+                styles={{ container: { alignItems: 'flex-start' }}}
             >
                 {items.map((item) => (
-                    <Carousel.Slide key={item.value} miw={0}>
+                    <Carousel.Slide key={item.value} miw={0} styles={{ slide: {overflow: 'hidden'}}}>
                         {item.content}
                     </Carousel.Slide>
                 ))}

@@ -179,18 +179,20 @@ export const CompetitionDetailPage = () => {
                                 w={{base: '100%', xs: 'fit-content'}}>
 
                         {/* Date Card */}
-                        <Card withBorder radius="md" p="md" bg="transparent">
-                            <Group gap="xs" mb="xs" c="dimmed">
-                                <IconCalendar size={20}/>
-                                <Text fw={500}>{t('app.competition.detail.date')}</Text>
-                            </Group>
-                            {competition.endDate ? (
-                                <Text>{`${dayjs(competition.date).format('L')} - ${dayjs(competition.endDate).format('L')}`}</Text>
-                            ) : (
-                                <Text>{dayjs(competition.date).format('L')}</Text>)
-                            }
+                        {competition.date && (
+                            <Card withBorder radius="md" p="md" bg="transparent">
+                                <Group gap="xs" mb="xs" c="dimmed">
+                                    <IconCalendar size={20}/>
+                                    <Text fw={500}>{t('app.competition.detail.date')}</Text>
+                                </Group>
+                                {competition.endDate ? (
+                                    <Text>{`${dayjs(competition.date).format('L')} - ${dayjs(competition.endDate).format('L')}`}</Text>
+                                ) : (
+                                    <Text>{dayjs(competition.date).format('L')}</Text>)
+                                }
 
-                        </Card>
+                            </Card>
+                        )}
 
                         {/* Location Card */}
                         {competition.location && (

@@ -7,7 +7,7 @@ import {
     ActionIcon,
     useMantineColorScheme,
     useComputedColorScheme,
-    Burger, Stack, Drawer, Menu, Avatar, Text, rem, Tooltip
+    Burger, Stack, Drawer, Menu, Avatar, Text, rem, Tooltip, Box, Divider, Anchor, Flex, Container
 } from '@mantine/core';
 import {useNavigate, useLocation, Outlet} from 'react-router-dom';
 import {
@@ -189,8 +189,48 @@ export default function App() {
                 </Stack>
             </Drawer>
 
-            <AppShell.Main h="calc(100vh - 60px)">
-                <Outlet />
+            <AppShell.Main>
+                <Stack justify="space-between" style={{ minHeight: 'calc(100dvh - 60px)' }} gap={0}>
+
+                    {/* Page Content Wrapper */}
+                    <Box style={{ flexGrow: 1 }}>
+                        <Outlet />
+                    </Box>
+
+                    {/* Footer Container */}
+                    <Box component="footer" w="100%" mt="auto">
+                        <Divider />
+                        {/* Container prevents the infinite stretch on wide monitors */}
+                        <Container size="xl" p="md">
+                            <Flex
+                                direction={{ base: 'column', md: 'row' }}
+                                justify="space-between"
+                                align="center"
+                                gap="md"
+                            >
+                                {/* Left Side: Disclaimer with stricter max-width to force text wrapping */}
+                                <Text size="xs" c="dimmed" ta={{ base: 'center', md: 'left' }} maw={600}>
+                                    <i>FIRST</i>® LEGO® League is a jointly held trademark of <i>FIRST</i>® (
+                                    <Anchor href="https://www.firstinspires.org" target="_blank" size="xs" c="dimmed" td="underline">
+                                        www.firstinspires.org
+                                    </Anchor>
+                                    ) and the LEGO Group, <i>neither of which is overseeing, involved with, or responsible for this activity, product, or service.</i>
+                                </Text>
+
+                                {/* Right Side: Links */}
+                                <Group gap="xl">
+                                    <Anchor size="sm" c="dimmed" onClick={() => navigate('/impressum')}>
+                                        {t("app.footer.imprint")}
+                                    </Anchor>
+                                    <Anchor size="sm" c="dimmed" onClick={() => navigate('/privacy')}>
+                                        {t("app.footer.privacy")}
+                                    </Anchor>
+                                </Group>
+                            </Flex>
+                        </Container>
+                    </Box>
+
+                </Stack>
             </AppShell.Main>
         </AppShell>
     );

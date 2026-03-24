@@ -17,6 +17,10 @@ export const en: I18nLocale = {
             toggleLanguage: "Change Language",
             currentLanguage: "EN",
         },
+        footer: {
+            imprint: "Imprint",
+            privacy: "Privacy Policy",
+        },
         sidebar: {
             menu: "Menu",
             login: "Login",
@@ -179,6 +183,11 @@ export const en: I18nLocale = {
                 results_not_available: "No results available yet.",
                 season_journey: "Season Journey",
                 no_competitions: "This team has not participated in any competitions this season.",
+                links: {
+                    show_more_one: "Show 1 more",
+                    show_more_other: "Show {{count}} more",
+                    show_less: "Show less",
+                },
                 awards: {
                     title: "Awards & Nominations",
                     none: "No awards or nominations for this team in this competition.",

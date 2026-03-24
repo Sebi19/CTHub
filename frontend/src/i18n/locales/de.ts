@@ -17,6 +17,11 @@ export const de = {
             toggleLanguage: "Sprache wechseln",
             currentLanguage: "DE",
         },
+        footer: {
+            imprint: "Impressum",
+            privacy: "Datenschutz",
+
+        },
         sidebar: {
             menu: "Menü",
             login: "Anmelden",
@@ -182,6 +187,11 @@ export const de = {
                 awards: {
                     title: "Pokale und Nominierungen",
                     none: "Keine Pokale oder Nominierungen für diesen Wettbewerb.",
+                },
+                links: {
+                    show_more_one: "{{count}} weiteren anzeigen",
+                    show_more_other: "{{count}} weitere anzeigen",
+                    show_less: "Weniger anzeigen",
                 },
                 robot_game: {
                     title: "Robot-Game",

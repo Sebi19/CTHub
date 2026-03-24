@@ -5,7 +5,7 @@ import {
     IconBrandTiktok,
     IconBrandDiscord,
     IconBrandLinkedin,
-    IconWorld
+    IconWorld, IconBrandTwitter, IconBrandX
 } from '@tabler/icons-react';
 import React from 'react';
 
@@ -80,9 +80,27 @@ export const parseTeamLink = (rawUrl: string, fallbackLabel?: string): ParsedLin
             color = "indigo";
             label = 'Discord';
         } else if (hostname.includes('linkedin.com')) {
-            icon = <IconBrandLinkedin size={18} />;
+            icon = <IconBrandLinkedin size={18}/>;
             color = "blue";
             label = 'LinkedIn';
+        } else if (hostname.includes('twitter.com')) {
+            icon = <IconBrandTwitter size={18}/>;
+            color = "cyan";
+            const parts = pathname.split('/');
+            if (parts.length > 1 && parts[1]) {
+                label = `@${parts[1]}`;
+            } else {
+                label = 'Twitter';
+            }
+        } else if (hostname === 'x.com') {
+            icon = <IconBrandX />;
+            color = "dark";
+            const parts = pathname.split('/');
+            if (parts.length > 1 && parts[1]) {
+                label = `@${parts[1]}`;
+            } else {
+                label = 'X';
+            }
         } else {
             // It's a generic website.
             // Strip protocol and 'www.' for a cleaner display (e.g., "myteam.com")

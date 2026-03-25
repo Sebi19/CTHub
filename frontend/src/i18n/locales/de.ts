@@ -8,6 +8,26 @@ export const de = {
                     noImage: "Kein Bild verfügbar",
                     noProfile: "Kein Profil verfügbar",
                 }
+            },
+            robot_game: {
+                round_short: "R",
+                round_short_pr1: "VR1",
+                round_short_pr2: "VR2",
+                round_short_pr3: "VR3",
+                round_short_r16: "AF",
+                round_short_qf: "VF",
+                round_short_sf: "HF",
+                round_short_f1: "F1",
+                round_short_f2: "F2",
+                round_long: "Runde",
+                round_long_pr1: "Vorrunde 1",
+                round_long_pr2: "Vorrunde 2",
+                round_long_pr3: "Vorrunde 3",
+                round_long_r16: "Achtelfinale",
+                round_long_qf: "Viertelfinale",
+                round_long_sf: "Halbfinale",
+                round_long_f1: "Finale 1",
+                round_long_f2: "Finale 2",
             }
         },
         header: {
@@ -221,6 +241,21 @@ export const de = {
                         qf: "Viertelfinale",
                         sf: "Halbfinale",
                         f: "Finale",
+                    }
+                },
+                robot_game_stats: {
+                    title: "Robot-Game Statistik",
+                    highscore: "Bestleistung",
+                    average_score: "Durchschnitt",
+                    official_run_count: "Offizielle Runs",
+                    perfect_score: {
+                      line_one: "PERFEKTE",
+                      line_two: "PUNKTZAHL"
+                    },
+                    legend: {
+                        best_pr: "Beste Vorrunde",
+                        other_pr: "Andere Vorrunden",
+                        playoffs: "Finalrunden",
                     }
                 }
             }

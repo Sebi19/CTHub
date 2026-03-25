@@ -106,6 +106,8 @@ export interface SeasonDto {
   /** @format int32 */
   startYear: number;
   active: boolean;
+  /** @format int32 */
+  maxPoints?: number;
 }
 
 export interface SeasonTeamDetailsDto {

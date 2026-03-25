@@ -10,6 +10,7 @@ import {CompetitionTypeBadge} from "../common/competition/CompetitionTypeBadge.t
 import {CompetitionTypeIcon} from "../common/competition/CompetitionTypeIcon.tsx";
 import {SeasonTeamAvatar} from "../common/team/avatar/SeasonTeamAvatar.tsx";
 import {useState} from "react";
+import {TeamRobotgameStats} from "../common/team/TeamRobotgameStats.tsx";
 
 interface SeasonTeamDetailsProps {
     teamDetails: SeasonTeamDetailsDto;
@@ -195,6 +196,8 @@ export const SeasonTeamDetails = ({teamDetails, hideSeasonBadge}: SeasonTeamDeta
 
                 )}
             </Stack>
+            
+            <TeamRobotgameStats records={sortedRecords}/>
         </Box>
     )
 }

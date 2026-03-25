@@ -19,4 +19,5 @@ public class SeasonDto {
     private Integer startYear;
     @NotNull
     private boolean active;
+    private Integer maxPoints;
 }

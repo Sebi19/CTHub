@@ -8,6 +8,26 @@ export const en: I18nLocale = {
                     noImage: "No image available",
                     noProfile: "No profile available",
                 }
+            },
+            robot_game: {
+                round_short: "R",
+                round_short_pr1: "PR1",
+                round_short_pr2: "PR2",
+                round_short_pr3: "PR3",
+                round_short_r16: "R16",
+                round_short_qf: "QF",
+                round_short_sf: "SF",
+                round_short_f1: "F1",
+                round_short_f2: "F2",
+                round_long: "Round",
+                round_long_pr1: "Preliminary Round 1",
+                round_long_pr2: "Preliminary Round 2",
+                round_long_pr3: "Preliminary Round 3",
+                round_long_r16: "Round of 16",
+                round_long_qf: "Quarterfinals",
+                round_long_sf: "Semifinals",
+                round_long_f1: "Finals 1",
+                round_long_f2: "Finals 2",
             }
         },
         header: {
@@ -221,6 +241,21 @@ export const en: I18nLocale = {
                         qf: "Quarterfinals",
                         sf: "Semifinals",
                         f: "Finals",
+                    }
+                },
+                robot_game_stats: {
+                    title: "Robot-Game Stats",
+                    highscore: "Best Score",
+                    average_score: "Average Score",
+                    official_run_count: "Official Runs",
+                    perfect_score: {
+                        line_one: "PERFECT",
+                        line_two: "SCORE"
+                    },
+                    legend: {
+                        best_pr: "Best Preliminary Round",
+                        other_pr: "Other Preliminary Rounds",
+                        playoffs: "Playoffs",
                     }
                 }
             }

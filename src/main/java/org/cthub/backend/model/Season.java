@@ -29,4 +29,6 @@ public class Season {
     private boolean active;
 
     private String overviewHash;
+
+    private Integer maxPoints;
 }

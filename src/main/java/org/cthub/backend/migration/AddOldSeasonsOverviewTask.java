@@ -23,13 +23,14 @@ public class AddOldSeasonsOverviewTask implements CommandLineRunner {
         String name,
         Integer startYear,
         String overviewUrl,
-        String finalUrlPart
+        String finalUrlPart,
+        Integer maxPoints
     ) {}
 
     private static final List<SeasonData> SEASONS_TO_ADD = List.of(
-        new SeasonData("2022-23", "Superpowered", 2022, "https://web.archive.org/web/20230306064212/https://www.first-lego-league.org/de/austragungsorte", "finale-2022-23---dresden"),
-        new SeasonData("2023-24", "Masterpiece", 2023, "https://web.archive.org/web/20240416003245/https://www.first-lego-league.org/de/austragungsorte", "finale-2024-25"),
-        new SeasonData("2024-25", "Submerged", 2024, "https://web.archive.org/web/20250326220633/https://www.first-lego-league.org/de/austragungsorte", "finale-2025-26")
+        new SeasonData("2022-23", "Superpowered", 2022, "https://web.archive.org/web/20230306064212/https://www.first-lego-league.org/de/austragungsorte", "finale-2022-23---dresden", 410),
+        new SeasonData("2023-24", "Masterpiece", 2023, "https://web.archive.org/web/20240416003245/https://www.first-lego-league.org/de/austragungsorte", "finale-2024-25", 550),
+        new SeasonData("2024-25", "Submerged", 2024, "https://web.archive.org/web/20250326220633/https://www.first-lego-league.org/de/austragungsorte", "finale-2025-26", 620)
     );
 
     private final ScraperService scraperService;
@@ -51,6 +52,7 @@ public class AddOldSeasonsOverviewTask implements CommandLineRunner {
                 .name(season.name)
                 .startYear(season.startYear)
                 .active(false)
+                .maxPoints(season.maxPoints)
                 .overviewHash(null) // Will be set after scraping
                 .build();
 

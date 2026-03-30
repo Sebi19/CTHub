@@ -38,6 +38,8 @@ import {getCompetitionLink, getCompetitionsListLink, navigateBack} from "../../u
 import { SeasonBadge } from '../common/season/SeasonBadge.tsx';
 import {CompetitionTypeBadge} from "../common/competition/CompetitionTypeBadge.tsx";
 import {type SwipeableTabItem, SwipeableTabs} from "../common/layout/SwipeableTabs.tsx";
+import {NotFoundPage} from "../error/NotFoundPage.tsx";
+import {ServerErrorPage} from "../error/ServerErrorPage.tsx";
 
 export const CompetitionDetailPage = () => {
     const { seasonId, urlPart } = useParams();
@@ -46,8 +48,8 @@ export const CompetitionDetailPage = () => {
     const { i18n, t } = useTranslation();
 
     const [competition, setCompetition] = useState<CompetitionDetailDto | null>(null);
+    const [errorCode, setErrorCode] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
 
     const teamCount = competition ? competition.registeredTeams.length : 0;
 
@@ -117,8 +119,10 @@ export const CompetitionDetailPage = () => {
                 setCompetition(res.data);
                 setIsLoading(false);
             })
-            .catch(() => {
-                setError(t('app.competition.detail.error_loading'));
+            .catch((error) => {
+                const status = error.response?.status || 500;
+
+                setErrorCode(status);
                 setIsLoading(false);
             });
     }, [seasonId, urlPart, t]);
@@ -128,7 +132,15 @@ export const CompetitionDetailPage = () => {
     };
 
     if (isLoading) return <Center h="50vh"><Loader size="lg" /></Center>;
-    if (error || !competition) return <Center h="50vh"><Text c="red">{error}</Text></Center>;
+
+    if (errorCode === 404 || !competition) {
+        return <NotFoundPage />;
+    }
+
+    // Catch 500s, 502s, network timeouts, etc.
+    if (errorCode) {
+        return <ServerErrorPage />;
+    }
 
     return (
         <Container size="xl" py="xl">

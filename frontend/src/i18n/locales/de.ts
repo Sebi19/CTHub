@@ -106,7 +106,6 @@ export const de = {
             detail: {
                 doc_title: "{{competitionName}} - {{seasonId}} | CTH",
                 back: "Zurück",
-                error_loading: "Fehler beim Laden der Wettbewerbsdetails",
                 inactive_title: "Wettbewerb inaktiv",
                 inactive_message: "Dieser Wettbewerb ist derzeit nicht aktiv. Es könnte sein dass er abgesagt wurde oder sich die URL geändert hat. Überprüfen sie die offizielle Website für weitere Informationen.",
                 type: "Wettbewerb",

@@ -106,7 +106,6 @@ export const en: I18nLocale = {
             detail: {
                 doc_title: "{{competitionName}} - {{seasonId}} | CTH",
                 back: "Back",
-                error_loading: "Error loading competition details",
                 inactive_title: "Competition Inactive",
                 inactive_message: "This competition is currently not active. It may have been cancelled or the URL may have changed. Please check the official website for more information.",
                 type: "Competitions",

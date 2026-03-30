@@ -4,11 +4,11 @@ import { useTranslation } from 'react-i18next';
 import {Link, useNavigate} from 'react-router-dom';
 import type {TeamCompetitionRecordDto} from "../../api/generated.ts";
 import {getCompetitionLink} from "../../utils/routingUtils.ts";
-import dayjs from "dayjs";
 import {PlaceBadge} from "../common/team/PlaceBadge.tsx";
 import {TeamAchievementsStack} from "../common/team/TeamAchievementsStack.tsx";
 import {AdvancingBadge} from "../common/team/AdvancingBadge.tsx";
 import {TeamRobotgameOverview} from "../common/team/TeamRobotgameOverview.tsx";
+import {getFormattedCompetitionDate} from "../../utils/competitionUtils.ts";
 
 interface CompetitionRecordCardProps extends BoxProps {
     record: TeamCompetitionRecordDto;
@@ -68,11 +68,7 @@ export const CompetitionRecordCard = ({ record, ...other }: CompetitionRecordCar
                     </Anchor>
                     <Group gap="xs" mt={4}>
                         <IconCalendar size={14} style={{ color: 'var(--mantine-color-dimmed)' }} />
-                        {comp.endDate ? (
-                            <Text  size="xs" c="dimmed">{`${dayjs(comp.date).format('L')} - ${dayjs(comp.endDate).format('L')}`}</Text>
-                        ) : (
-                            <Text size="xs" c="dimmed">{dayjs(comp.date).format('L')}</Text>)
-                        }
+                        <Text  size="xs" c="dimmed">{getFormattedCompetitionDate(comp)}</Text>
                     </Group>
                 </Box>
 

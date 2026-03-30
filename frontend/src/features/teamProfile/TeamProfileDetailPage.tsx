@@ -21,6 +21,8 @@ import dayjs from "dayjs";
 import {getCompetitionsListLink, navigateBack} from "../../utils/routingUtils.ts";
 import {ProfileAvatar} from "../common/team/avatar/ProfileAvatar.tsx";
 import {type SwipeableTabItem, SwipeableTabs} from "../common/layout/SwipeableTabs.tsx";
+import {NotFoundPage} from "../error/NotFoundPage.tsx";
+import {ServerErrorPage} from "../error/ServerErrorPage.tsx";
 
 export const TeamProfileDetailPage = () => {
     const {t} = useTranslation();
@@ -29,6 +31,7 @@ export const TeamProfileDetailPage = () => {
     const { teamProfileUrl, seasonId } = useParams();
 
     const [profile, setProfile] = useState<TeamProfileDetailsDto | null>(null);
+    const [errorCode, setErrorCode] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     const [activeTab, setActiveTab] = useState<string>(seasonId || 'profile');
@@ -41,6 +44,9 @@ export const TeamProfileDetailPage = () => {
     }, [seasonId]);
 
     useEffect(() => {
+        setProfile(null);
+        setErrorCode(null);
+        setIsLoading(true);
         if (!teamProfileUrl) return;
 
         // Hook this up to your generated API client method!
@@ -49,7 +55,10 @@ export const TeamProfileDetailPage = () => {
                 setProfile(res.data);
                 setIsLoading(false);
             })
-            .catch(() => {
+            .catch((error) => {
+                const status = error.response?.status || 500;
+
+                setErrorCode(status);
                 setIsLoading(false);
             });
     }, [teamProfileUrl]);
@@ -140,7 +149,14 @@ export const TeamProfileDetailPage = () => {
 
     if (isLoading) return <Center h="50vh"><Loader /></Center>;
 
-    if (!profile) return <Center h="50vh"><Text>Profile not found</Text></Center>;
+    if (errorCode === 404 || !profile) {
+        return <NotFoundPage />;
+    }
+
+    // Catch 500s, 502s, network timeouts, etc.
+    if (errorCode) {
+        return <ServerErrorPage />;
+    }
 
     return (
         <Container size="xl" py="xl">

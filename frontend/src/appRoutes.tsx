@@ -6,6 +6,7 @@ import {CompetitionDetailPage} from "./features/competition/CompetitionDetailPag
 import {RobotGameLeaderboardPage} from "./features/robotGameLeaderboard/RobotGameLeaderboardPage.tsx";
 import {SeasonTeamDetailPage} from "./features/seasonTeam/SeasonTeamDetailPage.tsx";
 import {TeamProfileDetailPage} from "./features/teamProfile/TeamProfileDetailPage.tsx";
+import {NotFoundPage} from "./features/error/NotFoundPage.tsx";
 
 export function AppRoutes() {
     const {isAuthenticated} = useAuth();
@@ -32,6 +33,8 @@ export function AppRoutes() {
                 <Route path="/:teamProfileUrl" element={<TeamProfileDetailPage/>}/>
 
                 <Route path="/:teamProfileUrl/:seasonId" element={<TeamProfileDetailPage/>}/>
+
+                <Route path="*" element={<NotFoundPage />} />
 
                 {/* Example Protected Page (Add later) */}
                 {/* <Route path="my-team" element={<ProtectedRoute><MyTeamPage /></ProtectedRoute>} /> */}

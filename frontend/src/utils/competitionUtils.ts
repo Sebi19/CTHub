@@ -1,4 +1,9 @@
-import {CompetitionAwardCategoryDto, type CompetitionResultsDto, CompetitionType} from "../api/generated.ts";
+import {
+    CompetitionAwardCategoryDto,
+    type CompetitionResultsDto,
+    type CompetitionShortInfoDto,
+    CompetitionType
+} from "../api/generated.ts";
 import {
     IconBulb,
     IconChevronsUp,
@@ -10,6 +15,7 @@ import {
 } from "@tabler/icons-react";
 import type {MantineColor} from "@mantine/core";
 import {checkExhaustive} from "./typeUtils.ts";
+import dayjs from "dayjs";
 
 /**
  * Returns the standardized Mantine color for a competition type.
@@ -76,3 +82,13 @@ export const getCategoryConfig = (category: CompetitionAwardCategoryDto): Catego
             return { CategoryIcon: IconQuestionMark, color: 'gray' };
     }
 };
+
+export const getFormattedCompetitionDate = (competition: Omit<CompetitionShortInfoDto, 'resultsAvailable'>): string => {
+    if (!competition.date) return 'N/A';
+
+    if (!competition.endDate) {
+        return dayjs(competition.date).format('L');
+    }
+
+    return `${dayjs(competition.date).format('L')} - ${dayjs(competition.endDate).format('L')}`;
+}

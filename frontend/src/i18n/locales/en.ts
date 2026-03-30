@@ -30,6 +30,20 @@ export const en: I18nLocale = {
                 round_long_f2: "Finals 2",
             }
         },
+        error: {
+            error_404: {
+                doc_title: "404 Not Found | CTH",
+                title: "Page Not Found",
+                description: "The page you are looking for does not exist or has been moved. Please check the URL and try again.",
+                back_home: "Back to Home",
+            },
+            error_500: {
+                doc_title: "500 Server Error | CTH",
+                title: "Something went wrong",
+                description: "Our servers are currently experiencing issues. Please try again later or contact support if the problem persists.",
+                retry: "Refresh page",
+            },
+        },
         header: {
             leaderboard: "Leaderboard",
             login: "Login",

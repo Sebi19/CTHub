@@ -30,6 +30,20 @@ export const de = {
                 round_long_f2: "Finale 2",
             }
         },
+        error: {
+            error_404: {
+                doc_title: "Seite nicht gefunden | CTH",
+                title: "Seite nicht gefunden",
+                description: "Leider existiert die Seite, die Sie suchen, nicht. Möglicherweise haben Sie die Adresse falsch eingegeben oder die Seite wurde auf eine andere URL verschoben.",
+                back_home: "Zur Startseite",
+            },
+            error_500: {
+                doc_title: "Serverfehler | CTH",
+                title: "Etwas ist schiefgelaufen",
+                description: "Unsere Server haben derzeit Probleme. Bitte versuchen Sie es später erneut oder kontaktieren Sie den Support, wenn das Problem weiterhin besteht.",
+                retry: "Seite aktualisieren",
+            },
+        },
         header: {
             leaderboard: "Rangliste",
             login: "Anmelden",

@@ -19,7 +19,7 @@ import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import type {CompetitionDetailDto} from '../../api/generated.ts';
 import {getCompetitionLink} from "../../utils/routingUtils.ts";
-import {getCompetitionTypeColor} from "../../utils/competitionUtils.ts";
+import {getCompetitionTypeColor, getFormattedCompetitionDate} from "../../utils/competitionUtils.ts";
 import {useSessionStorage} from "@mantine/hooks";
 
 interface Props {
@@ -124,7 +124,7 @@ export const CompetitionPreviousTab = ({ competition }: Props) => {
                                 {comp.date && (
                                     <Group gap="xs" c="dimmed">
                                         <IconCalendar size={16} />
-                                        <Text size="sm">{dayjs(comp.date).format('L')}</Text>
+                                        <Text size="sm">{getFormattedCompetitionDate(comp)}</Text>
                                     </Group>
                                 )}
                             </Stack>
@@ -167,7 +167,7 @@ export const CompetitionPreviousTab = ({ competition }: Props) => {
                                         {comp.date ? (
                                             <Group gap="xs" c="dimmed" wrap="nowrap">
                                                 <IconCalendar size={16} />
-                                                <Text size="sm">{dayjs(comp.date).format('L')}</Text>
+                                                <Text size="sm">{getFormattedCompetitionDate(comp)}</Text>
                                             </Group>
                                         ) : (
                                             <Text c="dimmed">-</Text>

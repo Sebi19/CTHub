@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useRef, useState} from 'react';
+import {useMemo, useState} from 'react';
 import {MantineReactTable, useMantineReactTable, type MRT_ColumnDef, type MRT_SortingState} from 'mantine-react-table';
 import {
     Text,
@@ -389,82 +389,6 @@ export const CompetitionRobotGameTab = ({ competition }: Props) => {
             withBorder: false,
         },
     });
-
-    const scrollRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const boxEl = scrollRef.current;
-        if (!boxEl) return;
-
-        let startX = 0;
-        let startY = 0;
-        let activeScroller: HTMLElement | null = null;
-
-        const handleTouchStart = (e: TouchEvent) => {
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-
-            // 1. Find the exact element that is natively scrolling
-            // (MRT generates internal containers, so we traverse up from the touch target to find it)
-            let node = e.target as HTMLElement;
-            activeScroller = null;
-
-            while (node && node !== document.body) {
-                if (node.scrollWidth > node.clientWidth) {
-                    const style = window.getComputedStyle(node);
-                    if (style.overflowX === 'auto' || style.overflowX === 'scroll') {
-                        activeScroller = node;
-                        break;
-                    }
-                }
-                if (node === boxEl) break; // Don't look higher than our wrapper
-                node = node.parentElement as HTMLElement;
-            }
-
-            // Fallback to the wrapper Box if no internal scroller was found
-            if (!activeScroller) activeScroller = boxEl;
-        };
-
-        const handleTouchMove = (e: TouchEvent) => {
-            if (!activeScroller) return;
-
-            const currentX = e.touches[0].clientX;
-            const currentY = e.touches[0].clientY;
-            const deltaX = startX - currentX;
-            const deltaY = startY - currentY;
-
-            // If the user is scrolling vertically, ignore it completely
-            if (Math.abs(deltaY) > Math.abs(deltaX)) return;
-
-            // 2. The Boundary Math
-            const { scrollLeft, scrollWidth, clientWidth } = activeScroller;
-
-            const isAtLeftEdge = scrollLeft <= 0;
-            // We use <= 1 instead of === 0 to account for sub-pixel zoom rounding bugs in mobile browsers!
-            const isAtRightEdge = Math.abs(scrollWidth - clientWidth - scrollLeft) <= 1;
-
-            // 3. The Smart Shield Logic
-            if (deltaX > 0 && !isAtRightEdge) {
-                // Swiping left (scrolling table to the right), and NOT at the right edge
-                e.stopPropagation();
-            } else if (deltaX < 0 && !isAtLeftEdge) {
-                // Swiping right (scrolling table to the left), and NOT at the left edge
-                e.stopPropagation();
-            }
-
-            // IF we reach this point, they ARE at the edge and pushing against it.
-            // We do NOTHING. The event bubbles up to Embla, and Embla seamlessly grabs the slide!
-        };
-
-        // We use passive: true because we aren't cancelling native scrolling, just managing bubbling
-        boxEl.addEventListener('touchstart', handleTouchStart, { passive: true });
-        boxEl.addEventListener('touchmove', handleTouchMove, { passive: true });
-
-        return () => {
-            boxEl.removeEventListener('touchstart', handleTouchStart);
-            boxEl.removeEventListener('touchmove', handleTouchMove);
-        };
-    }, []);
 
     return (
         <Stack gap="xl" mt="md">

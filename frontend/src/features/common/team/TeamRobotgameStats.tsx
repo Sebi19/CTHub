@@ -1,11 +1,12 @@
     import type {TeamCompetitionRecordDto} from "../../../api/generated.ts";
     import {useTranslation} from "react-i18next";
-    import {Box, Group, Paper, SimpleGrid, ThemeIcon, Title, Text, Tooltip} from "@mantine/core";
-    import {IconMathAvg, IconRobot, IconTrophy} from "@tabler/icons-react";
+    import {Box, Group, Paper, SimpleGrid, ThemeIcon, Title, Text, Tooltip, ScrollArea} from "@mantine/core";
+    import {IconCalendar, IconMathAvg, IconRobot, IconTrophy} from "@tabler/icons-react";
     import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip, ReferenceLine } from 'recharts';
-    import {getCompetitionTypeColor} from "../../../utils/competitionUtils.ts";
+    import {getCompetitionTypeColor, getFormattedCompetitionDate} from "../../../utils/competitionUtils.ts";
     import {useId} from "react";
     import {useElementSize} from "@mantine/hooks";
+    import {useCarouselScrollShield} from "../../../hooks/useCarouselScrollShield.ts";
     interface TeamRobotGameStatsProps {
         records: TeamCompetitionRecordDto[];
     }
@@ -50,8 +51,8 @@
                 <text x={x} y={y - 28} fill="var(--mantine-color-dimmed)" fontSize={10} textAnchor="middle">
                     {t('app.common.robot_game.round_short', { context: roundName.toLowerCase()})}
                 </text>
-                <text x={x} y={y - 12} fill="white" fontSize={14} fontWeight={700} textAnchor="middle">
-                    {value}
+                <text x={x} y={y - 12} fill="var(--mantine-color-text)" fontSize={14} fontWeight={700} textAnchor="middle">
+                    {Math.round(value)}
                 </text>
             </>
         );
@@ -68,6 +69,10 @@
         if (data.isDivider) {
             return (
                 <Paper px="md" py="sm" withBorder shadow="md" radius="md">
+                    <Group gap={2}>
+                        <IconCalendar size={14} style={{ color: 'var(--mantine-color-dimmed)' }} />
+                        <Text  size="xs" c="dimmed">{getFormattedCompetitionDate(data.competition)}</Text>
+                    </Group>
                     <Text fw={700} size="sm">{data.competitionName}</Text>
                 </Paper>
             );
@@ -75,13 +80,17 @@
 
         return (
             <Paper px="md" py="sm" withBorder shadow="md" radius="md">
-            <Text fw={700} size="sm">{data.competitionName}</Text>
+                <Group gap={2}>
+                    <IconCalendar size={14} style={{ color: 'var(--mantine-color-dimmed)' }} />
+                    <Text  size="xs" c="dimmed">{getFormattedCompetitionDate(data.competition)}</Text>
+                </Group>
+                <Text fw={700} size="sm">{data.competitionName}</Text>
                 <Text fw={500} size="xs" c="dimmed" mb={8}>{t("app.common.robot_game.round_long", {context: data.roundName.toLowerCase()})}</Text>
 
                 <Group gap="xs">
                     {data.isPlayoff ? <IconTrophy size={16} color="var(--mantine-color-violet-5)"/> : <IconRobot size={16} color="var(--mantine-color-blue-6)"/>}
                     <Text c={data.isPlayoff ? 'violet.5' : 'blue.6'} fw={700}>
-                        {data.score}
+                        {Math.round(data.score)}
                     </Text>
                 </Group>
             </Paper>
@@ -101,6 +110,8 @@
         const gradientId = `colorSplit-${rawId.replace(/:/g, '')}`;
 
         const { ref, width } = useElementSize();
+
+        const { ref: scrollRef, width: scrollWidth } = useElementSize();
 
         let highestScore = 0;
         let lowestScore = Infinity;
@@ -147,7 +158,8 @@
                             runLabel: shortCompName, // Empty label for the divider entry
                             score: null, // No score for the divider entry
                             isDivider: true, // Custom flag to identify dividers in the data
-                            competitionName: record.competition.name
+                            competitionName: record.competition.name,
+                            competition: record.competition
                         })
                         verticalDividers.push({
                             x: shortCompName, // Setting 'x' makes it a vertical line instead of horizontal!
@@ -162,14 +174,18 @@
                         previousCompName = shortCompName;
                     }
 
+                    const renderScore = runCount === 1 ? score + 0.001 : score;
+
+
                     chartData.push({
                         runLabel: runLabel,
-                        score: score, // Just one unified score property now!
+                        score: renderScore, // Just one unified score property now!
                         isDivider: false,
                         isPlayoff: isPlayoff,
                         subtle: !isPlayoff && score < rg.bestPr,
                         roundName: label,
-                        competitionName: record.competition.name
+                        competitionName: record.competition.name,
+                        competition: record.competition,
                     });
                 }
             };
@@ -231,7 +247,26 @@
         });
 
         const pixelsPerSection = width > 0 ? width / Math.max(1, totalSections) : Infinity;
-        const hideLabels = width > 0 && pixelsPerSection < 45;
+        const hideLabels = false; //width > 0 && pixelsPerSection < 45;
+
+        const MIN_PIXELS_PER_POINT = 45;
+        const BUFFER_PIXELS_PER_POINT = 5;
+
+        const preferredMinWidth = (chartData.length * MIN_PIXELS_PER_POINT) + 60;
+
+        let dynamicMinWidth = preferredMinWidth;
+
+        if (preferredMinWidth > scrollWidth) {
+            const minimalMinWidth = (chartData.length * (MIN_PIXELS_PER_POINT - BUFFER_PIXELS_PER_POINT)) + 60;
+            if (minimalMinWidth > scrollWidth) {
+                dynamicMinWidth = preferredMinWidth;
+            } else {
+                dynamicMinWidth = scrollWidth;
+            }
+        }
+
+        useCarouselScrollShield<HTMLDivElement>(scrollRef);
+
 
         return (
             <Box mt="xl">
@@ -263,125 +298,127 @@
                     </Paper>
                 </SimpleGrid>
 
-                <Paper withBorder p="md" radius="md" ref={ref}>
-                    <Box h={320}>
-                        <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={chartData} margin={{top: 30, right: 30, left: 0, bottom: 20}}>
-                                <defs>
-                                    <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
-                                        {lineLimits.map((lineLimit) => {
-                                            return (
-                                                <stop offset={`${lineLimit.stop}%`} stopColor={`var(--mantine-color-${lineLimit.color}-5)`} key={lineLimit.key}/>
-                                            )
-                                        })}
-                                    </linearGradient>
-                                </defs>
-                                {/* The Axes */}
-                                <XAxis dataKey="runLabel" hide/>
-                                <YAxis
-                                    domain={[minTick, maxTick]}
-                                    ticks={yTicks} // Force it to use our beautiful [200, 250, 300...] array
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{fill: 'var(--mantine-color-dimmed)', fontSize: 12}}
-                                    width={40}
-                                />
+                <ScrollArea type={"auto"} ref={scrollRef} style={{ width: '100%' }} mb="md">
+                    <Paper withBorder p="md" radius="md" ref={ref} miw={dynamicMinWidth}>
+                        <Box h={320}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={chartData} margin={{top: 30, right: 30, left: 0, bottom: 20}}>
+                                    <defs>
+                                        <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
+                                            {lineLimits.map((lineLimit) => {
+                                                return (
+                                                    <stop offset={`${lineLimit.stop}%`} stopColor={`var(--mantine-color-${lineLimit.color}-5)`} key={lineLimit.key}/>
+                                                )
+                                            })}
+                                        </linearGradient>
+                                    </defs>
+                                    {/* The Axes */}
+                                    <XAxis dataKey="runLabel" hide/>
+                                    <YAxis
+                                        domain={[minTick, maxTick]}
+                                        ticks={yTicks} // Force it to use our beautiful [200, 250, 300...] array
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{fill: 'var(--mantine-color-dimmed)', fontSize: 12}}
+                                        width={40}
+                                    />
 
-                                {/* Your Custom Tooltip */}
-                                <RechartsTooltip filterNull={false} content={(props) => <ChartTooltip {...props} chartData={chartData}/>}
-                                         cursor={{stroke: 'var(--mantine-color-dark-3)', strokeWidth: 2}}/>
+                                    {/* Your Custom Tooltip */}
+                                    <RechartsTooltip filterNull={false} content={(props) => <ChartTooltip {...props} chartData={chartData}/>}
+                                             cursor={{stroke: 'var(--mantine-color-dark-3)', strokeWidth: 2}}/>
 
-                                <ReferenceLine
-                                    y={seasonPerfectScore}
-                                    stroke="var(--mantine-color-yellow-5)"
-                                    strokeDasharray="4 4"
-                                    label={(props: any) => (
-                                        <text
-                                            y={props.viewBox.y - 18} // Initial Y position
-                                            fill="var(--mantine-color-yellow-5)"
-                                            fontSize={9} // Slightly smaller for better fit
-                                            fontWeight={800}
-                                            style={{ pointerEvents: 'none' }} // Ensure it doesn't block dot hovers
-                                        >
-                                            <tspan x={props.viewBox.x + 5} dy="0">{t("app.season_team.detail.robot_game_stats.perfect_score.line_one")}</tspan>
-                                            <tspan x={props.viewBox.x + 5} dy="11">{t("app.season_team.detail.robot_game_stats.perfect_score.line_two")}</tspan>
-                                        </text>
-                                    )}
-                                />
+                                    <ReferenceLine
+                                        y={seasonPerfectScore}
+                                        stroke="var(--mantine-color-yellow-5)"
+                                        strokeDasharray="4 4"
+                                        label={(props: any) => (
+                                            <text
+                                                y={props.viewBox.y - 18} // Initial Y position
+                                                fill="var(--mantine-color-yellow-5)"
+                                                fontSize={9} // Slightly smaller for better fit
+                                                fontWeight={800}
+                                                style={{ pointerEvents: 'none' }} // Ensure it doesn't block dot hovers
+                                            >
+                                                <tspan x={props.viewBox.x + 5} dy="0">{t("app.season_team.detail.robot_game_stats.perfect_score.line_one")}</tspan>
+                                                <tspan x={props.viewBox.x + 5} dy="11">{t("app.season_team.detail.robot_game_stats.perfect_score.line_two")}</tspan>
+                                            </text>
+                                        )}
+                                    />
 
-                                {/* Vertical Dividers */}
-                                {verticalDividers.map((div, i) => {
-                                    const span = compCounts[div.compIndex] + 1; // +1 for the divider itself
-                                    const availablePixels = (span * pixelsPerSection) - 40;
-                                    const maxChars = Math.floor(availablePixels / 8);
+                                    {/* Vertical Dividers */}
+                                    {verticalDividers.map((div, i) => {
+                                        const span = compCounts[div.compIndex] + 1; // +1 for the divider itself
+                                        const availablePixels = (span * pixelsPerSection) - 40;
+                                        const maxChars = Math.floor(availablePixels / 8);
 
-                                    let displayLabel = div.label;
+                                        let displayLabel = div.label;
 
-                                    if (maxChars < 5) {
-                                        displayLabel = '';
-                                    } else if (displayLabel.length > maxChars) {
-                                        // Truncate and add ellipsis, taking the 3 dots into account
-                                        displayLabel = `${displayLabel.substring(0, maxChars - 3)}...`;
-                                    }
+                                        if (maxChars < 5) {
+                                            displayLabel = '';
+                                        } else if (displayLabel.length > maxChars) {
+                                            // Truncate and add ellipsis, taking the 3 dots into account
+                                            displayLabel = `${displayLabel.substring(0, maxChars - 3)}...`;
+                                        }
 
-                                    return (
-                                        <ReferenceLine
-                                            key={i}
-                                            x={div.x}
-                                            stroke="var(--mantine-color-gray-5)"
-                                            label={(props) => (
-                                                <Tooltip label={div.label}>
-                                                    <text
-                                                        x={props.viewBox.x + 8}
-                                                        y={props.viewBox.y - 16}
-                                                        fill="var(--mantine-color-gray-3)"
-                                                        fontSize={14}
-                                                    >
-                                                        {displayLabel}
-                                                    </text>
-                                                </Tooltip>
-                                            )}
-                                        />
-                                    );
-                                })}
+                                        return (
+                                            <ReferenceLine
+                                                key={i}
+                                                x={div.x}
+                                                stroke="var(--mantine-color-gray-5)"
+                                                label={(props) => (
+                                                    <Tooltip label={div.label}>
+                                                        <text
+                                                            x={props.viewBox.x + 8}
+                                                            y={props.viewBox.y - 16}
+                                                            fill="var(--mantine-color-dimmed)"
+                                                            fontSize={14}
+                                                        >
+                                                            {displayLabel}
+                                                        </text>
+                                                    </Tooltip>
+                                                )}
+                                            />
+                                        );
+                                    })}
 
-                                {/* The Actual Line */}
-                                <Line
-                                    type="monotone"
-                                    dataKey="score"
-                                    stroke={`url(#${gradientId})`}
-                                    strokeWidth={3}
-                                    connectNulls // Keeps your curve smooth over the vertical dividers!
+                                    {/* The Actual Line */}
+                                    <Line
+                                        type="linear"
+                                        dataKey="score"
+                                        stroke={`url(#${gradientId})`}
+                                        strokeWidth={3}
+                                        connectNulls // Keeps your curve smooth over the vertical dividers!
 
-                                    // 1. YOUR CUSTOM DOT
-                                    dot={<CustomDot/>}
-                                    activeDot={<CustomDot active />}
+                                        // 1. YOUR CUSTOM DOT
+                                        dot={<CustomDot/>}
+                                        activeDot={<CustomDot active />}
 
-                                    // 2. YOUR CUSTOM LABELS
-                                    label={<CustomLabel chartData={chartData} hideLabels={hideLabels}/>}
-                                />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </Box>
-                    <Group justify="center" gap="xl" mt="md" pb="xs">
-                        <Group gap={6}>
-                            <Box w={10} h={10} style={{ borderRadius: '50%' }} bg="blue.6" />
-                            <Text size="xs" c="dimmed" fw={500}>{t("app.season_team.detail.robot_game_stats.legend.best_pr")}</Text>
-                        </Group>
-
-                        <Group gap={6}>
-                            <Box w={10} h={10} style={{ borderRadius: '50%' }} bg="gray.4" />
-                            <Text size="xs" c="dimmed" fw={500}>{t("app.season_team.detail.robot_game_stats.legend.other_pr")}</Text>
-                        </Group>
-
-                        {hasPlayoffRun && (
+                                        // 2. YOUR CUSTOM LABELS
+                                        label={<CustomLabel chartData={chartData} hideLabels={hideLabels}/>}
+                                    />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </Box>
+                        <Group justify="center" gap="xl" mt="md" pb="xs">
                             <Group gap={6}>
-                                <Box w={10} h={10} style={{ borderRadius: '50%' }} bg="violet.5" />
-                                <Text size="xs" c="dimmed" fw={500}>{t("app.season_team.detail.robot_game_stats.legend.playoffs")}</Text>
+                                <Box w={10} h={10} style={{ borderRadius: '50%' }} bg="blue.6" />
+                                <Text size="xs" c="dimmed" fw={500}>{t("app.season_team.detail.robot_game_stats.legend.best_pr")}</Text>
                             </Group>
-                        )}
-                    </Group>
-                </Paper>
+
+                            <Group gap={6}>
+                                <Box w={10} h={10} style={{ borderRadius: '50%' }} bg="gray.4" />
+                                <Text size="xs" c="dimmed" fw={500}>{t("app.season_team.detail.robot_game_stats.legend.other_pr")}</Text>
+                            </Group>
+
+                            {hasPlayoffRun && (
+                                <Group gap={6}>
+                                    <Box w={10} h={10} style={{ borderRadius: '50%' }} bg="violet.5" />
+                                    <Text size="xs" c="dimmed" fw={500}>{t("app.season_team.detail.robot_game_stats.legend.playoffs")}</Text>
+                                </Group>
+                            )}
+                        </Group>
+                    </Paper>
+                </ScrollArea>
             </Box>
         );
     }

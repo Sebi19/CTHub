@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {useParams, useNavigate, useLocation} from 'react-router-dom';
-import {Container, Text, Loader, Center, Button} from '@mantine/core';
+import {Container, Loader, Center, Button} from '@mantine/core';
 import {IconArrowLeft } from '@tabler/icons-react';
 import type {SeasonTeamDetailsDto} from "../../api/generated.ts";
 import {client} from "../../api.ts";
@@ -8,6 +8,8 @@ import {getCompetitionsListLink, getTeamLink, navigateBack} from "../../utils/ro
 import {useDocumentTitle} from "@mantine/hooks";
 import {useTranslation} from "react-i18next";
 import {SeasonTeamDetails} from "./SeasonTeamDetails.tsx";
+import {NotFoundPage} from "../error/NotFoundPage.tsx";
+import {ServerErrorPage} from "../error/ServerErrorPage.tsx";
 
 export const SeasonTeamDetailPage = () => {
     const { seasonId, fllId } = useParams();
@@ -16,11 +18,13 @@ export const SeasonTeamDetailPage = () => {
     const {t} = useTranslation();
 
     const [teamDetails, setTeamDetails] = useState<SeasonTeamDetailsDto | null>(null);
+    const [errorCode, setErrorCode] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    useDocumentTitle(t('app.season_team.detail.doc_title', {teamName: teamDetails?.name || '', seasonId: teamDetails?.season?.id || ''}))
-
     useEffect(() => {
+        setTeamDetails(null);
+        setErrorCode(null);
+        setIsLoading(true);
         if (!seasonId || !fllId) return;
 
         // Hook this up to your generated API client method!
@@ -29,7 +33,10 @@ export const SeasonTeamDetailPage = () => {
                 setTeamDetails(res.data);
                 setIsLoading(false);
             })
-            .catch(() => {
+            .catch((error) => {
+                const status = error.response?.status || 500;
+
+                setErrorCode(status);
                 setIsLoading(false);
             });
     }, [seasonId, fllId]);
@@ -39,13 +46,22 @@ export const SeasonTeamDetailPage = () => {
         return null; // Don't render anything while redirecting
     }
 
-
-    if (isLoading) return <Center h="50vh"><Loader /></Center>;
-    if (!teamDetails) return <Center h="50vh"><Text c="red">Team not found</Text></Center>;
+    useDocumentTitle(t('app.season_team.detail.doc_title', {teamName: teamDetails?.name || '', seasonId: teamDetails?.season?.id || ''}))
 
     const handleBackNavigation = () => {
         navigateBack(location, navigate, getCompetitionsListLink(seasonId))
     };
+
+
+    if (isLoading) return <Center h="50vh"><Loader /></Center>;
+
+    if (errorCode === 404 || !teamDetails) {
+        return <NotFoundPage />;
+    }
+
+    if (errorCode) {
+        return <ServerErrorPage />;
+    }
 
     return (
         <Container size="xl" py="xl">

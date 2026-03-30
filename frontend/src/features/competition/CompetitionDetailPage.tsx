@@ -29,12 +29,11 @@ import type {CompetitionDetailDto} from "../../api/generated.ts";
 import {client} from "../../api.ts";
 import {CompetitionTeamsTab} from "./CompetitionTeamsTab.tsx";
 import {useTranslation} from "react-i18next";
-import dayjs from "dayjs";
 import {CompetitionRobotGameTab} from "./CompetitionRobotGameTab.tsx";
 import {CompetitionAwardsTab} from "./CompetitionAwardsTab.tsx";
 import {useDocumentTitle, useSessionStorage} from "@mantine/hooks";
 import {CompetitionPreviousTab} from "./CompetitionPreviousTab.tsx";
-import {getCompetitionTypeColor} from "../../utils/competitionUtils.ts";
+import {getCompetitionTypeColor, getFormattedCompetitionDate} from "../../utils/competitionUtils.ts";
 import {getCompetitionLink, getCompetitionsListLink, navigateBack} from "../../utils/routingUtils.ts";
 import { SeasonBadge } from '../common/season/SeasonBadge.tsx';
 import {CompetitionTypeBadge} from "../common/competition/CompetitionTypeBadge.tsx";
@@ -185,12 +184,7 @@ export const CompetitionDetailPage = () => {
                                     <IconCalendar size={20}/>
                                     <Text fw={500}>{t('app.competition.detail.date')}</Text>
                                 </Group>
-                                {competition.endDate ? (
-                                    <Text>{`${dayjs(competition.date).format('L')} - ${dayjs(competition.endDate).format('L')}`}</Text>
-                                ) : (
-                                    <Text>{dayjs(competition.date).format('L')}</Text>)
-                                }
-
+                                    <Text>{getFormattedCompetitionDate(competition)}</Text>
                             </Card>
                         )}
 

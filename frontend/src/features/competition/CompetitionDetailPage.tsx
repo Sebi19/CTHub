@@ -97,8 +97,10 @@ export const CompetitionDetailPage = () => {
 
     const [activeTab, setActiveTab] = useSessionStorage<string | null>({
         key: `competition-tab-${seasonId}-${urlPart}`,
-        defaultValue: 'teams',
+        defaultValue: null,
     });
+
+    const currentTab = activeTab || (competition?.results ? 'awards' : 'teams');
 
     const officialUrl = `https://www.first-lego-league.org/${i18n.resolvedLanguage}/challenge-${seasonId}/${urlPart}`;
 
@@ -274,7 +276,7 @@ export const CompetitionDetailPage = () => {
                 </Stack>
             </Group>
 
-            <SwipeableTabs value={activeTab} onChange={setActiveTab} items={tabItems}/>
+            <SwipeableTabs value={currentTab} onChange={setActiveTab} items={tabItems}/>
         </Container>
     );
 };

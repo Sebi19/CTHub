@@ -211,6 +211,20 @@ export const de = {
             },
             robot_game: {
                 empty: "Es sind noch keine Ergebnisse für diesen Wettbewerb verfügbar.",
+                header: {
+                    playoff: "Playoff",
+                    prelim: "Vorrunde",
+                    team: "Team",
+                    pr1: "VR1",
+                    pr2: "VR2",
+                    pr3: "VR3",
+                    best_pr: "Beste VR",
+                    r16: "AF",
+                    qf: "VF",
+                    sf: "HF",
+                    f1: "F I",
+                    f2: "F II",
+                },
             },
             previous: {
                 empty: "Es konnten keine vorherigen Wettbewerbe gefunden werden.",
@@ -269,7 +283,7 @@ export const de = {
                         qf: "Viertelfinale",
                         sf: "Halbfinale",
                         f: "Finale",
-                    }
+                    },
                 },
                 robot_game_stats: {
                     title: "Robot-Game Statistik",

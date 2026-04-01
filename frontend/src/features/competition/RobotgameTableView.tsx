@@ -7,6 +7,7 @@ import {Link} from "react-router-dom";
 import {getTeamLink} from "../../utils/routingUtils.ts";
 import {IconHash, IconMedal, IconTrophy} from "@tabler/icons-react";
 import type {CompetitionRobotGameEntryDto, SeasonTeamDto} from "../../api/generated.ts";
+import {useTranslation} from "react-i18next";
 
 // We create a combined type for the table row
 type TableRowData = CompetitionRobotGameEntryDto & {
@@ -21,6 +22,7 @@ interface RobotGameTableViewProps {
 }
 
 export const RobotGameTableView = ({scores, teams}: RobotGameTableViewProps) => {
+    const {t} = useTranslation();
     // Calling the hook here means it only mounts when the table mounts!
     const scrollRef = useCarouselScrollShield<HTMLDivElement>();
 
@@ -89,7 +91,7 @@ export const RobotGameTableView = ({scores, teams}: RobotGameTableViewProps) => 
         () => [
             {
                 accessorKey: 'rank',
-                header: 'Playoff',
+                header: t("app.competition.robot_game.header.playoff"),
                 size: 80,
                 Cell: ({ cell }) => {
                     const rank = cell.getValue<number>();
@@ -100,7 +102,7 @@ export const RobotGameTableView = ({scores, teams}: RobotGameTableViewProps) => 
             },
             {
                 accessorKey: 'prelimRank',
-                header: 'Vorrunde',
+                header: t("app.competition.robot_game.header.prelim"),
                 size: 80,
                 Cell: ({ cell }) => {
                     const prelimRank = cell.getValue<number>();
@@ -113,7 +115,7 @@ export const RobotGameTableView = ({scores, teams}: RobotGameTableViewProps) => 
             },
             {
                 id: 'team', // Custom ID since we are combining two fields
-                header: 'Team',
+                header: t("app.competition.robot_game.header.team"),
                 size: 250,
                 accessorFn: (row) => `${row.fllId} ${row.teamName}`, // For sorting/searching
                 Cell: ({ row }) => (
@@ -136,7 +138,7 @@ export const RobotGameTableView = ({scores, teams}: RobotGameTableViewProps) => 
             },
             {
                 accessorKey: 'pr1',
-                header: 'PR1',
+                header: t("app.competition.robot_game.header.pr1"),
                 size: 50,
                 minSize: 25,
                 mantineTableHeadCellProps: {
@@ -161,7 +163,7 @@ export const RobotGameTableView = ({scores, teams}: RobotGameTableViewProps) => 
             },
             {
                 accessorKey: 'pr2',
-                header: 'PR2',
+                header: t("app.competition.robot_game.header.pr2"),
                 size: 50,
                 Cell: ({ cell, row }) => {
                     const score = cell.getValue<number>();
@@ -173,7 +175,7 @@ export const RobotGameTableView = ({scores, teams}: RobotGameTableViewProps) => 
             },
             {
                 accessorKey: 'pr3',
-                header: 'PR3',
+                header: t("app.competition.robot_game.header.pr3"),
                 size: 50,
                 Cell: ({ cell, row }) => {
                     const score = cell.getValue<number>();
@@ -185,7 +187,7 @@ export const RobotGameTableView = ({scores, teams}: RobotGameTableViewProps) => 
             },
             {
                 accessorKey: 'bestPr',
-                header: 'Best PR',
+                header: t("app.competition.robot_game.header.best_pr"),
                 size: 70,
                 mantineTableBodyCellProps: {
                     style: { backgroundColor: 'var(--mantine-color-blue-light)' } // Highlights the column like the official site!
@@ -194,31 +196,31 @@ export const RobotGameTableView = ({scores, teams}: RobotGameTableViewProps) => 
             },
             {
                 accessorKey: 'r16',
-                header: 'R16',
+                header: t("app.competition.robot_game.header.r16"),
                 size: 50,
             },
             {
                 accessorKey: 'qf',
-                header: 'QF',
+                header: t("app.competition.robot_game.header.qf"),
                 size: 50,
             },
             {
                 accessorKey: 'sf',
-                header: 'SF',
+                header: t("app.competition.robot_game.header.sf"),
                 size: 50,
             },
             {
                 accessorKey: 'f1',
-                header: 'F I',
+                header: t("app.competition.robot_game.header.f1"),
                 size: 50,
             },
             {
                 accessorKey: 'f2',
-                header: 'F II',
+                header: t("app.competition.robot_game.header.f2"),
                 size: 50,
             },
         ],
-        [sorting]
+        [sorting, t]
     );
 
 

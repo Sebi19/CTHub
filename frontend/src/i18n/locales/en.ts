@@ -211,6 +211,20 @@ export const en: I18nLocale = {
             },
             robot_game: {
                 empty: "There are no Robot-Game results for this competition yet.",
+                header: {
+                    playoff: "Playoff",
+                    prelim: "Preliminary",
+                    team: "Team",
+                    pr1: "PR1",
+                    pr2: "PR2",
+                    pr3: "PR3",
+                    best_pr: "Best PR",
+                    r16: "R16",
+                    qf: "QF",
+                    sf: "SF",
+                    f1: "F I",
+                    f2: "F II",
+                },
             },
             previous: {
                 empty: "There are no related competitions for this competition.",

@@ -8,6 +8,7 @@ import org.cthub.backend.dto.competition.CompetitionShortInfoDto;
 import org.cthub.backend.dto.search.SeasonTeamSearchResultDto;
 import org.cthub.backend.dto.team.SeasonTeamDetailsDto;
 import org.cthub.backend.dto.team.SeasonTeamDto;
+import org.cthub.backend.dto.team.SeasonTeamSummaryDto;
 import org.cthub.backend.dto.team.TeamCompetitionRecordDto;
 import org.cthub.backend.model.Competition;
 import org.cthub.backend.model.Link;
@@ -33,6 +34,9 @@ public abstract class SeasonTeamMapper {
 
     @Mapping(target = "seasonTeamProfile", source = "seasonTeamProfile")
     public abstract SeasonTeamDto toTeamDto(SeasonTeam seasonTeam);
+
+    @Mapping(target = "seasonTeamProfile", source = "seasonTeamProfile")
+    public abstract SeasonTeamSummaryDto toTeamSummaryDto(SeasonTeam seasonTeam);
 
     @Mapping(target = "seasonTeamProfile", source = "seasonTeamProfile")
     @Mapping(target = "competitionRecords", source = "seasonTeam")

@@ -16,7 +16,9 @@ public interface RobotGameResultRepository extends JpaRepository<RobotGameResult
     // 3. COALESCE handles nulls (if no Place entry exists, they didn't advance -> false)
     @Query("SELECT r, COALESCE(p.advancing, false) " +
         "FROM RobotGameResult r " +
-        "JOIN FETCH r.seasonTeam " +
+        "JOIN FETCH r.seasonTeam st " +
+        "LEFT JOIN FETCH st.seasonTeamProfile stp " +
+        "LEFT JOIN FETCH stp.teamProfile tp " +
         "JOIN FETCH r.competition " +
         "JOIN FETCH r.competition.season " +
         "LEFT JOIN Place p ON p.seasonTeam = r.seasonTeam AND p.competition = r.competition " +

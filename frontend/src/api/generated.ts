@@ -83,7 +83,7 @@ export interface CompetitionRobotGameEntryDto {
   /** @format int32 */
   f2?: number;
   /** @format int32 */
-  prelimRank?: number;
+  prelimRank: number;
 }
 
 export interface CompetitionShortInfoDto {
@@ -258,7 +258,7 @@ export interface TeamProfileDetailsDto {
 export interface OverallRobotGameEntryDto {
   /** @format int32 */
   rank: number;
-  team: SeasonTeamDto;
+  team: SeasonTeamSummaryDto;
   competition: CompetitionShortInfoDto;
   country?: string;
   qualified: boolean;
@@ -288,6 +288,17 @@ export interface OverallRobotGameEntryDto {
   final1?: number;
   /** @format int32 */
   final2?: number;
+}
+
+export interface SeasonTeamSummaryDto {
+  /** @format int64 */
+  id: number;
+  season: SeasonDto;
+  active: boolean;
+  fllId: string;
+  name: string;
+  country?: string;
+  seasonTeamProfile?: SeasonTeamProfileDto;
 }
 
 import type {

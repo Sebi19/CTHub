@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.cthub.backend.dto.competition.CompetitionShortInfoDto;
-import org.cthub.backend.dto.team.SeasonTeamDto;
+import org.cthub.backend.dto.team.SeasonTeamSummaryDto;
 
 @Data
 @Builder
@@ -17,7 +17,7 @@ public class OverallRobotGameEntryDto {
     @NotNull
     private int rank;           // Overall Rank (#Best)
     @NotNull
-    private SeasonTeamDto team;
+    private SeasonTeamSummaryDto team;
     @NotNull
     private CompetitionShortInfoDto competition;
     private String country;     // "DE", "CH"

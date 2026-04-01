@@ -14,7 +14,7 @@ import java.util.Optional;
 public interface SeasonTeamRepository extends JpaRepository<SeasonTeam, Long> {
     List<SeasonTeam> findByRegisteredCompetitionsContains(Competition competition);
 
-        @Query("SELECT DISTINCT st FROM SeasonTeam st " +
+    @Query("SELECT DISTINCT st FROM SeasonTeam st " +
         "LEFT JOIN FETCH st.seasonTeamProfile stp " + // Eager fetch the profile
         "LEFT JOIN FETCH stp.teamProfile " +
         "LEFT JOIN FETCH st.links " +       // Eager fetch the links
@@ -43,6 +43,81 @@ public interface SeasonTeamRepository extends JpaRepository<SeasonTeam, Long> {
         "LEFT JOIN FETCH st.registeredCompetitions " + // Eager fetch the competitions!
         "WHERE tp.id = :profileId")
     List<SeasonTeam> findByTeamProfileId(@Param("profileId") Long profileId);
+
+
+    @Query("""
+        SELECT st,
+        GREATEST(
+            CASE
+                WHEN LOWER(st.name) = LOWER(:query) THEN 1.0
+                WHEN LOWER(st.name) LIKE LOWER(CONCAT(:query, '%')) THEN 0.9
+                WHEN LOWER(st.name) LIKE LOWER(CONCAT('% ', :query, '%')) THEN 0.8
+                WHEN LOWER(st.name) LIKE LOWER(CONCAT('%-', :query, '%')) THEN 0.8
+                WHEN LOWER(st.name) LIKE LOWER(CONCAT('%', :query, '%')) THEN 0.7
+                ELSE 0.0
+            END,
+            FUNCTION('similarity', st.name, :query),
+            
+            CASE
+                WHEN LOWER(st.fllId) = LOWER(:query) THEN 1.0
+                WHEN LOWER(st.fllId) LIKE LOWER(CONCAT(:query, '%')) THEN 0.9
+                ELSE 0.0
+            END,
+            
+            (CAST(FUNCTION('similarity', COALESCE(st.city, ''), :query) AS Double) * 0.8),
+            (CAST(FUNCTION('similarity', COALESCE(st.institution, ''), :query) AS Double) * 0.8)
+        ) as match_score
+        
+        FROM SeasonTeam st
+        JOIN FETCH st.season s
+        LEFT JOIN FETCH st.seasonTeamProfile stp
+        LEFT JOIN FETCH stp.teamProfile
+        
+        WHERE (:seasonId IS NULL OR s.id = :seasonId)
+        
+        AND GREATEST(
+            CASE
+                WHEN LOWER(st.name) = LOWER(:query) THEN 1.0
+                WHEN LOWER(st.name) LIKE LOWER(CONCAT(:query, '%')) THEN 0.9
+                WHEN LOWER(st.name) LIKE LOWER(CONCAT('% ', :query, '%')) THEN 0.8
+                WHEN LOWER(st.name) LIKE LOWER(CONCAT('%-', :query, '%')) THEN 0.8
+                WHEN LOWER(st.name) LIKE LOWER(CONCAT('%', :query, '%')) THEN 0.7
+                ELSE 0.0
+            END,
+            FUNCTION('similarity', st.name, :query),
+            CASE
+                WHEN LOWER(st.fllId) = LOWER(:query) THEN 1.0
+                WHEN LOWER(st.fllId) LIKE LOWER(CONCAT(:query, '%')) THEN 0.9
+                ELSE 0.0
+            END,
+            (CAST(FUNCTION('similarity', COALESCE(st.city, ''), :query) AS Double) * 0.8),
+            (CAST(FUNCTION('similarity', COALESCE(st.institution, ''), :query) AS Double) * 0.8)
+        ) >= :threshold
+        
+        ORDER BY GREATEST(
+            CASE
+                WHEN LOWER(st.name) = LOWER(:query) THEN 1.0
+                WHEN LOWER(st.name) LIKE LOWER(CONCAT(:query, '%')) THEN 0.9
+                WHEN LOWER(st.name) LIKE LOWER(CONCAT('% ', :query, '%')) THEN 0.8
+                WHEN LOWER(st.name) LIKE LOWER(CONCAT('%-', :query, '%')) THEN 0.8
+                WHEN LOWER(st.name) LIKE LOWER(CONCAT('%', :query, '%')) THEN 0.7
+                ELSE 0.0
+            END,
+            FUNCTION('similarity', st.name, :query),
+            CASE
+                WHEN LOWER(st.fllId) = LOWER(:query) THEN 1.0
+                WHEN LOWER(st.fllId) LIKE LOWER(CONCAT(:query, '%')) THEN 0.9
+                ELSE 0.0
+            END,
+            (CAST(FUNCTION('similarity', COALESCE(st.city, ''), :query) AS Double) * 0.8),
+            (CAST(FUNCTION('similarity', COALESCE(st.institution, ''), :query) AS Double) * 0.8)
+        ) DESC
+        """)
+    List<Object[]> searchFuzzySeasonTeams(
+        @Param("query") String query,
+        @Param("seasonId") String seasonId,
+        @Param("threshold") double threshold
+    );
 
 
 }

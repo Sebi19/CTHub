@@ -28,6 +28,9 @@ export const en: I18nLocale = {
                 round_long_sf: "Semifinals",
                 round_long_f1: "Finals 1",
                 round_long_f2: "Finals 2",
+            },
+            navigation: {
+                back: "Back",
             }
         },
         error: {
@@ -63,6 +66,19 @@ export const en: I18nLocale = {
             login: "Login",
             currentLanguage: "English",
             toggleTheme: "Change Color Scheme",
+        },
+        search: {
+            button_placeholder: "Search...",
+            shortcut: "Ctrl+K",
+            select_season: "Select season",
+            placeholder_season: "Search in season...",
+            placeholder_global: "Search across all seasons...",
+            season_filter_label: "Filter by season",
+            instructions: "Start typing to search for competitions or teams...",
+            no_results: "No results found for '{{query}}'.",
+            result: {
+                profile: "Profile",
+            },
         },
         login: {
             doc_title: "Login | CTH",
@@ -105,7 +121,6 @@ export const en: I18nLocale = {
         competition: {
             detail: {
                 doc_title: "{{competitionName}} - {{seasonId}} | CTH",
-                back: "Back",
                 inactive_title: "Competition Inactive",
                 inactive_message: "This competition is currently not active. It may have been cancelled or the URL may have changed. Please check the official website for more information.",
                 type: "Competitions",
@@ -121,6 +136,7 @@ export const en: I18nLocale = {
                     previous_competitions_FINAL: "Qualification Competitions",
                 },
                 season: "{{seasonId}} ({{seasonName}})",
+                season_short: "{{seasonId}}",
                 official_link: "Official Competition Page",
                 date: "Date",
                 location: "Location",
@@ -215,7 +231,6 @@ export const en: I18nLocale = {
         season_team: {
             detail: {
                 doc_title: "{{teamName}} - {{seasonId}} | CTH",
-                back: "Back",
                 results_not_available: "No results available yet.",
                 season_journey: "Season Journey",
                 no_competitions: "This team has not participated in any competitions this season.",
@@ -276,7 +291,6 @@ export const en: I18nLocale = {
         team_profile: {
             detail: {
                 doc_title: "{{profileName}} | CTH",
-                back: "Back",
                 profile_tab: "Profile",
                 seasons_on_record_one: "{{count}} Season on record",
                 seasons_on_record_other: "{{count}} Seasons on record",

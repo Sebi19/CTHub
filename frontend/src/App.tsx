@@ -7,7 +7,7 @@ import {
     ActionIcon,
     useMantineColorScheme,
     useComputedColorScheme,
-    Burger, Stack, Drawer, Menu, Avatar, Text, rem, Tooltip, Box, Divider, Anchor, Flex, Container
+    Burger, Stack, Drawer, Menu, Avatar, Text, rem, Tooltip, Box, Divider, Anchor, Flex, Container, Badge
 } from '@mantine/core';
 import {useNavigate, useLocation, Outlet} from 'react-router-dom';
 import {
@@ -17,7 +17,7 @@ import {
     IconLogin,
     IconChevronDown,
     IconLogout,
-    IconUser
+    IconUser, IconSearch
 } from '@tabler/icons-react';
 import logo from './assets/CTH.svg';
 import {useDisclosure} from "@mantine/hooks";
@@ -25,6 +25,8 @@ import {useAuth} from "./features/auth/AuthContext.tsx";
 import type {UserDto} from "./api/generated.ts";
 import {LanguageSwitcher} from "./features/navbar/LanguageSwitcher.tsx";
 import {Trans, useTranslation} from "react-i18next";
+import {GlobalSearchSpotlight} from "./features/globalSearch/GlobalSearchSpotlight.tsx";
+import {spotlight} from "@mantine/spotlight";
 
 
 
@@ -106,6 +108,8 @@ export default function App() {
 
     return (
         <AppShell header={{ height: 60 }} padding="0">
+            <GlobalSearchSpotlight />
+
             <AppShell.Header>
                 <Group h="100%" px="md" justify="space-between">
 
@@ -123,6 +127,21 @@ export default function App() {
 
                     {/* RIGHT: Actions (Theme + Auth) */}
                     <Group gap="xs">
+                        <Button
+                            variant="default"
+                            leftSection={<IconSearch size={16} />}
+                            rightSection={<Badge size="xs" variant="filled" color="gray">{t("app.search.shortcut")}</Badge>}
+                            onClick={spotlight.open}
+                            visibleFrom="sm"
+                        >
+                            {t("app.search.button_placeholder")}
+                        </Button>
+
+                        {/* A compact icon-only button for mobile screens */}
+                        <ActionIcon variant="default" size="lg" hiddenFrom="sm" onClick={spotlight.open}>
+                            <IconSearch size={18} />
+                        </ActionIcon>
+
                         {/* Desktop Nav Links (Hidden on mobile) */}
                         <Group visibleFrom="lg" gap={5} mr={"md"}>
                             {renderNavLinks(false)}

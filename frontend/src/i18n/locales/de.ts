@@ -28,7 +28,10 @@ export const de = {
                 round_long_sf: "Halbfinale",
                 round_long_f1: "Finale 1",
                 round_long_f2: "Finale 2",
-            }
+            },
+            navigation: {
+                back: "Zurück",
+            },
         },
         error: {
             error_404: {
@@ -63,6 +66,19 @@ export const de = {
             login: "Anmelden",
             currentLanguage: "Deutsch",
             toggleTheme: "Farbschema wechseln",
+        },
+        search: {
+            button_placeholder: "Suchen...",
+            shortcut: "Strg+K",
+            select_season: "Saison auswählen",
+            placeholder_season: "In Saison suchen...",
+            placeholder_global: "In allen Saisons suchen...",
+            season_filter_label: "Nach Saison filtern",
+            instructions: "Tippen, um nach Wettbewerben oder Teams zu suchen ...",
+            no_results: "Keine Ergebnisse für \"{{query}}\" gefunden.",
+            result: {
+                profile: "Profil",
+            },
         },
         login: {
             doc_title: "Anmelden | CTH",
@@ -105,7 +121,6 @@ export const de = {
         competition: {
             detail: {
                 doc_title: "{{competitionName}} - {{seasonId}} | CTH",
-                back: "Zurück",
                 inactive_title: "Wettbewerb inaktiv",
                 inactive_message: "Dieser Wettbewerb ist derzeit nicht aktiv. Es könnte sein dass er abgesagt wurde oder sich die URL geändert hat. Überprüfen sie die offizielle Website für weitere Informationen.",
                 type: "Wettbewerb",
@@ -121,6 +136,7 @@ export const de = {
                     previous_competitions_FINAL: "Qualifikationswettbewerbe",
                 },
                 season: "{{seasonId}} ({{seasonName}})",
+                season_short: "{{seasonId}}",
                 official_link: "Offizielle Wettbewerbsseite",
                 date: "Datum",
                 location: "Austragungsort",
@@ -215,7 +231,6 @@ export const de = {
         season_team: {
             detail: {
                 doc_title: "{{teamName}} - {{seasonId}} | CTH",
-                back: "Zurück",
                 results_not_available: "Noch keine Ergebnisse vorhanden.",
                 season_journey: "Saisonverlauf",
                 no_competitions: "Es konnten keine Wettbewerbe für diese Saison gefunden werden.",
@@ -276,7 +291,6 @@ export const de = {
         team_profile: {
             detail: {
                 doc_title: "{{profileName}} | CTH",
-                back: "Zurück",
                 profile_tab: "Profil",
                 seasons_on_record_one: "{{count}} Saison verknüpft",
                 seasons_on_record_other: "{{count}} Saisons verknüpft",

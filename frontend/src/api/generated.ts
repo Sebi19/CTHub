@@ -10,6 +10,13 @@
  * ---------------------------------------------------------------
  */
 
+export enum SearchResultTypeDto {
+  SEASON_TEAM = "SEASON_TEAM",
+  TEAM_PROFILE = "TEAM_PROFILE",
+  COMPETITION = "COMPETITION",
+  SEASON = "SEASON",
+}
+
 export enum CompetitionType {
   REGIONAL = "REGIONAL",
   QUALIFICATION = "QUALIFICATION",
@@ -193,6 +200,52 @@ export interface SeasonTeamDto {
   country?: string;
   links: LinkDto[];
   seasonTeamProfile?: SeasonTeamProfileDto;
+}
+
+export interface CompetitionSearchResultDto {
+  season: SeasonDto;
+  urlPart: string;
+  name: string;
+  type: CompetitionType;
+  country?: string;
+  /** @format date */
+  date?: string;
+  /** @format date */
+  endDate?: string;
+}
+
+export interface SearchResultItemDto {
+  type?: SearchResultTypeDto;
+  /** @format double */
+  score?: number;
+  competition?: CompetitionSearchResultDto;
+  seasonTeam?: SeasonTeamSearchResultDto;
+  teamProfile?: TeamProfileSearchResultDto;
+  season?: SeasonSearchResultDto;
+}
+
+export interface SeasonSearchResultDto {
+  id: string;
+  name: string;
+  /** @format int32 */
+  startYear: number;
+  active: boolean;
+}
+
+export interface SeasonTeamSearchResultDto {
+  season: SeasonDto;
+  fllId: string;
+  name: string;
+  institution?: string;
+  city?: string;
+  country?: string;
+  seasonTeamProfile?: SeasonTeamProfileDto;
+}
+
+export interface TeamProfileSearchResultDto {
+  profileName: string;
+  profileUrl: string;
+  avatarUrl?: string;
 }
 
 export interface TeamProfileDetailsDto {
@@ -484,6 +537,27 @@ export class Api<
       this.request<CompetitionDetailDto, any>({
         path: `/api/seasons/${seasonId}/competitions/${urlPart}`,
         method: "GET",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags search-controller
+     * @name GlobalSearch
+     * @request GET:/api/search
+     */
+    globalSearch: (
+      query: {
+        q: string;
+        seasonId?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<SearchResultItemDto[], any>({
+        path: `/api/search`,
+        method: "GET",
+        query: query,
         ...params,
       }),
 

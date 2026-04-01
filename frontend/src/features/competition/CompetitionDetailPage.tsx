@@ -21,7 +21,7 @@ import {
     IconRobot,
     IconTrophy,
     IconUsers,
-    IconInfoCircle, IconUser, IconArrowRight, IconSitemap, IconArrowLeft
+    IconInfoCircle, IconUser, IconArrowRight, IconSitemap
 } from '@tabler/icons-react';
 
 // Import our new tab components
@@ -40,6 +40,7 @@ import {CompetitionTypeBadge} from "../common/competition/CompetitionTypeBadge.t
 import {type SwipeableTabItem, SwipeableTabs} from "../common/layout/SwipeableTabs.tsx";
 import {NotFoundPage} from "../error/NotFoundPage.tsx";
 import {ServerErrorPage} from "../error/ServerErrorPage.tsx";
+import {NavigateBackButton} from "../common/navigation/NavigateBackButton.tsx";
 
 export const CompetitionDetailPage = () => {
     const { seasonId, urlPart } = useParams();
@@ -133,28 +134,19 @@ export const CompetitionDetailPage = () => {
 
     if (isLoading) return <Center h="50vh"><Loader size="lg" /></Center>;
 
-    if (errorCode === 404 || !competition) {
-        return <NotFoundPage />;
+    if (errorCode === 404) {
+        return <NotFoundPage handleBackNavigation={handleBackNavigation} />;
     }
 
     // Catch 500s, 502s, network timeouts, etc.
-    if (errorCode) {
-        return <ServerErrorPage />;
+    if (errorCode || !competition) {
+        return <ServerErrorPage handleBackNavigation={handleBackNavigation} />;
     }
 
     return (
         <Container size="xl" py="xl">
             {/* Top Navigation */}
-            <Button
-                variant="subtle"
-                color="gray"
-                leftSection={<IconArrowLeft size={16} />}
-                onClick={handleBackNavigation}
-                mb="md"
-                px={0}
-            >
-                {t('app.competition.detail.back')}
-            </Button>
+            <NavigateBackButton handleBackNavigation={handleBackNavigation} />
 
             {!competition.active && (
                 <Alert

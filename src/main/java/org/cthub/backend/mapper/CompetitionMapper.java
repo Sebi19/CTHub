@@ -6,6 +6,7 @@ import org.cthub.backend.dto.competition.CompetitionNominationDto;
 import org.cthub.backend.dto.competition.CompetitionPlaceDto;
 import org.cthub.backend.dto.competition.CompetitionRobotGameEntryDto;
 import org.cthub.backend.dto.competition.CompetitionShortInfoDto;
+import org.cthub.backend.dto.search.CompetitionSearchResultDto;
 import org.cthub.backend.model.Competition;
 import org.cthub.backend.model.Nomination;
 import org.cthub.backend.model.Place;
@@ -36,4 +37,6 @@ public interface CompetitionMapper {
     CompetitionRobotGameEntryDto toRobotGameEntryDto(RobotGameResult result);
 
     CompetitionContactInfoDto toContactInfoDto(Competition.ContactInfo contactInfo);
+
+    CompetitionSearchResultDto toSearchResultDto(Competition competition);
 }

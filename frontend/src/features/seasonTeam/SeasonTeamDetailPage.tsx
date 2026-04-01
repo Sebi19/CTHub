@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import {useParams, useNavigate, useLocation} from 'react-router-dom';
-import {Container, Loader, Center, Button} from '@mantine/core';
-import {IconArrowLeft } from '@tabler/icons-react';
+import {Container, Loader, Center} from '@mantine/core';
 import type {SeasonTeamDetailsDto} from "../../api/generated.ts";
 import {client} from "../../api.ts";
 import {getCompetitionsListLink, getTeamLink, navigateBack} from "../../utils/routingUtils.ts";
@@ -10,6 +9,7 @@ import {useTranslation} from "react-i18next";
 import {SeasonTeamDetails} from "./SeasonTeamDetails.tsx";
 import {NotFoundPage} from "../error/NotFoundPage.tsx";
 import {ServerErrorPage} from "../error/ServerErrorPage.tsx";
+import {NavigateBackButton} from "../common/navigation/NavigateBackButton.tsx";
 
 export const SeasonTeamDetailPage = () => {
     const { seasonId, fllId } = useParams();
@@ -55,27 +55,18 @@ export const SeasonTeamDetailPage = () => {
 
     if (isLoading) return <Center h="50vh"><Loader /></Center>;
 
-    if (errorCode === 404 || !teamDetails) {
-        return <NotFoundPage />;
+    if (errorCode === 404) {
+        return <NotFoundPage handleBackNavigation={handleBackNavigation} />;
     }
 
-    if (errorCode) {
-        return <ServerErrorPage />;
+    if (errorCode  || !teamDetails) {
+        return <ServerErrorPage handleBackNavigation={handleBackNavigation} />;
     }
 
     return (
         <Container size="xl" py="xl">
             {/* Top Navigation */}
-            <Button
-                variant="subtle"
-                color="gray"
-                leftSection={<IconArrowLeft size={16} />}
-                onClick={handleBackNavigation}
-                mb="md"
-                px={0}
-            >
-                {t('app.season_team.detail.back')}
-            </Button>
+            <NavigateBackButton handleBackNavigation={handleBackNavigation} />
 
             <SeasonTeamDetails teamDetails={teamDetails} />
         </Container>

@@ -1,7 +1,6 @@
 import {
     CompetitionAwardCategoryDto,
-    type CompetitionResultsDto,
-    type CompetitionShortInfoDto,
+    type CompetitionResultsDto, type CompetitionSearchResultDto,
     CompetitionType
 } from "../api/generated.ts";
 import {
@@ -83,7 +82,7 @@ export const getCategoryConfig = (category: CompetitionAwardCategoryDto): Catego
     }
 };
 
-export const getFormattedCompetitionDate = (competition: Omit<CompetitionShortInfoDto, 'resultsAvailable'>): string => {
+export const getFormattedCompetitionDate = (competition: CompetitionSearchResultDto): string => {
     if (!competition.date) return 'N/A';
 
     if (!competition.endDate) {

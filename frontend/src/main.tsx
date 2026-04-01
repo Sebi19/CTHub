@@ -8,6 +8,7 @@ import './i18n/config.ts';
 // Imports...
 import '@mantine/core/styles.css';
 import '@mantine/dates/styles.css';
+import '@mantine/spotlight/styles.css';
 import '@fontsource/geist-sans/400.css';
 import '@fontsource/geist-sans/500.css';
 import '@fontsource/geist-sans/600.css';

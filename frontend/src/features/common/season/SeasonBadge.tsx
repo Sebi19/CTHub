@@ -5,18 +5,21 @@
     interface SeasonBadgeProps extends Omit<BadgeProps, 'children'> {
         season: SeasonDto;
         hideIfActive?: boolean;
+        short?: boolean;
     }
 
-    export const SeasonBadge = ({ season, hideIfActive = false, ...others }: SeasonBadgeProps) => {
+    export const SeasonBadge = ({ season, hideIfActive = false, short = false, ...others }: SeasonBadgeProps) => {
         const {t} = useTranslation();
 
         if (hideIfActive && season.active) {
             return null;
         }
 
+        const translation = short ? 'app.competition.detail.season_short' : 'app.competition.detail.season';
+
         return (
             <Badge color="blue" {...others}>
-                {t('app.competition.detail.season', {
+                {t(translation, {
                     seasonName: season.name,
                     seasonId: season.id
                 })}

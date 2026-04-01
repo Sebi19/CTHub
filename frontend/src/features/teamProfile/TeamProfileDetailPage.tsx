@@ -7,9 +7,9 @@ import {
     Paper,
     Center,
     Loader,
-    Button, ThemeIcon
+    ThemeIcon
 } from '@mantine/core';
-import {IconArrowLeft, IconBuildingBank, IconCalendarStats, IconMapPin} from '@tabler/icons-react';
+import {IconBuildingBank, IconCalendarStats, IconMapPin} from '@tabler/icons-react';
 import {useLocation, useNavigate, useParams} from 'react-router-dom';
 import {SeasonTeamDetails} from "../seasonTeam/SeasonTeamDetails.tsx";
 import {useEffect, useMemo, useState} from "react";
@@ -23,6 +23,7 @@ import {ProfileAvatar} from "../common/team/avatar/ProfileAvatar.tsx";
 import {type SwipeableTabItem, SwipeableTabs} from "../common/layout/SwipeableTabs.tsx";
 import {NotFoundPage} from "../error/NotFoundPage.tsx";
 import {ServerErrorPage} from "../error/ServerErrorPage.tsx";
+import {NavigateBackButton} from "../common/navigation/NavigateBackButton.tsx";
 
 export const TeamProfileDetailPage = () => {
     const {t} = useTranslation();
@@ -149,27 +150,18 @@ export const TeamProfileDetailPage = () => {
 
     if (isLoading) return <Center h="50vh"><Loader /></Center>;
 
-    if (errorCode === 404 || !profile) {
-        return <NotFoundPage />;
+    if (errorCode === 404) {
+        return <NotFoundPage handleBackNavigation={handleBackNavigation} />;
     }
 
     // Catch 500s, 502s, network timeouts, etc.
-    if (errorCode) {
-        return <ServerErrorPage />;
+    if (errorCode || !profile) {
+        return <ServerErrorPage handleBackNavigation={handleBackNavigation} />;
     }
 
     return (
         <Container size="xl" py="xl">
-            <Button
-                variant="subtle"
-                color="gray"
-                leftSection={<IconArrowLeft size={16} />}
-                onClick={handleBackNavigation}
-                mb="md"
-                px={0}
-            >
-                {t('app.team_profile.detail.back')}
-            </Button>
+            <NavigateBackButton handleBackNavigation={handleBackNavigation} />
 
             <SwipeableTabs value={activeTab} onChange={handleTabChange} items={tabItems} />
         </Container>

@@ -56,4 +56,53 @@ public interface CompetitionRepository extends JpaRepository<Competition, Long> 
 
 
     int countBySeasonAndActiveTrue(Season season);
+
+    @Query("""
+        SELECT c,
+        GREATEST(
+            CASE
+                WHEN LOWER(c.name) = LOWER(:query) THEN 1.0
+                WHEN LOWER(c.name) LIKE LOWER(CONCAT(:query, '%')) THEN 0.9
+                WHEN LOWER(c.name) LIKE LOWER(CONCAT('% ', :query, '%')) THEN 0.8
+                WHEN LOWER(c.name) LIKE LOWER(CONCAT('%-', :query, '%')) THEN 0.8
+                WHEN LOWER(c.name) LIKE LOWER(CONCAT('%', :query, '%')) THEN 0.7
+                ELSE 0.0
+            END,
+            FUNCTION('similarity', c.name, :query)
+        ) as match_score
+        
+        FROM Competition c
+        JOIN FETCH c.season s
+        WHERE c.active = true
+        AND (:seasonId IS NULL OR s.id = :seasonId)
+        
+        AND GREATEST(
+            CASE
+                WHEN LOWER(c.name) = LOWER(:query) THEN 1.0
+                WHEN LOWER(c.name) LIKE LOWER(CONCAT(:query, '%')) THEN 0.9
+                WHEN LOWER(c.name) LIKE LOWER(CONCAT('% ', :query, '%')) THEN 0.8
+                WHEN LOWER(c.name) LIKE LOWER(CONCAT('%-', :query, '%')) THEN 0.8
+                WHEN LOWER(c.name) LIKE LOWER(CONCAT('%', :query, '%')) THEN 0.7
+                ELSE 0.0
+            END,
+            FUNCTION('similarity', c.name, :query)
+        ) >= :threshold
+        
+        ORDER BY GREATEST(
+            CASE
+                WHEN LOWER(c.name) = LOWER(:query) THEN 1.0
+                WHEN LOWER(c.name) LIKE LOWER(CONCAT(:query, '%')) THEN 0.9
+                WHEN LOWER(c.name) LIKE LOWER(CONCAT('% ', :query, '%')) THEN 0.8
+                WHEN LOWER(c.name) LIKE LOWER(CONCAT('%-', :query, '%')) THEN 0.8
+                WHEN LOWER(c.name) LIKE LOWER(CONCAT('%', :query, '%')) THEN 0.7
+                ELSE 0.0
+            END,
+            FUNCTION('similarity', c.name, :query)
+        ) DESC
+        """)
+    List<Object[]> searchFuzzyCompetitions(
+        @Param("query") String query,
+        @Param("seasonId") String seasonId,
+        @Param("threshold") double threshold
+    );
 }

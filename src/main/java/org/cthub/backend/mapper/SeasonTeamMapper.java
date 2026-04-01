@@ -5,6 +5,7 @@ import org.cthub.backend.dto.competition.CompetitionNominationDto;
 import org.cthub.backend.dto.competition.CompetitionPlaceDto;
 import org.cthub.backend.dto.competition.CompetitionRobotGameEntryDto;
 import org.cthub.backend.dto.competition.CompetitionShortInfoDto;
+import org.cthub.backend.dto.search.SeasonTeamSearchResultDto;
 import org.cthub.backend.dto.team.SeasonTeamDetailsDto;
 import org.cthub.backend.dto.team.SeasonTeamDto;
 import org.cthub.backend.dto.team.TeamCompetitionRecordDto;
@@ -44,6 +45,9 @@ public abstract class SeasonTeamMapper {
     );
 
     public abstract List<SeasonTeamDto> toTeamDtoList(List<SeasonTeam> seasonTeams);
+
+    @Mapping(target = "seasonTeamProfile", source = "seasonTeamProfile")
+    public abstract SeasonTeamSearchResultDto toSearchResultDto(SeasonTeam seasonTeam);
 
     protected abstract LinkDto toLinkDto(Link link);
 

@@ -36,7 +36,7 @@ export function LoginForm() {
         try {
             // 1. Create FormData (Spring Security expects form-urlencoded by default)
             const loginData: LoginRequestDto = {
-                email: values.email,
+                email: values.email.trim().toLowerCase(),
                 password: values.password
             };
 

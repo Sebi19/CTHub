@@ -28,7 +28,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
 
     // 3. Logged in, but wrong role? -> Robotgame
     if (allowedRoles && user && !allowedRoles.includes(user.role || '')) {
-        return <Navigate to="/robotgame" replace />;
+        return <Navigate to="/" replace />;
     }
 
     // 4. Access Granted

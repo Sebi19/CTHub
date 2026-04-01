@@ -60,7 +60,7 @@ export function LoginForm() {
 
             // 4. Update Context
             login(userProfile.data);
-            navigate('/robotgame');
+            navigate('/');
 
         } catch (err: any) {
             // Axios error handling

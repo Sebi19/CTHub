@@ -34,7 +34,7 @@ export default function App() {
     const { t } = useTranslation();
 
     const NAV_LINKS = [
-        { link: '/robotgame', label: t("app.header.leaderboard"), icon: IconTrophy },
+        { link: '/leaderboard', label: t("app.header.leaderboard"), icon: IconTrophy },
         // Add more later: { link: '/teams', label: 'Teams', icon: IconUsers },
     ];
 

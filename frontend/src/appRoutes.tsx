@@ -19,12 +19,12 @@ export function AppRoutes() {
             <Route path="/" element={<App/>}>
 
                 {/* Index: Redirect to robotgame */}
-                <Route index element={<Navigate to="/robotgame" replace/>}/>
+                <Route index element={<Navigate to="/leaderboard" replace/>}/>
 
-                <Route path="/login" element={!isAuthenticated ? <LoginPage/> : <Navigate to="/robotgame"/>}/>
+                <Route path="/login" element={!isAuthenticated ? <LoginPage/> : <Navigate to="/"/>}/>
 
                 {/* Public Pages */}
-                <Route path="robotgame" element={<RobotGameLeaderboardPage/>}/>
+                <Route path="leaderboard" element={<RobotGameLeaderboardPage/>}/>
 
                 <Route path="competition/:seasonId/:urlPart" element={<CompetitionDetailPage/>}/>
 

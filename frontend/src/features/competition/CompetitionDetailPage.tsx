@@ -86,7 +86,7 @@ export const CompetitionDetailPage = () => {
         if (competition.previousCompetitions?.length) {
             items.push({
                 value: 'previous-competitions',
-                label: t('app.competition.detail.tabs.previous_competitions', { context: competition.type }),
+                label: t('app.competition.detail.tabs.previous_competitions', { context: competition.type, competitionCount: competition.previousCompetitions.length }),
                 Icon: IconSitemap,
                 content: <CompetitionPreviousTab competition={competition} />
             });

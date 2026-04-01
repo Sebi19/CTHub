@@ -28,7 +28,7 @@ public class CompetitionRobotGameEntryDto {
     private Integer sf;
     private Integer f1;
     private Integer f2;
-    // TODO: Set not null once migrated
+    @NotNull
     private Integer prelimRank;
 
 }

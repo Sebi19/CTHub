@@ -60,6 +60,7 @@ public class RobotGameResult {
     @Column(nullable = false)
     private int rank; // 1, 2, 3... null if not ranked
 
-    // TODO: Set not null once migrated
-    private Integer prelimRank;
+    @NotNull
+    @Column(nullable = false)
+    private int prelimRank;
 }

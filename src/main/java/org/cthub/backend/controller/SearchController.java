@@ -20,6 +20,7 @@ public class SearchController {
     private final SearchService searchService;
 
     @GetMapping
+    @PreAuthorize("permitAll()")
     public List<SearchResultItemDto> globalSearch(
         @RequestParam("q") String query,
         @RequestParam(value = "seasonId", required = false) String seasonId) {

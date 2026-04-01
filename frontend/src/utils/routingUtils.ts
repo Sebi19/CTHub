@@ -1,5 +1,5 @@
 import type { Location, NavigateFunction } from 'react-router-dom';
-import type {CompetitionShortInfoDto, SeasonTeamDto} from '../api/generated';
+import type {CompetitionShortInfoDto, SeasonTeamSummaryDto} from '../api/generated';
 
 /**
  * Generates the standard router link for a competition.
@@ -13,7 +13,7 @@ export const getCompetitionLink = (comp: CompetitionShortInfoDto): string => {
  * Prefers the custom profile URL if it exists, otherwise falls back to the standard route.
  * @param team The team data
  */
-export const getTeamLink = (team: SeasonTeamDto): string => {
+export const getTeamLink = (team: SeasonTeamSummaryDto): string => {
     if (team.seasonTeamProfile?.profile) {
         return `/${team.seasonTeamProfile.profile.profileUrl}/${team.season.id}`;
     }

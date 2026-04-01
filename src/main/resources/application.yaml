@@ -19,6 +19,7 @@ spring:
           batch_size: 50
         order_updates: true
         order_inserts: true
+        default_batch_fetch_size: 100
 springdoc:
   writer-with-default-pretty-printer: true
   remove-broken-reference-definitions: false

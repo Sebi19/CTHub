@@ -6,4 +6,4 @@ app:
     remember-me-key: "local-remember-me-key"
 spring:
   jpa:
-    show-sql: false
+    show-sql: true

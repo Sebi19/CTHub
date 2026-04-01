@@ -1,7 +1,7 @@
 import { useMemo, useEffect, useState } from 'react';
 import { MantineReactTable, useMantineReactTable, type MRT_ColumnDef } from 'mantine-react-table';
 import {Badge, Text, Anchor, Box, useMantineColorScheme } from '@mantine/core';
-import {type OverallRobotGameEntryDto, type SeasonTeamDto} from '../../api/generated';
+import {type OverallRobotGameEntryDto, type SeasonTeamSummaryDto} from '../../api/generated';
 import { client } from '../../api';
 import {useTranslation} from "react-i18next";
 import { MRT_Localization_EN } from 'mantine-react-table/locales/en/index.cjs';
@@ -40,7 +40,7 @@ export const RobotGameLeaderboard = () => {
             .catch(() => setIsLoading(false));
     }, []);
 
-    const formatName = (team: SeasonTeamDto): string => {
+    const formatName = (team: SeasonTeamSummaryDto): string => {
         return `${team.name} [${team.fllId}]`;
     }
 

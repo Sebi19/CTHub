@@ -10,9 +10,11 @@ import {SeasonTeamDetails} from "./SeasonTeamDetails.tsx";
 import {NotFoundPage} from "../error/NotFoundPage.tsx";
 import {ServerErrorPage} from "../error/ServerErrorPage.tsx";
 import {NavigateBackButton} from "../common/navigation/NavigateBackButton.tsx";
+import {useAppContext} from "../../hooks/AppContext.tsx";
 
 export const SeasonTeamDetailPage = () => {
     const { seasonId, fllId } = useParams();
+    const { setActiveSeason, globalDefaultSeason } = useAppContext();
     const navigate = useNavigate();
     const location = useLocation();
     const {t} = useTranslation();
@@ -20,6 +22,16 @@ export const SeasonTeamDetailPage = () => {
     const [teamDetails, setTeamDetails] = useState<SeasonTeamDetailsDto | null>(null);
     const [errorCode, setErrorCode] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (seasonId) {
+            setActiveSeason(seasonId);
+        }
+
+        return () => {
+            setActiveSeason(globalDefaultSeason);
+        };
+    }, [seasonId, setActiveSeason, globalDefaultSeason]);
 
     useEffect(() => {
         setTeamDetails(null);

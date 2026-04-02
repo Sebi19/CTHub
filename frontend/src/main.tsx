@@ -22,6 +22,7 @@ import { AppRoutes } from "./appRoutes.tsx";
 import { shadcnCssVariableResolver } from "./cssVariableResolver.ts";
 import { shadcnTheme } from "./theme.ts";
 import "./style.css";
+import {AppProvider} from "./hooks/AppContext.tsx";
 
 // 3. Create a wrapper component
 function RootWrapper() {
@@ -46,7 +47,9 @@ function RootWrapper() {
             <ModalsProvider>
                 <AuthProvider>
                     <BrowserRouter>
-                        <AppRoutes />
+                        <AppProvider>
+                            <AppRoutes />
+                        </AppProvider>
                     </BrowserRouter>
                 </AuthProvider>
             </ModalsProvider>

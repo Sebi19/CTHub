@@ -41,9 +41,11 @@ import {type SwipeableTabItem, SwipeableTabs} from "../common/layout/SwipeableTa
 import {NotFoundPage} from "../error/NotFoundPage.tsx";
 import {ServerErrorPage} from "../error/ServerErrorPage.tsx";
 import {NavigateBackButton} from "../common/navigation/NavigateBackButton.tsx";
+import {useAppContext} from "../../hooks/AppContext.tsx";
 
 export const CompetitionDetailPage = () => {
     const { seasonId, urlPart } = useParams();
+    const { setActiveSeason, globalDefaultSeason } = useAppContext();
     const navigate = useNavigate();
     const location = useLocation();
     const { i18n, t } = useTranslation();
@@ -51,6 +53,16 @@ export const CompetitionDetailPage = () => {
     const [competition, setCompetition] = useState<CompetitionDetailDto | null>(null);
     const [errorCode, setErrorCode] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (seasonId) {
+            setActiveSeason(seasonId);
+        }
+
+        return () => {
+            setActiveSeason(globalDefaultSeason);
+        };
+    }, [seasonId, setActiveSeason, globalDefaultSeason]);
 
     const teamCount = competition ? competition.registeredTeams.length : 0;
 

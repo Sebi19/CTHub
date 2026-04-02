@@ -11,6 +11,7 @@ import {CompetitionTypeBadge} from "../common/competition/CompetitionTypeBadge.t
 import {getFormattedCompetitionDate} from "../../utils/competitionUtils.ts";
 import {CompetitionTypeIcon} from "../common/competition/CompetitionTypeIcon.tsx";
 import { useTranslation } from 'react-i18next';
+import { useAppContext } from '../../hooks/AppContext.tsx';
 
 export function GlobalSearchSpotlight() {
     const {t} = useTranslation();
@@ -19,7 +20,12 @@ export function GlobalSearchSpotlight() {
     const [debouncedQuery] = useDebouncedValue(searchQuery, 300);
 
     // In the future, we will initialize this from your Router/Context
-    const [seasonContext, setSeasonContext] = useState<string | undefined>('2025-26');
+    const { activeSeason } = useAppContext();
+    const [seasonContext, setSeasonContext] = useState<string | undefined>(activeSeason);
+
+    useEffect(() => {
+        setSeasonContext(activeSeason);
+    }, [activeSeason]);
 
     const [searchResults, setSearchResults] = useState<SearchResultItemDto[]>([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -92,7 +98,7 @@ export function GlobalSearchSpotlight() {
             onSpotlightClose={() => {
                 setSearchQuery('');
                 setSearchResults([]);
-                setSeasonContext('2025-26'); // Optional: Reset the filter back to default too!
+                setSeasonContext(activeSeason);
             }}
         >
             <Spotlight.Search

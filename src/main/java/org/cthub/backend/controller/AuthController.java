@@ -4,6 +4,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.cthub.backend.dto.auth.LoginRequestDto;
 import org.cthub.backend.dto.auth.UserDto;
@@ -32,13 +33,17 @@ public class AuthController {
     @PostMapping("/login")
     @PreAuthorize("permitAll()")
     public ResponseEntity<UserDto> login(
-        @RequestBody LoginRequestDto loginRequest,
+        @Valid @RequestBody LoginRequestDto loginRequest,
         HttpServletRequest request,
         HttpServletResponse response) {
 
+        String cleanEmail = loginRequest.getEmail() != null
+            ? loginRequest.getEmail().trim().toLowerCase()
+            : "";
+
         // 1. Authenticate the user (checks DB & password)
         Authentication authenticationRequest =
-            UsernamePasswordAuthenticationToken.unauthenticated(loginRequest.getEmail(), loginRequest.getPassword());
+            UsernamePasswordAuthenticationToken.unauthenticated(cleanEmail, loginRequest.getPassword());
 
         Authentication authenticationResponse =
             this.authenticationManager.authenticate(authenticationRequest);

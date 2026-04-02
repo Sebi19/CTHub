@@ -11,6 +11,7 @@ import {CompetitionTypeBadge} from "../common/competition/CompetitionTypeBadge.t
 import {getFormattedCompetitionDate} from "../../utils/competitionUtils.ts";
 import {CompetitionTypeIcon} from "../common/competition/CompetitionTypeIcon.tsx";
 import { useTranslation } from 'react-i18next';
+import { useAppContext } from '../../hooks/AppContext.tsx';
 
 export function GlobalSearchSpotlight() {
     const {t} = useTranslation();
@@ -19,7 +20,12 @@ export function GlobalSearchSpotlight() {
     const [debouncedQuery] = useDebouncedValue(searchQuery, 300);
 
     // In the future, we will initialize this from your Router/Context
-    const [seasonContext, setSeasonContext] = useState<string | undefined>('2025-26');
+    const { activeSeason, availableSeasonIds } = useAppContext();
+    const [seasonContext, setSeasonContext] = useState<string | undefined>(activeSeason);
+
+    useEffect(() => {
+        setSeasonContext(activeSeason);
+    }, [activeSeason]);
 
     const [searchResults, setSearchResults] = useState<SearchResultItemDto[]>([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -75,7 +81,7 @@ export function GlobalSearchSpotlight() {
             </Menu.Target>
             <Menu.Dropdown>
                 <Menu.Label>{t("app.search.select_season")}</Menu.Label>
-                {['2025-26', '2024-25', '2023-24', '2022-23'].map((season) => (
+                {availableSeasonIds.map((season) => (
                     <Menu.Item key={season} onClick={() => setSeasonContext(season)}>
                         {season}
                     </Menu.Item>
@@ -92,7 +98,7 @@ export function GlobalSearchSpotlight() {
             onSpotlightClose={() => {
                 setSearchQuery('');
                 setSearchResults([]);
-                setSeasonContext('2025-26'); // Optional: Reset the filter back to default too!
+                setSeasonContext(activeSeason);
             }}
         >
             <Spotlight.Search
@@ -115,7 +121,7 @@ export function GlobalSearchSpotlight() {
                 {/* 1. Empty / Initial States */}
                 {!seasonContext && searchQuery.trim().length === 0 && (
                     <Spotlight.ActionsGroup label={t("app.search.season_filter_label")}>
-                        {['2025-26', '2024-25', '2023-24', '2022-23'].map((season) => (
+                        {availableSeasonIds.map((season) => (
                             <Spotlight.Action
                                 key={season}
                                 closeSpotlightOnTrigger={false}

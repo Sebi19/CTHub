@@ -24,18 +24,30 @@ import {type SwipeableTabItem, SwipeableTabs} from "../common/layout/SwipeableTa
 import {NotFoundPage} from "../error/NotFoundPage.tsx";
 import {ServerErrorPage} from "../error/ServerErrorPage.tsx";
 import {NavigateBackButton} from "../common/navigation/NavigateBackButton.tsx";
+import {useAppContext} from "../../hooks/AppContext.tsx";
 
 export const TeamProfileDetailPage = () => {
     const {t} = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
     const { teamProfileUrl, seasonId } = useParams();
+    const { setActiveSeason, globalDefaultSeason } = useAppContext();
 
     const [profile, setProfile] = useState<TeamProfileDetailsDto | null>(null);
     const [errorCode, setErrorCode] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     const [activeTab, setActiveTab] = useState<string>(seasonId || 'profile');
+
+    useEffect(() => {
+        if (seasonId) {
+            setActiveSeason(seasonId);
+        }
+
+        return () => {
+            setActiveSeason(globalDefaultSeason);
+        };
+    }, [seasonId, setActiveSeason, globalDefaultSeason]);
 
     useEffect(() => {
         const urlTab = seasonId || 'profile';
@@ -135,6 +147,12 @@ export const TeamProfileDetailPage = () => {
 
         // Update the UI instantly so Embla can animate without stuttering
         setActiveTab(newTab);
+
+        if (newTab === 'profile') {
+            setActiveSeason(globalDefaultSeason);
+        } else {
+            setActiveSeason(newTab);
+        }
 
         const nextUrl = newTab === 'profile'
             ? `/${teamProfileUrl}`

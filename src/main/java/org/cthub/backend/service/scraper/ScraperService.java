@@ -8,6 +8,7 @@ import org.cthub.backend.repository.CompetitionRepository;
 import org.cthub.backend.repository.SeasonRepository;
 import org.cthub.backend.service.scraper.dto.*;
 import org.jsoup.Jsoup;
+import org.springframework.cache.CacheManager;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +29,8 @@ public class ScraperService {
     private final ScraperPersister persister;
     private final SeasonRepository seasonRepository;
     private final CompetitionRepository competitionRepository;
+
+    private final CacheManager cacheManager;
 
     private static final String LOCATIONS_URL = "https://www.first-lego-league.org/de/austragungsorte";
     private static final String ROBOT_GAME_RESULTS_BASE_URL = "https://evaluation.hands-on-technology.org/de/rg-score/";
@@ -67,6 +70,10 @@ public class ScraperService {
                 log.error("❌ Failed to process competition '{}': {}", comp.getName(), e.getMessage());
                 // Continue loop - don't let one failure stop the night
             }*/
+        }
+
+        if (updatedCount > 0) {
+            evictActiveSeasonCaches();
         }
 
         long duration = (System.currentTimeMillis() - start) / 1000;
@@ -115,6 +122,11 @@ public class ScraperService {
                 log.error("Failed quick sync for {}: {}", comp.getName(), e.getMessage());
             }
         }
+
+        if (foundCount > 0) {
+            evictActiveSeasonCaches();
+        }
+
         log.info("⚡ QUICK SYNC DONE. Found new results for {} events.", foundCount);
     }
 
@@ -362,5 +374,11 @@ public class ScraperService {
                 .replace("oe", "o"));
         }
         return candidates;
+    }
+
+    private void evictActiveSeasonCaches() {
+        if (cacheManager.getCache("globalLeaderboardActiveSeason") != null) {
+            cacheManager.getCache("globalLeaderboardActiveSeason").clear();
+        }
     }
 }

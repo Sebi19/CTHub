@@ -554,6 +554,20 @@ export class Api<
     /**
      * No description
      *
+     * @tags season-controller
+     * @name GetAllSeasons
+     * @request GET:/api/season
+     */
+    getAllSeasons: (params: RequestParams = {}) =>
+      this.request<SeasonDto[], any>({
+        path: `/api/season`,
+        method: "GET",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
      * @tags search-controller
      * @name GlobalSearch
      * @request GET:/api/search

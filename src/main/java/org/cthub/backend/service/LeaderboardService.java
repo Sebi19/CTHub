@@ -6,11 +6,11 @@ import org.cthub.backend.mapper.RobotGameEntryMapper;
 import org.cthub.backend.model.RobotGameResult;
 import org.cthub.backend.repository.RobotGameResultRepository;
 import org.cthub.backend.repository.SeasonRepository;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +20,7 @@ public class LeaderboardService {
     private final SeasonRepository seasonRepository;
     private final RobotGameEntryMapper robotGameEntryMapper;
 
+    @Cacheable("globalLeaderboardActiveSeason")
     public List<OverallRobotGameEntryDto> getGlobalLeaderboardActiveSeason() {
         String currentSeasonId = seasonRepository.findByActiveTrue()
                 .orElseThrow(() -> new IllegalArgumentException("No active season found"))

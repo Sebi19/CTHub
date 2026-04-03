@@ -171,6 +171,25 @@ public class ScraperService {
         log.info("✅ FULL SYNC for season {} COMPLETE in {}s. Updated {} competitions.", seasonId, duration, updatedCount);
     }
 
+    @Async
+    public void syncSingleCompetition(String seasonId, String urlPart, boolean ignoreHashes) {
+        log.info("🔍 Starting single competition sync for season {}, competition {}...", seasonId, urlPart);
+        long start = System.currentTimeMillis();
+
+        Competition comp = competitionRepository.findByUrlPartAndSeasonId(urlPart, seasonId)
+            .orElseThrow(() -> new IllegalStateException("Competition with URL part " + urlPart + " not found in season " + seasonId));
+
+
+        boolean updated = processSingleCompetition(comp, ignoreHashes, null);
+
+        if (updated) {
+            evictActiveSeasonCaches();
+            log.info("✅ Single competition sync COMPLETE for {} in {}s.", comp.getName(), (System.currentTimeMillis() - start) / 1000);
+        } else {
+            log.info("✅ Single competition sync for {}: No changes detected. Completed in {}s.", comp.getName(), (System.currentTimeMillis() - start) / 1000);
+        }
+    }
+
     // ==========================================
     // 3. CORE LOGIC (The "Brain") 🧠
     // ==========================================

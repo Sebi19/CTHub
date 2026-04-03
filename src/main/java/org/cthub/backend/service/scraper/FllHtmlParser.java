@@ -463,8 +463,7 @@ public class FllHtmlParser {
 
     private List<ScrapedTeamDto> parseTeamsList(Document doc, String regionalCountry) {
         List<ScrapedTeamDto> teams = new ArrayList<>();
-        // Selector from your screenshot/old code
-        Elements rows = doc.select("div.ce_table.teams div.row:not(.header)");
+        Elements rows = doc.select("div.ce_table.teams:has(div.row.header.challenge) div.row:not(.header)");
 
         for (Element row : rows) {
             try {
@@ -590,7 +589,9 @@ public class FllHtmlParser {
                 fullStartStr = startPart;
             }
 
+
             LocalDate startDate = LocalDate.parse(fullStartStr, formatter);
+
             return new EventDates(startDate, endDate);
         }
 

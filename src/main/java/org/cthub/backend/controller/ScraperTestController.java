@@ -47,6 +47,17 @@ public class ScraperTestController {
         return ResponseEntity.ok("⚡ Quick Sync started in background.");
     }
 
+    @GetMapping("/sync-competition/{seasonId}/{urlPart}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> syncCompetition(
+        @PathVariable String seasonId,
+        @PathVariable String urlPart,
+        @RequestParam(defaultValue = "false") boolean ignoreHashes
+    ) {
+        scraperService.syncSingleCompetition(seasonId, urlPart, ignoreHashes);
+        return ResponseEntity.ok("🔄 Syncing competition " + seasonId + "/" + urlPart + " started in background.");
+    }
+
     @GetMapping("/fetch-old/{seasonId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> fetchOldSeasonData(

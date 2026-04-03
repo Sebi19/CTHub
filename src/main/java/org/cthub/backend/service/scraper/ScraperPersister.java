@@ -180,7 +180,9 @@ public class ScraperPersister {
         comp.setDate(details.getDate());
         comp.setEndDate(details.getEndDate());
         comp.setLocation(details.getLocation());
-        comp.setQualificationUrlPart(details.getQualificationUrlPart());
+        if (details.getQualificationUrlPart() != null) {
+            comp.setQualificationUrlPart(details.getQualificationUrlPart());
+        }
 
         Competition.ContactInfo contact = new Competition.ContactInfo();
         contact.setContactName(details.getContactName());

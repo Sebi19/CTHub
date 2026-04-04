@@ -123,7 +123,7 @@
 
         let hasPlayoffRun = false;
 
-        const competitionCount = records.length;
+        const competitionCount = records.filter(record => record.robotGame).length;
         const compCounts: number[] = [];
 
         const seasonPerfectScore = records.length > 0 ? records[0].competition.season.maxPoints ?? 0 : 0;

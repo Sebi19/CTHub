@@ -4,6 +4,7 @@ cors:
 app:
   security:
     remember-me-key: "local-remember-me-key"
+    admin-password: "admin123"
 spring:
   jpa:
     show-sql: true

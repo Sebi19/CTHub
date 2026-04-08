@@ -17,7 +17,7 @@ import {
     IconLogin,
     IconChevronDown,
     IconLogout,
-    IconUser, IconSearch
+    IconUser, IconSearch, IconBrandGithub
 } from '@tabler/icons-react';
 import logo from './assets/CTH.svg';
 import {useDisclosure} from "@mantine/hooks";
@@ -123,6 +123,11 @@ export default function App() {
                             {/* Show acronym on very small screens */}
                             <Title order={3} hiddenFrom="xs">CTH</Title>
                         </Group>
+                        <Anchor href="https://github.com/Sebi19/CTHub" target="_blank" td="none">
+                            <ActionIcon variant="default" size="lg">
+                                <IconBrandGithub size={18} />
+                            </ActionIcon>
+                        </Anchor>
                     </Group>
 
                     {/* RIGHT: Actions (Theme + Auth) */}

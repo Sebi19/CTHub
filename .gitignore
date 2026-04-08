@@ -31,10 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+.github/
 
 ### Other ###
 node_modules
 dist
 dist-ssr
 .env
-.idea

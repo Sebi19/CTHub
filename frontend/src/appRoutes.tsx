@@ -18,8 +18,8 @@ export function AppRoutes() {
                         */}
             <Route path="/" element={<App/>}>
 
-                {/* Index: Redirect to robotgame */}
-                <Route index element={<Navigate to="/leaderboard" replace/>}/>
+                {/* Index: Redirect to rootbots */}
+                <Route index element={<Navigate to="/rootbots/2025-26" replace/>}/>
 
                 <Route path="/login" element={!isAuthenticated ? <LoginPage/> : <Navigate to="/"/>}/>
 

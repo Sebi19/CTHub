@@ -84,6 +84,7 @@ public class ScraperPersister {
             Competition comp = existingMap.getOrDefault(urlPart, Competition.builder()
                 .season(season)
                 .urlPart(urlPart)
+                .resultsAvailable(false)
                 .build());
 
             // Update Fields from Overview
@@ -95,7 +96,6 @@ public class ScraperPersister {
 
             // Mark as Active (in case it was previously inactive)
             comp.setActive(true);
-            comp.setResultsAvailable(false);
 
             activeCompetitions.add(comp);
         }

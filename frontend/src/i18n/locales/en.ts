@@ -225,6 +225,10 @@ export const en: I18nLocale = {
                     f1: "F I",
                     f2: "F II",
                 },
+                sort: {
+                    prelim: "Sort by Preliminary",
+                    playoff: "Sort by Playoff",
+                }
             },
             previous: {
                 empty: "There are no related competitions for this competition.",

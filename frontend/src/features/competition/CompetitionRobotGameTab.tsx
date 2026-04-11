@@ -1,4 +1,4 @@
-import {useMemo} from 'react';
+import {useMemo, useState} from 'react';
 import {
     Text,
     Stack,
@@ -10,9 +10,9 @@ import {
     TooltipGroup,
     Tooltip,
     Center,
-    SegmentedControl, SimpleGrid,
+    SegmentedControl, SimpleGrid, Select, Loader,
 } from '@mantine/core';
-import {IconLayoutGrid, IconList} from '@tabler/icons-react';
+import {IconLayoutGrid, IconList, IconSortAscending} from '@tabler/icons-react';
 import {type CompetitionDetailDto, type SeasonTeamDto} from '../../api/generated';
 import {Link, useNavigate} from "react-router-dom";
 import {getTeamLink} from "../../utils/routingUtils.ts";
@@ -28,6 +28,7 @@ interface Props {
 }
 
 type ViewMode = 'teams' | 'table';
+type SortMode = 'prelim' | 'playoff';
 
 export const CompetitionRobotGameTab = ({ competition }: Props) => {
     const {t} = useTranslation();
@@ -36,24 +37,42 @@ export const CompetitionRobotGameTab = ({ competition }: Props) => {
     const teams = competition.registeredTeams || [];
     const navigate = useNavigate();
 
-    if (!results) {
-        return <Text c="dimmed" ta="center" py="xl">{t("app.competition.robot_game.empty")}</Text>;
-    }
-
     const [viewMode, setViewMode] = useSessionStorage<string | undefined>({
         key: `competition-robotgame-view-${competition.season?.id}-${competition.urlPart}`,
         defaultValue: 'teams',
     });
 
+    const [sortMode, setSortMode] = useSessionStorage<SortMode>({
+        key: `competition-robotgame-sort-${competition.season?.id}-${competition.urlPart}`,
+        defaultValue: 'prelim',
+    });
+
+    const [teamCardsLoading, setTeamCardsLoading] = useState(false);
+
+    const handleSortModeChange = (mode: SortMode) => {
+        setSortMode(mode);
+        setTeamCardsLoading(true);
+        setTimeout(() => setTeamCardsLoading(false), 100); // Simulate loading delay for smoother transition
+    }
+
     const sortedTeams = useMemo(() => {
-        return [...teams].sort((a, b) => {
-            const rankA = scores.find(s => s.teamId === a.id)?.prelimRank || 0;
-            const rankB = scores.find(s => s.teamId === b.id)?.prelimRank || 0;
-            return rankA - rankB; // Descending order
-        }).filter(
-            team => scores.some(score => score.teamId === team.id) // Only include teams that have scores
-        );
-    }, [teams])
+        return [...teams]
+            .filter(team => scores.some(score => score.teamId === team.id))
+            .sort((a, b) => {
+                const scoreA = scores.find(s => s.teamId === a.id);
+                const scoreB = scores.find(s => s.teamId === b.id);
+
+                // Determine which rank to use based on sortMode
+                const rankA = (sortMode === 'playoff' ? scoreA?.rank : scoreA?.prelimRank) || 999;
+                const rankB = (sortMode === 'playoff' ? scoreB?.rank : scoreB?.prelimRank) || 999;
+
+                return rankA - rankB;
+            });
+    }, [teams, scores, sortMode]);
+
+    if (!results) {
+        return <Text c="dimmed" ta="center" py="xl">{t("app.competition.robot_game.empty")}</Text>;
+    }
 
     const TeamRobotGameCard = ({ team }: { team: SeasonTeamDto }) => {
         const {  robotGameEntry } = getTeamAchievements(team.id, results);
@@ -141,18 +160,58 @@ export const CompetitionRobotGameTab = ({ competition }: Props) => {
                         ]}
                     />
                 </TooltipGroup>
+                {(viewMode === 'teams') && (
+                    <Select
+                        leftSection={<IconSortAscending size={16} />}
+                        value={sortMode}
+                        variant='default'
+                        onChange={(val) => handleSortModeChange(val as SortMode)}
+                        allowDeselect={false}
+                        data={[
+                            { value: 'prelim', label: t('app.competition.robot_game.sort.prelim') },
+                            { value: 'playoff', label: t('app.competition.robot_game.sort.playoff') },
+                        ]}
+                        style={{ width: 220 }}
+                        styles={{
+                            input: {
+                                // This is the specific "Zinc 800" color used in Shadcn Dark
+                                borderColor: '#27272a',
+                                backgroundColor: 'transparent',
+                                color: 'var(--mantine-color-white)',
+                                transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+                            },
+                            // This removes the heavy blue/white "glow" that makes it look focused
+                            section: {
+                                color: 'var(--mantine-color-dark-2)',
+                            }
+                        }}
+                        onFocus={(e) => {
+                            e.currentTarget.style.borderColor = '#3f3f46'; // Zinc 700 on focus
+                        }}
+                        onBlur={(e) => {
+                            e.currentTarget.style.borderColor = '#27272a';
+                        }}
+                    />
+                )}
             </Group>
 
             {(viewMode === 'teams') && (
-                <Box
+                <Stack gap="md"
                     //hiddenFrom={viewMode === 'table' ? "sm" : undefined}
                 >
-                    <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
-                        {sortedTeams.map(team => (
-                            <TeamRobotGameCard key={team.id} team={team} />
-                        ))}
-                    </SimpleGrid>
-                </Box>
+                    {teamCardsLoading && (
+                        <Center py="xl">
+                            <Loader variant="dots" />
+                        </Center>
+                    )}
+                    {!teamCardsLoading && (
+                        <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
+                            {sortedTeams.map(team => (
+                                <TeamRobotGameCard key={team.id} team={team} />
+                            ))}
+                        </SimpleGrid>
+                    )}
+                </Stack>
             )}
 
             {viewMode === 'table' && (

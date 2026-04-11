@@ -1,7 +1,7 @@
 import {useEffect, useState} from 'react';
-import {ActionIcon, Avatar, Badge, Center, Group, Highlight, Loader, Menu, Pill, rem, Text} from '@mantine/core';
+import {ActionIcon, Badge, Center, Group, Highlight, Loader, Menu, Pill, rem, Text} from '@mantine/core';
 import {Spotlight, spotlight} from '@mantine/spotlight';
-import {IconCalendar, IconFilter, IconRobot, IconSearch, IconUser} from '@tabler/icons-react';
+import {IconCalendar, IconFilter, IconSearch} from '@tabler/icons-react';
 import {useNavigate} from 'react-router-dom';
 import {useDebouncedValue} from '@mantine/hooks';
 import {client} from '../../api';
@@ -12,6 +12,8 @@ import {getFormattedCompetitionDate} from "../../utils/competitionUtils.ts";
 import {CompetitionTypeIcon} from "../common/competition/CompetitionTypeIcon.tsx";
 import { useTranslation } from 'react-i18next';
 import { useAppContext } from '../../hooks/AppContext.tsx';
+import {SeasonTeamAvatar} from "../common/team/avatar/SeasonTeamAvatar.tsx";
+import {ProfileAvatar} from "../common/team/avatar/ProfileAvatar.tsx";
 
 export function GlobalSearchSpotlight() {
     const {t} = useTranslation();
@@ -73,7 +75,7 @@ export function GlobalSearchSpotlight() {
     );
 
     const searchRightSection = (
-        <Menu shadow="md" width={150} position="bottom-end" withinPortal zIndex={1000000}>
+        <Menu shadow="md" width={150} position="bottom-end" withinPortal zIndex={1001}>
             <Menu.Target>
                 <ActionIcon variant="subtle" color="gray">
                     <IconFilter style={{ width: rem(18), height: rem(18) }} />
@@ -95,6 +97,7 @@ export function GlobalSearchSpotlight() {
             shortcut={['mod + K', '/']}
             query={searchQuery}
             onQueryChange={setSearchQuery}
+            zIndex={1000} // Fix 1: Lower z-index so tooltips (1100) work
             onSpotlightClose={() => {
                 setSearchQuery('');
                 setSearchResults([]);
@@ -102,8 +105,6 @@ export function GlobalSearchSpotlight() {
             }}
         >
             <Spotlight.Search
-                //value={searchQuery}
-                //onChange={(event) => setSearchQuery(event.currentTarget.value)}
                 onKeyDown={(e) => {
                     if (e.key === 'Backspace' && searchQuery === '' && seasonContext) {
                         setSeasonContext(undefined);
@@ -154,46 +155,55 @@ export function GlobalSearchSpotlight() {
                 {/* 2. The Unified Search Results Loop */}
                 {searchResults.map((result, index) => {
 
+                    // The "Grid Clamp": forces the middle column to occupy only the remaining space
+                    const gridItemStyle: React.CSSProperties = {
+                        display: 'grid',
+                        gridTemplateColumns: 'auto 1fr', // Column 1: Avatar/Icon, Column 2: Content
+                        alignItems: 'center',
+                        gap: 'var(--mantine-spacing-sm)',
+                        width: '100%',
+                        overflow: 'hidden',
+                    };
+
+                    const textContainerStyle: React.CSSProperties = {
+                        minWidth: 0, // CRITICAL: Allows the grid cell to shrink below content size
+                        overflow: 'hidden',
+                    };
+
                     // --- COMPETITIONS ---
                     if (result.type === SearchResultTypeDto.COMPETITION && result.competition) {
                         const comp = result.competition;
                         return (
-                            <Spotlight.Action
-                                key={index}
-                                onClick={() => {
-                                    navigate(`/competition/${comp.season.id}/${comp.urlPart}`);
-                                    spotlight.close();
-                                }}
-                            >
-                                <Group wrap="nowrap" w="100%">
-                                    {/* 1. The Icon (Moved inside the layout) */}
-                                        <CompetitionTypeIcon type={comp.type} size={36} />
+                            <Spotlight.Action key={index} onClick={() => { navigate(`/competition/${comp.season.id}/${comp.urlPart}`); spotlight.close(); }}>
+                                <div style={gridItemStyle}>
+                                    <CompetitionTypeIcon type={comp.type} size={36} />
 
-                                    {/* 2. The Content */}
-                                    <div style={{ flex: 1 }}>
-                                        <Group justify="space-between" wrap="nowrap">
-                                            <Highlight highlight={searchQuery} fw={500} truncate="end">{comp.name}</Highlight>
+                                    <div style={textContainerStyle}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                                            <Highlight
+                                                highlight={searchQuery}
+                                                fw={500}
+                                                truncate="end"
+                                                style={{ flex: 1, minWidth: 0 }}
+                                            >
+                                                {comp.name}
+                                            </Highlight>
 
-                                            <Group gap="xs" wrap="nowrap">
-                                                {/* Show Season ID if we are searching globally! */}
-                                                {!seasonContext && (
-                                                    <SeasonBadge season={comp.season} variant="light" short/>
-                                                )}
-                                                {comp.date &&
+                                            <Group gap="xs" wrap="nowrap" style={{ flexShrink: 0 }}>
+                                                {!seasonContext && <SeasonBadge season={comp.season} variant="light" short/>}
+                                                {comp.date && (
                                                     <Group gap={2}>
                                                         <IconCalendar size={14} style={{ color: 'var(--mantine-color-dimmed)' }} />
                                                         <Text size="xs" c="dimmed" style={{ whiteSpace: 'nowrap' }}>{getFormattedCompetitionDate(comp)}</Text>
                                                     </Group>
-                                                }
+                                                )}
                                             </Group>
-                                        </Group>
-
-                                        {/* Competition Type / Country Subtitle */}
-                                        <Text size="xs" c="dimmed" mt={2}>
+                                        </div>
+                                        <Text size="xs" c="dimmed" mt={2} truncate="end">
                                             <CompetitionTypeBadge type={comp.type} variant="light" size="xs" />
                                         </Text>
                                     </div>
-                                </Group>
+                                </div>
                             </Spotlight.Action>
                         );
                     }
@@ -206,39 +216,43 @@ export function GlobalSearchSpotlight() {
                         const subtitle = [team.institution, team.city].filter(Boolean).join(' • ');
 
                         return (
-                            <Spotlight.Action
-                                key={index}
-                                onClick={() => {
-                                    navigate(`/team/${team.season.id}/${team.fllId}`);
-                                    spotlight.close();
-                                }}
-                            >
-                                <Group wrap="nowrap" w="100%">
-                                    <Avatar src={team.seasonTeamProfile?.seasonAvatarUrl} size={36} radius="xl" color="blue">
-                                        <IconRobot/>
-                                    </Avatar>
-                                    <div style={{ flex: 1 }}>
-                                        <Group justify="space-between" wrap="nowrap">
-                                            <Highlight highlight={searchQuery} fw={500} truncate="end">{team.name}</Highlight>
+                            <Spotlight.Action key={index} onClick={() => { navigate(`/team/${team.season.id}/${team.fllId}`); spotlight.close(); }}>
+                                <div style={gridItemStyle}>
+                                    <SeasonTeamAvatar team={team} size={36}/>
 
-                                            <Group gap="xs" wrap="nowrap">
-                                                {!seasonContext && (
-                                                    <SeasonBadge season={team.season} variant="light" short/>
-                                                )}
-                                                <Highlight highlight={searchQuery} component={Badge} variant="light" color="gray">
+                                    <div style={textContainerStyle}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                                            <Highlight
+                                                highlight={searchQuery}
+                                                fw={500}
+                                                truncate="end"
+                                                style={{ flex: 1, minWidth: 0 }}
+                                            >
+                                                {team.name}
+                                            </Highlight>
+
+                                            <Group gap="xs" wrap="nowrap" style={{ flexShrink: 0 }}>
+                                                {!seasonContext && <SeasonBadge season={team.season} variant="light" short/>}
+                                                <Highlight highlight={searchQuery} component={Badge} variant="light">
                                                     {`#${team.fllId}`}
                                                 </Highlight>
                                             </Group>
-                                        </Group>
+                                        </div>
 
-                                        {/* City & Institution Subtitle */}
                                         {subtitle && (
-                                            <Highlight highlight={searchQuery} size="xs" c="dimmed" mt={2} truncate="end">
+                                            <Highlight
+                                                highlight={searchQuery}
+                                                size="xs"
+                                                c="dimmed"
+                                                mt={2}
+                                                truncate="end"
+                                                style={{ display: 'block' }}
+                                            >
                                                 {subtitle}
                                             </Highlight>
                                         )}
                                     </div>
-                                </Group>
+                                </div>
                             </Spotlight.Action>
                         );
                     }
@@ -247,29 +261,23 @@ export function GlobalSearchSpotlight() {
                     if (result.type === SearchResultTypeDto.TEAM_PROFILE && result.teamProfile) {
                         const profile = result.teamProfile;
                         return (
-                            <Spotlight.Action
-                                key={index}
-                                onClick={() => {
-                                    navigate(`/${profile.profileUrl}`);
-                                    spotlight.close();
-                                }}
-                            >
-                                <Group wrap="nowrap" w="100%">
-                                    <Avatar src={profile.avatarUrl} size={36} radius="xl" color="blue">
-                                        <IconUser />
-                                    </Avatar>
-
-                                    <div style={{ flex: 1 }}>
-                                        <Group justify="space-between" wrap="nowrap">
-                                            <Highlight highlight={searchQuery} fw={500} truncate="end">{profile.profileName}</Highlight>
-                                            <Badge variant="dot" color="blue" size="sm">{t("app.search.result.profile")}</Badge>
-                                        </Group>
+                            <Spotlight.Action key={index} onClick={() => { navigate(`/${profile.profileUrl}`); spotlight.close(); }}>
+                                <div style={gridItemStyle}>
+                                    <ProfileAvatar avatarUrl={profile.avatarUrl} size={36}/>
+                                    <div style={textContainerStyle}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                                            <Highlight highlight={searchQuery} fw={500} truncate="end" style={{ flex: 1, minWidth: 0 }}>
+                                                {profile.profileName}
+                                            </Highlight>
+                                            <Badge variant="dot" color="blue" size="sm"  style={{ flexShrink: 0 }}>
+                                                {t("app.search.result.profile")}
+                                            </Badge>
+                                        </div>
                                     </div>
-                                </Group>
+                                </div>
                             </Spotlight.Action>
                         );
                     }
-
                     return null;
                 })}
             </Spotlight.ActionsList>

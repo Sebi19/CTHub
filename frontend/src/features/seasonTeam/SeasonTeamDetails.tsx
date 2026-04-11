@@ -62,7 +62,7 @@ export const SeasonTeamDetails = ({teamDetails, hideSeasonBadge}: SeasonTeamDeta
                                 minWidth: 80,  // 2. The hard floor. Stop shrinking at 80px.
                                 minHeight: 80, // (Keep it a perfect circle)
                             }}
-                            hideNoProfile/>
+                            hideNoImage/>
                         <Stack gap={0} flex="1 1 0%" style={{
                             // This is the magic key. It creates a ceiling for the flex item's
                             // automatic minimum width calculation.

@@ -225,6 +225,10 @@ export const de = {
                     f1: "F I",
                     f2: "F II",
                 },
+                sort: {
+                    prelim: "Sortierung: Vorrunde",
+                    playoff: "Sortierung: Playoff",
+                }
             },
             previous: {
                 empty: "Es konnten keine vorherigen Wettbewerbe gefunden werden.",

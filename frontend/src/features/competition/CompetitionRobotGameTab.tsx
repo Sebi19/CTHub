@@ -1,4 +1,4 @@
-import {useMemo, useState} from 'react';
+import {useMemo} from 'react';
 import {
     Text,
     Stack,
@@ -19,7 +19,7 @@ import {getTeamLink} from "../../utils/routingUtils.ts";
 import {getTeamAchievements} from "../../utils/competitionUtils.ts";
 import {SeasonTeamAvatar} from "../common/team/avatar/SeasonTeamAvatar.tsx";
 import {useTranslation} from "react-i18next";
-import {useSessionStorage} from "@mantine/hooks";
+import {useDisclosure, useSessionStorage} from "@mantine/hooks";
 import {TeamRobotgameOverview} from "../common/team/TeamRobotgameOverview.tsx";
 import {RobotGameTableView} from "./RobotgameTableView.tsx";
 
@@ -47,12 +47,12 @@ export const CompetitionRobotGameTab = ({ competition }: Props) => {
         defaultValue: 'prelim',
     });
 
-    const [teamCardsLoading, setTeamCardsLoading] = useState(false);
+    const [teamCardsLoading, { open: setCardsLoadingTrue, close: setCardsLoadingFalse }] = useDisclosure(false);
 
     const handleSortModeChange = (mode: SortMode) => {
         setSortMode(mode);
-        setTeamCardsLoading(true);
-        setTimeout(() => setTeamCardsLoading(false), 100); // Simulate loading delay for smoother transition
+        setCardsLoadingTrue();
+        setTimeout(() => setCardsLoadingFalse(), 200);
     }
 
     const sortedTeams = useMemo(() => {
@@ -172,25 +172,6 @@ export const CompetitionRobotGameTab = ({ competition }: Props) => {
                             { value: 'playoff', label: t('app.competition.robot_game.sort.playoff') },
                         ]}
                         style={{ width: 220 }}
-                        styles={{
-                            input: {
-                                // This is the specific "Zinc 800" color used in Shadcn Dark
-                                borderColor: '#27272a',
-                                backgroundColor: 'transparent',
-                                color: 'var(--mantine-color-white)',
-                                transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
-                            },
-                            // This removes the heavy blue/white "glow" that makes it look focused
-                            section: {
-                                color: 'var(--mantine-color-dark-2)',
-                            }
-                        }}
-                        onFocus={(e) => {
-                            e.currentTarget.style.borderColor = '#3f3f46'; // Zinc 700 on focus
-                        }}
-                        onBlur={(e) => {
-                            e.currentTarget.style.borderColor = '#27272a';
-                        }}
                     />
                 )}
             </Group>
@@ -205,7 +186,7 @@ export const CompetitionRobotGameTab = ({ competition }: Props) => {
                         </Center>
                     )}
                     {!teamCardsLoading && (
-                        <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
+                        <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md" key={sortMode}>
                             {sortedTeams.map(team => (
                                 <TeamRobotGameCard key={team.id} team={team} />
                             ))}

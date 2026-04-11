@@ -175,6 +175,74 @@
         }
     }
 
+    /* Select & Combobox (Dropdowns) */
+
+    .mantine-Select-root {
+        /* This ensures the select uses the tighter Shadcn spacing */
+        --input-height: rem(36px);
+        --input-fz: var(--mantine-font-size-sm);
+    }
+
+    .mantine-Select-wrapper {
+        .mantine-Select-input {
+            /* Matches the subtle Zinc-800 border from the playground */
+            border-color: var(--mantine-color-default-border);
+            background-color: transparent;
+            font-weight: 500;
+            transition: border-color 150ms ease, box-shadow 150ms ease;
+            cursor: pointer;
+            caret-color: transparent;
+
+            &:focus-within {
+                /* Subtle focus instead of a bright primary glow */
+                border-color: var(--mantine-color-dark-4);
+                outline: none;
+            }
+        }
+
+        .mantine-Select-section {
+            pointer-events: none; /* Let clicks pass through to the input */
+        }
+    }
+
+    /* The Dropdown Menu for Select */
+    .mantine-Select-dropdown {
+        background-color: var(--mantine-color-body);
+        border: 1px solid var(--mantine-color-default-border);
+        box-shadow: var(--mantine-shadow-md);
+        padding: 4px;
+    }
+
+    .mantine-Select-option {
+        border-radius: var(--mantine-radius-sm);
+        font-size: var(--mantine-font-size-sm);
+
+        /* Shadcn style: subtle hover, non-primary selected state */
+        &:hover,
+        &[data-combobox-selected] {
+            background-color: var(--mantine-color-default-hover);
+            color: var(--mantine-color-text);
+        }
+
+        &[data-selected] {
+            background-color: var(--mantine-color-default-hover);
+            font-weight: 600;
+
+            &::after {
+                /* Optional: add a small checkmark or indicator if desired */
+            }
+        }
+    }
+
+    /* Refinement for the general Input variables to avoid the "stuck" high contrast */
+    [data-mantine-color-scheme="dark"] {
+        .mantine-Input-wrapper {
+            /* This is likely the culprit: default border was too bright */
+            --input-bd: #27272a;
+            --input-bd-focus: #3f3f46;
+        }
+    }
+
     /* Segmented Control */
 
     .mantine-SegmentedControl-root {

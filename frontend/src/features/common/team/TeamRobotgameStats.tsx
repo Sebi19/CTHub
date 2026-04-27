@@ -123,12 +123,14 @@
 
         let hasPlayoffRun = false;
 
-        const competitionCount = records.filter(record => record.robotGame).length;
+        const filteredRecords = records.filter(record => record.robotGame);
+
+        const competitionCount = filteredRecords.filter(record => record.robotGame).length;
         const compCounts: number[] = [];
 
-        const seasonPerfectScore = records.length > 0 ? records[0].competition.season.maxPoints ?? 0 : 0;
+        const seasonPerfectScore = filteredRecords.length > 0 ? filteredRecords[0].competition.season.maxPoints ?? 0 : 0;
 
-        records.forEach((record, index) => {
+        filteredRecords.forEach((record, index) => {
             const rg = record.robotGame;
             if (!rg) return;
             compCounts.push(0);
@@ -227,7 +229,7 @@
 
         const lineLimits: LineLimit[] = [];
 
-        records.forEach((record, index) => {
+        filteredRecords.forEach((record, index) => {
             const color = getCompetitionTypeColor(record.competition.type);
             const sectionStart = sections[index];
             const startPercentage = (sectionStart / totalSections) * 100;

@@ -123,12 +123,14 @@
 
         let hasPlayoffRun = false;
 
-        const competitionCount = records.filter(record => record.robotGame).length;
+        const filteredRecords = records.filter(record => record.robotGame);
+
+        const competitionCount = filteredRecords.filter(record => record.robotGame).length;
         const compCounts: number[] = [];
 
-        const seasonPerfectScore = records.length > 0 ? records[0].competition.season.maxPoints ?? 0 : 0;
+        const seasonPerfectScore = filteredRecords.length > 0 ? filteredRecords[0].competition.season.maxPoints ?? 0 : 0;
 
-        records.forEach((record, index) => {
+        filteredRecords.forEach((record, index) => {
             const rg = record.robotGame;
             if (!rg) return;
             compCounts.push(0);
@@ -227,7 +229,7 @@
 
         const lineLimits: LineLimit[] = [];
 
-        records.forEach((record, index) => {
+        filteredRecords.forEach((record, index) => {
             const color = getCompetitionTypeColor(record.competition.type);
             const sectionStart = sections[index];
             const startPercentage = (sectionStart / totalSections) * 100;
@@ -276,7 +278,7 @@
                     <Paper withBorder p="md" radius="md">
                         <Group justify="space-between">
                             <Text size="xs" c="dimmed" fw={700} tt="uppercase">{t("app.season_team.detail.robot_game_stats.highscore")}</Text>
-                            <ThemeIcon color="yellow" variant="light" size="lg"><IconTrophy size={20} /></ThemeIcon>
+                            <ThemeIcon color="blue" variant="light" size="lg"><IconTrophy size={20} /></ThemeIcon>
                         </Group>
                         <Text size="xl" fw={700} mt="sm">{highestScore}</Text>
                     </Paper>
@@ -292,7 +294,7 @@
                     <Paper withBorder p="md" radius="md">
                         <Group justify="space-between">
                             <Text size="xs" c="dimmed" fw={700} tt="uppercase">{t("app.season_team.detail.robot_game_stats.official_run_count")}</Text>
-                            <ThemeIcon color="gray" variant="light" size="lg"><IconRobot size={20} /></ThemeIcon>
+                            <ThemeIcon color="blue" variant="light" size="lg"><IconRobot size={20} /></ThemeIcon>
                         </Group>
                         <Text size="xl" fw={700} mt="sm">{runCount}</Text>
                     </Paper>

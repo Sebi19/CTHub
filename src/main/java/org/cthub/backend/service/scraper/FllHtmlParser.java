@@ -463,7 +463,7 @@ public class FllHtmlParser {
 
     private List<ScrapedTeamDto> parseTeamsList(Document doc, String regionalCountry) {
         List<ScrapedTeamDto> teams = new ArrayList<>();
-        Elements rows = doc.select("div.ce_table.teams:has(div.row.header.challenge) div.row:not(.header)");
+        Elements rows = doc.select("div.teams:has(div.row.header.challenge) div.row:not(.header)");
 
         for (Element row : rows) {
             try {

@@ -33,6 +33,10 @@ interface Props {
     competition: CompetitionDetailDto
 }
 
+interface RgAdditionalPlace extends SeasonTeamDto {
+    rank: number;
+}
+
 type ViewMode = 'categories' | 'teams' | 'matrix';
 
 export const CompetitionAwardsTab = ({ competition }: Props) => {
@@ -59,9 +63,16 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
     const getTeam = (teamId: number) => teams.find(t => t.id === teamId);
 
     // Helper: Get winner for a specific category
-    const getWinner = (category: string) => {
-        const nom = results.nominations.find(n => n.category === category && n.winner);
-        return nom ? getTeam(nom.teamId) : null;
+    const getWinners = (category: string) => {
+        return results.nominations
+            .filter(n => n.category === category && n.winner)
+            .map(n => getTeam(n.teamId))
+            .sort((a, b) => {
+                const fllA = parseInt(a?.fllId as any) || 9999;
+                const fllB = parseInt(b?.fllId as any) || 9999;
+                return fllA - fllB;
+            })
+            .filter(Boolean) as SeasonTeamDto[];
     };
 
     // Helper: Get the other nominees (who didn't win) for a category
@@ -69,26 +80,47 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
         return results.nominations
             .filter(n => n.category === category && !n.winner)
             .map(n => getTeam(n.teamId))
+            //sort nominees by FLL ID ascending
+            .sort((a, b) => {
+                const fllA = parseInt(a?.fllId as any) || 9999;
+                const fllB = parseInt(b?.fllId as any) || 9999;
+                return fllA - fllB;
+            })
             .filter(Boolean) as SeasonTeamDto[];
     };
 
-    const getRobotGameRank = (rank: number) => {
+    const getRobotGameAdditionalPlaces = () => {
         return results.robotGameEntries
-            .filter(e => e.rank === rank)
-            .map(n => getTeam(n.teamId))
-            .filter(Boolean)[0] as SeasonTeamDto | undefined;
+            .filter(e => e.rank && e.rank > 1 && e.rank <= 3)
+            .map(e => {
+                const team = getTeam(e.teamId);
+                if(!team) return null;
+
+                return {
+                    ...team,
+                    rank: e.rank
+                } as RgAdditionalPlace;
+            })
+            .filter((item): item is RgAdditionalPlace => item !== null)
+            .sort((a, b) => {
+                const rankA = results.robotGameEntries.find(e => e.teamId === a.id)?.rank || 999;
+                const rankB = results.robotGameEntries.find(e => e.teamId === b.id)?.rank || 999;
+                if(rankA !== rankB) return rankA - rankB;
+
+                const fllA = parseInt(a?.fllId as any) || 9999;
+                const fllB = parseInt(b?.fllId as any) || 9999;
+                return fllA - fllB;
+            })
     }
 
     // Reusable Card Component for the Grid
     const AwardCard = ({ category }: { category: CompetitionAwardCategoryDto }) => {
-        const winner = getWinner(category);
+        const winners = getWinners(category);
         const nominees = getNominees(category);
         const config = getCategoryConfig(category);
+        const rgAdditionalPlaces = getRobotGameAdditionalPlaces();
 
-        const rgSecondPlace = getRobotGameRank(2);
-        const rgThirdPlace = getRobotGameRank(3);
-
-        if (!winner && nominees.length === 0) return null; // Hide if no data yet
+        if (winners.length === 0 && nominees.length === 0) return null; // Hide if no data yet
 
         return (
             <Card withBorder radius="md" p="md" shadow="sm">
@@ -99,26 +131,30 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
                     <Text fw={700} size="lg">{t('app.competition.awards.category', {context: category})}</Text>
                 </Group>
 
-                {winner ? (
+                {winners.length > 0 ? (
                     <Box mb={nominees.length > 0 ? 'md' : 0}>
                         <Text size="sm" c="dimmed" tt="uppercase" fw={700} mb={"xs"}>{t("app.competition.awards.winner")}</Text>
-                        <Group gap="xs">
-                            <ThemeIcon color={config.color} variant={"outline"} radius="xl" size={28}>
-                                <IconTrophy size={16}/>
-                            </ThemeIcon>
-                            <Group gap={4} align={"baseline"}>
-                                <Anchor
-                                    component={Link}
-                                    to={getTeamLink(winner)}
-                                    c="inherit"
-                                    underline="hover"
-                                    fw={600}
-                                >
-                                    {winner.name}
-                                </Anchor>
-                                <Text span c="dimmed" size="sm" fw={400}>[{winner.fllId}]</Text>
-                            </Group>
-                        </Group>
+                        <Stack gap={4}>
+                            {winners.map(winner => (
+                                <Group gap="xs" key={winner.id}>
+                                    <ThemeIcon color={config.color} variant={"outline"} radius="xl" size={28}>
+                                        <IconTrophy size={16}/>
+                                    </ThemeIcon>
+                                    <Group gap={4} align={"baseline"}>
+                                        <Anchor
+                                            component={Link}
+                                            to={getTeamLink(winner)}
+                                            c="inherit"
+                                            underline="hover"
+                                            fw={600}
+                                        >
+                                            {winner.name}
+                                        </Anchor>
+                                        <Text span c="dimmed" size="sm" fw={400}>[{winner.fllId}]</Text>
+                                    </Group>
+                                </Group>
+                            ))}
+                        </Stack>
                     </Box>
                 ) : (
                     <Text c="dimmed" fs="italic" size="sm">Gewinner noch nicht bekannt</Text>
@@ -159,48 +195,27 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
                         <Divider my="sm" variant="dashed" />
                         <Text size="xs" c="dimmed" tt="uppercase" fw={700} mb="md">{t("app.competition.awards.additional_places")}</Text>
                         <Stack gap={10}>
-                            {rgSecondPlace && (
-                                <Group gap={"xs"}>
-                                    <Tooltip label={t("app.competition.awards.place", { count: 2, ordinal: true })}>
+                            {rgAdditionalPlaces.map(rgPlace => (
+                                <Group gap={"xs"} key={rgPlace.id}>
+                                    <Tooltip label={t("app.competition.awards.place", { count: rgPlace.rank, ordinal: true })}>
                                         <Badge size={"lg"} leftSection={<IconMedal size={16}></IconMedal>} color={config.color} variant={"light"}>
-                                            2
+                                            {rgPlace.rank}
                                         </Badge>
                                     </Tooltip>
                                     <Group gap={4} align="baseline">
                                         <Anchor
                                             component={Link}
-                                            to={getTeamLink(rgSecondPlace)}
+                                            to={getTeamLink(rgPlace)}
                                             c="inherit"
                                             underline="hover"
                                             size={'sm'}
                                         >
-                                            {rgSecondPlace.name}
+                                            {rgPlace.name}
                                         </Anchor>
-                                        <Text span c="dimmed" size="xs">[{rgSecondPlace.fllId}]</Text>
+                                        <Text span c="dimmed" size="xs">[{rgPlace.fllId}]</Text>
                                     </Group>
                                 </Group>
-                            )}
-                            {rgThirdPlace && (
-                                <Group gap={"xs"}>
-                                    <Tooltip label={t("app.competition.awards.place", { count: 3, ordinal: true })}>
-                                        <Badge size={"lg"} leftSection={<IconMedal size={16}></IconMedal>} color={config.color} variant={"light"}>
-                                            3
-                                        </Badge>
-                                    </Tooltip>
-                                    <Group gap={4} align="baseline">
-                                        <Anchor
-                                            component={Link}
-                                            to={getTeamLink(rgThirdPlace)}
-                                            c="inherit"
-                                            underline="hover"
-                                            size={'sm'}
-                                        >
-                                            {rgThirdPlace.name}
-                                        </Anchor>
-                                        <Text span c="dimmed" size="xs">[{rgThirdPlace.fllId}]</Text>
-                                    </Group>
-                                </Group>
-                            )}
+                            ))}
                         </Stack>
                     </>
                 )}

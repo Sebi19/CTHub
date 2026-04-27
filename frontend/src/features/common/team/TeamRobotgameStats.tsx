@@ -276,7 +276,7 @@
                     <Paper withBorder p="md" radius="md">
                         <Group justify="space-between">
                             <Text size="xs" c="dimmed" fw={700} tt="uppercase">{t("app.season_team.detail.robot_game_stats.highscore")}</Text>
-                            <ThemeIcon color="yellow" variant="light" size="lg"><IconTrophy size={20} /></ThemeIcon>
+                            <ThemeIcon color="blue" variant="light" size="lg"><IconTrophy size={20} /></ThemeIcon>
                         </Group>
                         <Text size="xl" fw={700} mt="sm">{highestScore}</Text>
                     </Paper>
@@ -292,7 +292,7 @@
                     <Paper withBorder p="md" radius="md">
                         <Group justify="space-between">
                             <Text size="xs" c="dimmed" fw={700} tt="uppercase">{t("app.season_team.detail.robot_game_stats.official_run_count")}</Text>
-                            <ThemeIcon color="gray" variant="light" size="lg"><IconRobot size={20} /></ThemeIcon>
+                            <ThemeIcon color="blue" variant="light" size="lg"><IconRobot size={20} /></ThemeIcon>
                         </Group>
                         <Text size="xl" fw={700} mt="sm">{runCount}</Text>
                     </Paper>

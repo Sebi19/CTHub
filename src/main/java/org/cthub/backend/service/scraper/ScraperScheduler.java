@@ -19,7 +19,9 @@ public class ScraperScheduler {
     // ==========================================
     // Runs every day at 03:00 AM
     // This syncs everything: Teams, Details, Scores, Awards.
-    @Scheduled(cron = "0 0 3 * * *", zone = "Europe/Vienna")
+
+    // Disabled for now
+    //@Scheduled(cron = "0 0 3 * * *", zone = "Europe/Vienna")
     public void scheduleFullSync() {
         log.info("⏰ Scheduler triggered: Nightly Full Sync");
         scraperService.runFullSync(false);

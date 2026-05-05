@@ -19,6 +19,7 @@ const relevantCategories = [
     CompetitionAwardCategoryDto.ROBOT_GAME];
 
 const categoryScores: Partial<Record<CompetitionAwardCategoryDto, number>> = {
+    [CompetitionAwardCategoryDto.CHAMPION]: 4,
     [CompetitionAwardCategoryDto.RESEARCH]: 3,
     [CompetitionAwardCategoryDto.ROBOT_DESIGN]: 2,
     [CompetitionAwardCategoryDto.CORE_VALUES]: 1,

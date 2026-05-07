@@ -72,6 +72,10 @@ export default function App() {
         </Button>
     ));
 
+    const userDisplayName = (user: UserDto) => {
+        return `${user.firstName} ${user.lastName}`;
+    }
+
     function UserMenu({ user, logout }: { user: UserDto, logout: () => void }) {
         return (
             <Menu shadow="md" width={200}>
@@ -79,7 +83,7 @@ export default function App() {
                     <Button variant="subtle" rightSection={<IconChevronDown size={14} />} px="xs">
                         <Group gap={8}>
                             <Avatar radius="xl" size={26} color="blue" />
-                            <Text visibleFrom="sm" size="sm" fw={500}>{user.email}</Text>
+                            <Text visibleFrom="sm" size="sm" fw={500}>{userDisplayName(user)}</Text>
                         </Group>
                     </Button>
                 </Menu.Target>
@@ -91,7 +95,7 @@ export default function App() {
                         style={{ opacity: 1, cursor: 'default', color: 'var(--mantine-color-text)' }}
                         // We use 'component="div"' so it doesn't behave like a button
                         component="div"
-                    >{user.email}</Menu.Item>
+                    >{userDisplayName(user)}</Menu.Item>
                     <Menu.Label>Account</Menu.Label>
                     <Menu.Divider />
                     <Menu.Item

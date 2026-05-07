@@ -41,6 +41,8 @@ export interface UserDto {
   /** @format int64 */
   id: number;
   email: string;
+  firstName: string;
+  lastName: string;
   role?: string;
 }
 
@@ -597,6 +599,29 @@ export class Api<
       this.request<Record<string, string>, any>({
         path: `/api/scraper/test`,
         method: "GET",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags scraper-test-controller
+     * @name SyncCompetition
+     * @request GET:/api/scraper/sync-competition/{seasonId}/{urlPart}
+     */
+    syncCompetition: (
+      seasonId: string,
+      urlPart: string,
+      query?: {
+        /** @default false */
+        ignoreHashes?: boolean;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<string, any>({
+        path: `/api/scraper/sync-competition/${seasonId}/${urlPart}`,
+        method: "GET",
+        query: query,
         ...params,
       }),
 

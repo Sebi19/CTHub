@@ -10,7 +10,7 @@ spring:
   jpa:
     # "update": Automatically creates/updates tables based on your Java code
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
@@ -20,6 +20,10 @@ spring:
         order_updates: true
         order_inserts: true
         default_batch_fetch_size: 100
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 1
 springdoc:
   writer-with-default-pretty-printer: true
   remove-broken-reference-definitions: false

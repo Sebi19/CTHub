@@ -29,6 +29,14 @@ public class User implements UserDetails {
 
     @NotNull
     @Column(nullable = false)
+    private String firstName;
+
+    @NotNull
+    @Column(nullable = false)
+    private String lastName;
+
+    @NotNull
+    @Column(nullable = false)
     private String password; // BCrypt hash
 
     @Enumerated(EnumType.STRING)

@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.cthub.backend.dto.auth.LoginRequestDto;
 import org.cthub.backend.dto.auth.UserDto;
+import org.cthub.backend.mapper.UserMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,6 +29,7 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final RememberMeServices rememberMeServices;
+    private final UserMapper userMapper;
 
     // POST /api/auth/login
     @PostMapping("/login")
@@ -65,11 +67,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        return ResponseEntity.ok(UserDto.builder()
-            .id(user.getId())
-            .email(user.getEmail())
-            .role(user.getRole().name())
-            .build());
+        return ResponseEntity.ok(userMapper.toUserDto(user));
     }
 
     // POST /api/auth/logout
@@ -102,11 +100,7 @@ public class AuthController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth != null && auth.getPrincipal() instanceof org.cthub.backend.model.User user) {
-            return ResponseEntity.ok(UserDto.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .role(user.getRole().name())
-                .build());
+            return ResponseEntity.ok(userMapper.toUserDto(user));
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }

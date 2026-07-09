@@ -11,7 +11,7 @@ import {
     Center,
     SegmentedControl, Table, Box, TooltipGroup, Anchor
 } from '@mantine/core';
-import { type CompetitionDetailDto, type SeasonTeamDto } from '../../api/generated';
+import { type CompetitionDetailDto, type SeasonTeamDto } from '../../../api/generated.ts';
 import {
     IconMapPin,
     IconExternalLink,
@@ -22,10 +22,10 @@ import {
 } from '@tabler/icons-react';
 import {useTranslation} from "react-i18next";
 import {Link, useNavigate} from "react-router-dom";
-import {getTeamLink} from "../../utils/routingUtils.ts";
+import {getTeamLink} from "../../../utils/routingUtils.ts";
 import {useSessionStorage} from "@mantine/hooks";
-import {parseTeamLink} from "../../utils/linkUtils.tsx";
-import {SeasonTeamAvatar} from "../common/team/avatar/SeasonTeamAvatar.tsx";
+import {parseTeamLink} from "../../../utils/linkUtils.tsx";
+import {SeasonTeamAvatar} from "../../common/team/avatar/SeasonTeamAvatar.tsx";
 
 interface Props {
     competition: CompetitionDetailDto;

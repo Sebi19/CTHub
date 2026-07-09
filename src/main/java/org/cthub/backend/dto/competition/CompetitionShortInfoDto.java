@@ -33,4 +33,7 @@ public class CompetitionShortInfoDto {
     private String country;
     private LocalDate date;
     private LocalDate endDate; // null means same as date
+
+    private int registeredTeamCount;
+    private int maxTeamCount;
 }

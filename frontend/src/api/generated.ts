@@ -102,6 +102,10 @@ export interface CompetitionShortInfoDto {
   date?: string;
   /** @format date */
   endDate?: string;
+  /** @format int32 */
+  registeredTeamCount?: number;
+  /** @format int32 */
+  maxTeamCount?: number;
 }
 
 export interface LinkDto {
@@ -531,6 +535,20 @@ export class Api<
     ) =>
       this.request<SeasonTeamDetailsDto, any>({
         path: `/api/seasons/${seasonId}/teams/${fllId}`,
+        method: "GET",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags competition-controller
+     * @name GetCompetitionsForSeason
+     * @request GET:/api/seasons/{seasonId}/competitions
+     */
+    getCompetitionsForSeason: (seasonId: string, params: RequestParams = {}) =>
+      this.request<CompetitionShortInfoDto[], any>({
+        path: `/api/seasons/${seasonId}/competitions`,
         method: "GET",
         ...params,
       }),

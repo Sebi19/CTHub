@@ -17,17 +17,17 @@ import {
     TooltipGroup
 } from '@mantine/core';
 import {IconLayoutBoard, IconLayoutGrid, IconList, IconMedal, IconStar, IconTrophy} from '@tabler/icons-react';
-import {CompetitionAwardCategoryDto, type CompetitionDetailDto, type SeasonTeamDto} from '../../api/generated';
+import {CompetitionAwardCategoryDto, type CompetitionDetailDto, type SeasonTeamDto} from '../../../api/generated.ts';
 import {Link, useNavigate} from "react-router-dom";
 import {useMemo} from "react";
 import {useTranslation} from "react-i18next";
-import {getTeamLink} from "../../utils/routingUtils.ts";
-import {PlaceBadge} from "../common/team/PlaceBadge.tsx";
+import {getTeamLink} from "../../../utils/routingUtils.ts";
+import {PlaceBadge} from "../../common/team/PlaceBadge.tsx";
 import {useSessionStorage} from "@mantine/hooks";
-import {TeamAchievementsStack} from "../common/team/TeamAchievementsStack.tsx";
-import {getCategoryConfig, getTeamAchievements} from "../../utils/competitionUtils.ts";
-import {AdvancingBadge} from "../common/team/AdvancingBadge.tsx";
-import {SeasonTeamAvatar} from "../common/team/avatar/SeasonTeamAvatar.tsx";
+import {TeamAchievementsStack} from "../../common/team/TeamAchievementsStack.tsx";
+import {getCategoryConfig, getTeamAchievements} from "../../../utils/competitionUtils.ts";
+import {AdvancingBadge} from "../../common/team/AdvancingBadge.tsx";
+import {SeasonTeamAvatar} from "../../common/team/avatar/SeasonTeamAvatar.tsx";
 
 interface Props {
     competition: CompetitionDetailDto

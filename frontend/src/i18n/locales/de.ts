@@ -48,6 +48,7 @@ export const de = {
             },
         },
         header: {
+            competitions: "Wettbewerbe",
             leaderboard: "Rangliste",
             login: "Anmelden",
             toggleTheme: "Farbschema wechseln",
@@ -244,6 +245,24 @@ export const de = {
                     type: "Typ",
                     country: "Land",
                 }
+            },
+            overview: {
+                title: "Austragungsorte",
+                eventsFound: "{{count}} Wettbewerbe gefunden",
+                selectSeason: "Saison",
+                sort: {
+                    date: "Datum",
+                    name: "Name"
+                },
+                filter: {
+                    all: "Alle",
+                    regional: "Regional",
+                    qualification: "Qualifikation",
+                    final: "Finale",
+                },
+                noResults: "Keine Wettbewerbe gefunden, die den Filterkriterien entsprechen.",
+                capacity: "Anmeldungen",
+                teams: "Teams",
             }
         },
         season_team: {

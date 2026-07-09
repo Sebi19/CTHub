@@ -5,7 +5,6 @@ import {
     Title,
     Text,
     Group,
-    Badge,
     Loader,
     Button,
     Center,
@@ -25,23 +24,24 @@ import {
 } from '@tabler/icons-react';
 
 // Import our new tab components
-import type {CompetitionDetailDto} from "../../api/generated.ts";
-import {client} from "../../api.ts";
+import type {CompetitionDetailDto} from "../../../api/generated.ts";
+import {client} from "../../../api.ts";
 import {CompetitionTeamsTab} from "./CompetitionTeamsTab.tsx";
 import {useTranslation} from "react-i18next";
 import {CompetitionRobotGameTab} from "./CompetitionRobotGameTab.tsx";
 import {CompetitionAwardsTab} from "./CompetitionAwardsTab.tsx";
 import {useDocumentTitle, useSessionStorage} from "@mantine/hooks";
 import {CompetitionPreviousTab} from "./CompetitionPreviousTab.tsx";
-import {getCompetitionTypeColor, getFormattedCompetitionDate} from "../../utils/competitionUtils.ts";
-import {getCompetitionLink, getCompetitionsListLink, navigateBack} from "../../utils/routingUtils.ts";
-import { SeasonBadge } from '../common/season/SeasonBadge.tsx';
-import {CompetitionTypeBadge} from "../common/competition/CompetitionTypeBadge.tsx";
-import {type SwipeableTabItem, SwipeableTabs} from "../common/layout/SwipeableTabs.tsx";
-import {NotFoundPage} from "../error/NotFoundPage.tsx";
-import {ServerErrorPage} from "../error/ServerErrorPage.tsx";
-import {NavigateBackButton} from "../common/navigation/NavigateBackButton.tsx";
-import {useAppContext} from "../../hooks/AppContext.tsx";
+import {getCompetitionTypeColor, getFormattedCompetitionDate} from "../../../utils/competitionUtils.ts";
+import {getCompetitionLink, getCompetitionsListLink, navigateBack} from "../../../utils/routingUtils.ts";
+import { SeasonBadge } from '../../common/season/SeasonBadge.tsx';
+import {CompetitionTypeBadge} from "../../common/competition/CompetitionTypeBadge.tsx";
+import {type SwipeableTabItem, SwipeableTabs} from "../../common/layout/SwipeableTabs.tsx";
+import {NotFoundPage} from "../../error/NotFoundPage.tsx";
+import {ServerErrorPage} from "../../error/ServerErrorPage.tsx";
+import {NavigateBackButton} from "../../common/navigation/NavigateBackButton.tsx";
+import {useAppContext} from "../../../hooks/AppContext.tsx";
+import {CountryBadge} from "../../common/CountryBadge.tsx";
 
 export const CompetitionDetailPage = () => {
     const { seasonId, urlPart } = useParams();
@@ -127,6 +127,7 @@ export const CompetitionDetailPage = () => {
 
     useEffect(() => {
         if (!seasonId || !urlPart) return;
+        setIsLoading(true);
 
         // Use your generated client (adjust method name if different)
         client.api.getCompetitionDetails(seasonId, urlPart)
@@ -179,15 +180,8 @@ export const CompetitionDetailPage = () => {
                 <Box flex={{base: '1 0 100%', xs: '1 1 min-content'}} miw={0}>
                     <Group gap="xs" mb="sm">
                         <SeasonBadge season={competition.season} hideIfActive/>
-
                         <CompetitionTypeBadge type={competition.type} />
-
-                        {competition.country && (
-                            <Badge variant="outline" color="gray">
-                                {competition.country}
-                            </Badge>
-                        )}
-
+                        <CountryBadge country={competition.country} />
                     </Group>
 
                     <Title order={1} mb="sm">{competition.name}</Title>

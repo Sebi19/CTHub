@@ -17,7 +17,7 @@ import {
     IconLogin,
     IconChevronDown,
     IconLogout,
-    IconUser, IconSearch, IconBrandGithub
+    IconUser, IconSearch, IconBrandGithub, IconCalendarStats
 } from '@tabler/icons-react';
 import logo from './assets/CTH.svg';
 import {useDisclosure} from "@mantine/hooks";
@@ -34,8 +34,8 @@ export default function App() {
     const { t } = useTranslation();
 
     const NAV_LINKS = [
+        { link: '/competitions', label: t("app.header.competitions"), icon: IconCalendarStats },
         { link: '/leaderboard', label: t("app.header.leaderboard"), icon: IconTrophy },
-        // Add more later: { link: '/teams', label: 'Teams', icon: IconUsers },
     ];
 
     const navigate = useNavigate();
@@ -48,7 +48,12 @@ export default function App() {
 
     const { isAuthenticated, user, logout } = useAuth();
 
-    const isActive = (path: string) => location.pathname === path;
+    const isActive = (path: string) => {
+        if (location.pathname === path) {
+            return true;
+        }
+        return (location.pathname.startsWith(path + '/'))
+    }
 
     const toggleColorScheme = () => {
         setColorScheme(computedColorScheme === 'light' ? 'dark' : 'light');

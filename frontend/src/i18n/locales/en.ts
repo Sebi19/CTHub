@@ -48,6 +48,7 @@ export const en: I18nLocale = {
             },
         },
         header: {
+            competitions: "Competitions",
             leaderboard: "Leaderboard",
             login: "Login",
             toggleTheme: "Change Theme",
@@ -244,6 +245,24 @@ export const en: I18nLocale = {
                     type: "Type",
                     country: "Country",
                 }
+            },
+            overview: {
+                title: "Competitions Overview",
+                eventsFound: "{{count}} competitions found",
+                selectSeason: "Season",
+                sort: {
+                    date: "Date",
+                    name: "Name"
+                },
+                filter: {
+                    all: "All",
+                    regional: "Regional",
+                    qualification: "Qualification",
+                    final: "Final",
+                },
+                noResults: "No competitions found for the selected filters.",
+                capacity: "Registrations",
+                teams: "Teams",
             }
         },
         season_team: {

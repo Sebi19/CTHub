@@ -13,14 +13,14 @@ import {
     SegmentedControl, SimpleGrid, Select, Loader,
 } from '@mantine/core';
 import {IconLayoutGrid, IconList, IconSortAscending} from '@tabler/icons-react';
-import {type CompetitionDetailDto, type SeasonTeamDto} from '../../api/generated';
+import {type CompetitionDetailDto, type SeasonTeamDto} from '../../../api/generated.ts';
 import {Link, useNavigate} from "react-router-dom";
-import {getTeamLink} from "../../utils/routingUtils.ts";
-import {getTeamAchievements} from "../../utils/competitionUtils.ts";
-import {SeasonTeamAvatar} from "../common/team/avatar/SeasonTeamAvatar.tsx";
+import {getTeamLink} from "../../../utils/routingUtils.ts";
+import {getTeamAchievements} from "../../../utils/competitionUtils.ts";
+import {SeasonTeamAvatar} from "../../common/team/avatar/SeasonTeamAvatar.tsx";
 import {useTranslation} from "react-i18next";
 import {useDisclosure, useSessionStorage} from "@mantine/hooks";
-import {TeamRobotgameOverview} from "../common/team/TeamRobotgameOverview.tsx";
+import {TeamRobotgameOverview} from "../../common/team/TeamRobotgameOverview.tsx";
 import {RobotGameTableView} from "./RobotgameTableView.tsx";
 
 interface Props {

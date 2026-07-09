@@ -1,12 +1,12 @@
-import {useCarouselScrollShield} from "../../hooks/useCarouselScrollShield.ts";
+import {useCarouselScrollShield} from "../../../hooks/useCarouselScrollShield.ts";
 import {Anchor, Group, ScrollArea, Stack, Text} from "@mantine/core";
 import {MantineReactTable, type MRT_ColumnDef, type MRT_SortingState, useMantineReactTable} from "mantine-react-table";
 import {useMemo, useState} from "react";
-import {SeasonTeamAvatar} from "../common/team/avatar/SeasonTeamAvatar.tsx";
+import {SeasonTeamAvatar} from "../../common/team/avatar/SeasonTeamAvatar.tsx";
 import {Link} from "react-router-dom";
-import {getTeamLink} from "../../utils/routingUtils.ts";
+import {getTeamLink} from "../../../utils/routingUtils.ts";
 import {IconHash, IconMedal, IconTrophy} from "@tabler/icons-react";
-import type {CompetitionRobotGameEntryDto, SeasonTeamDto} from "../../api/generated.ts";
+import type {CompetitionRobotGameEntryDto, SeasonTeamDto} from "../../../api/generated.ts";
 import {useTranslation} from "react-i18next";
 
 // We create a combined type for the table row

@@ -91,3 +91,16 @@ export const getFormattedCompetitionDate = (competition: CompetitionSearchResult
 
     return `${dayjs(competition.date).format('L')} - ${dayjs(competition.endDate).format('L')}`;
 }
+
+
+export const getCountryFlagEmoji = (countryCode: string): string => {
+    if (!countryCode) return '';
+
+    // Convert country code to regional indicator symbols
+    const codePoints = countryCode
+        .toUpperCase()
+        .split('')
+        .map(char => 127397 + char.charCodeAt(0));
+
+    return String.fromCodePoint(...codePoints);
+}

@@ -3,6 +3,7 @@ package org.cthub.backend.service;
 import lombok.RequiredArgsConstructor;
 import org.cthub.backend.dto.competition.CompetitionDetailDto;
 import org.cthub.backend.dto.competition.CompetitionResultsDto;
+import org.cthub.backend.dto.competition.CompetitionShortInfoDto;
 import org.cthub.backend.mapper.CompetitionMapper;
 import org.cthub.backend.mapper.SeasonTeamMapper;
 import org.cthub.backend.model.Competition;
@@ -80,5 +81,13 @@ public class CompetitionService {
         }
 
         return detailDto;
+    }
+
+    @Transactional(readOnly = true)
+    public List<CompetitionShortInfoDto> getCompetitionsForSeason(String seasonId) {
+        List<Competition> competitions = competitionRepository.findAllBySeasonId(seasonId);
+        return competitions.stream()
+                .map(competitionMapper::toShortInfoDto)
+                .toList();
     }
 }

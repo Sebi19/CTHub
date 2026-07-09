@@ -2,11 +2,12 @@ import {useAuth} from "./features/auth/AuthContext.tsx";
 import {Navigate, Route, Routes} from "react-router-dom";
 import App from "./App.tsx";
 import {LoginPage} from "./features/auth/LoginPage.tsx";
-import {CompetitionDetailPage} from "./features/competition/CompetitionDetailPage.tsx";
+import {CompetitionDetailPage} from "./features/competition/detail/CompetitionDetailPage.tsx";
 import {RobotGameLeaderboardPage} from "./features/robotGameLeaderboard/RobotGameLeaderboardPage.tsx";
 import {SeasonTeamDetailPage} from "./features/seasonTeam/SeasonTeamDetailPage.tsx";
 import {TeamProfileDetailPage} from "./features/teamProfile/TeamProfileDetailPage.tsx";
 import {NotFoundPage} from "./features/error/NotFoundPage.tsx";
+import {SeasonOverview} from "./features/competition/overview/SeasonOverview.tsx";
 
 export function AppRoutes() {
     const {isAuthenticated} = useAuth();
@@ -25,6 +26,10 @@ export function AppRoutes() {
 
                 {/* Public Pages */}
                 <Route path="leaderboard" element={<RobotGameLeaderboardPage/>}/>
+
+                <Route path="competitions" element={<SeasonOverview/>}/>
+
+                <Route path="competitions/:seasonId" element={<SeasonOverview/>}/>
 
                 <Route path="competition/:seasonId/:urlPart" element={<CompetitionDetailPage/>}/>
 

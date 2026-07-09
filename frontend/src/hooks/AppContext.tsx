@@ -8,6 +8,7 @@ type AppContextType = {
     globalDefaultSeason: string; // The baseline we always fall back to
     availableSeasonIds: string[];
     getSeasonDto: (seasonId: string) => SeasonDto;
+    seasonsLoaded: boolean;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -17,6 +18,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const [availableSeasonIds, setAvailableSeasonIds] = useState<string[]>(['2025-26']);
     const [globalDefaultSeason, setGlobalDefaultSeason] = useState('2025-26');
     const [activeSeason, setActiveSeason] = useState(globalDefaultSeason);
+    const [seasonsLoaded, setSeasonsLoaded] = useState(false);
 
     useEffect(() => {
         // Fetch the seasons exactly ONE time when the app loads
@@ -42,6 +44,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                         prev === '2025-26' ? currentSeasonId : prev
                     );
                 }
+                setSeasonsLoaded(true);
             })
             .catch((err) => {
                 console.error("Failed to load seasons:", err);
@@ -64,7 +67,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     return (
-        <AppContext.Provider value={{ activeSeason, setActiveSeason, globalDefaultSeason, availableSeasonIds, getSeasonDto }}>
+        <AppContext.Provider value={{ activeSeason, setActiveSeason, globalDefaultSeason, availableSeasonIds, getSeasonDto, seasonsLoaded }}>
             {children}
         </AppContext.Provider>
     );

@@ -50,6 +50,13 @@ public interface CompetitionRepository extends JpaRepository<Competition, Long> 
 
     @Query("SELECT c FROM Competition c " +
         "JOIN FETCH c.season s " +
+        "WHERE s.id = :seasonId"
+    )
+    List<Competition> findAllBySeasonId(
+        @Param("seasonId") String seasonId);
+
+    @Query("SELECT c FROM Competition c " +
+        "JOIN FETCH c.season s " +
         "WHERE c.active = true " +
         "AND CONCAT(s.id, '/', c.urlPart) IN :seasonAndUrlPairs")
     List<Competition> findAllByPairs(@Param("seasonAndUrlPairs") List<String> seasonAndUrlPairs);

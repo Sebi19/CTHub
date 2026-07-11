@@ -22,8 +22,10 @@ public interface CompetitionMapper {
     @Mapping(target = "contactInfo", source = "contact", ignore = true)
     @Mapping(target = "nextCompetition", ignore = true)
     @Mapping(target = "previousCompetitions", ignore = true)
+    @Mapping(target = "newApiCompetition", expression = "java(competition.getFlowId() != null)")
     CompetitionDetailDto toBaseDetailDto(Competition competition);
 
+    @Mapping(target = "newApiCompetition", expression = "java(competition.getFlowId() != null)")
     CompetitionShortInfoDto toShortInfoDto(Competition competition);
 
     @Mapping(target = "teamId", source = "seasonTeam.id")
@@ -38,5 +40,6 @@ public interface CompetitionMapper {
 
     CompetitionContactInfoDto toContactInfoDto(Competition.ContactInfo contactInfo);
 
+    @Mapping(target = "newApiCompetition", expression = "java(competition.getFlowId() != null)")
     CompetitionSearchResultDto toSearchResultDto(Competition competition);
 }

@@ -142,6 +142,7 @@ export const en: I18nLocale = {
                 season: "{{seasonId}} ({{seasonName}})",
                 season_short: "{{seasonId}}",
                 official_link: "Official Competition Page",
+                flow_link: "Official Timetable & Infos",
                 date: "Date",
                 location: "Location",
                 contact: "Contact",

@@ -19,6 +19,7 @@ public class CompetitionSearchResultDto {
     private SeasonDto season;
     @NotNull
     private String urlPart;
+    private String slug; // optional, only for competitions that have a slug in the new API
     @NotNull
     private String name;
     @NotNull
@@ -26,4 +27,6 @@ public class CompetitionSearchResultDto {
     private String country;
     private LocalDate date;
     private LocalDate endDate;
+    @NotNull
+    boolean newApiCompetition; // every competition since 2026-27
 }

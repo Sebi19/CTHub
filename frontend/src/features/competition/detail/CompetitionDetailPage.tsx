@@ -121,6 +121,13 @@ export const CompetitionDetailPage = () => {
 
     const officialUrl = `https://www.first-lego-league.org/${i18n.resolvedLanguage}/challenge-${seasonId}/${urlPart}`;
 
+    const flowUrl = `https://flow.hands-on-technology.org/${competition?.slug}`;
+
+    const filteredLinks = useMemo(() => {
+        if (!competition) return [];
+        return competition.links.filter(link => !link.url.startsWith("https://flow.hands-on-technology.org"));
+    }, [competition]);
+
     const cleanFormattedString = (str: string) => {
         if (!str) return '';
         return str
@@ -248,18 +255,33 @@ export const CompetitionDetailPage = () => {
                     style={{zIndex: 10}}
                     mb="sm"
                 >
-                    <Button
-                        component="a"
-                        href={officialUrl}
-                        target="_blank"
-                        variant="filled" // Stands out more than the 'light' ones below
-                        color={getCompetitionTypeColor(competition.type)} // Optional: theme it to match the badge!
-                        rightSection={<IconExternalLink size={16}/>}
-                    >
-                        {t('app.competition.detail.official_link')}
-                    </Button>
+                    {!competition.newApiCompetition && (
+                        <Button
+                            component="a"
+                            href={officialUrl}
+                            target="_blank"
+                            variant="filled" // Stands out more than the 'light' ones below
+                            color={getCompetitionTypeColor(competition.type)} // Optional: theme it to match the badge!
+                            rightSection={<IconExternalLink size={16}/>}
+                        >
+                            {t('app.competition.detail.official_link')}
+                        </Button>
+                    )}
 
-                    {competition.links.map((link, index) => (
+                    {competition.newApiCompetition && (
+                        <Button
+                            component="a"
+                            href={flowUrl}
+                            target="_blank"
+                            variant="filled" // Stands out more than the 'light' ones below
+                            color={getCompetitionTypeColor(competition.type)} // Optional: theme it to match the badge!
+                            rightSection={<IconExternalLink size={16}/>}
+                        >
+                            {t('app.competition.detail.flow_link')}
+                        </Button>
+                    )}
+
+                    {filteredLinks.map((link, index) => (
                         <Button
                             key={index}
                             component="a"

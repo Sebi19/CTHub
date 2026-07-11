@@ -25,6 +25,7 @@ public class CompetitionDetailDto {
     private String name;
     @NotNull
     private String urlPart;
+    private String slug; // optional, only for competitions that have a slug in the new API
 
     @NotNull
     private CompetitionType type;
@@ -50,4 +51,7 @@ public class CompetitionDetailDto {
 
     private int registeredTeamCount;
     private int maxTeamCount;
+
+    @NotNull
+    boolean newApiCompetition; // every competition since 2026-27
 }

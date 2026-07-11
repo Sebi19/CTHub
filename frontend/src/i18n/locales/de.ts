@@ -142,6 +142,7 @@ export const de = {
                 season: "{{seasonId}} ({{seasonName}})",
                 season_short: "{{seasonId}}",
                 official_link: "Offizielle Wettbewerbsseite",
+                flow_link: "Offizieller Zeitplan und Infos",
                 date: "Datum",
                 location: "Austragungsort",
                 contact: "Kontakt",

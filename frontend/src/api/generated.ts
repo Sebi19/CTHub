@@ -94,6 +94,7 @@ export interface CompetitionShortInfoDto {
   season: SeasonDto;
   name: string;
   urlPart: string;
+  slug?: string;
   type: CompetitionType;
   active: boolean;
   resultsAvailable: boolean;
@@ -106,6 +107,7 @@ export interface CompetitionShortInfoDto {
   registeredTeamCount?: number;
   /** @format int32 */
   maxTeamCount?: number;
+  newApiCompetition: boolean;
 }
 
 export interface LinkDto {
@@ -168,6 +170,7 @@ export interface CompetitionDetailDto {
   season: SeasonDto;
   name: string;
   urlPart: string;
+  slug?: string;
   type: CompetitionType;
   active: boolean;
   nextCompetition?: CompetitionShortInfoDto;
@@ -186,6 +189,7 @@ export interface CompetitionDetailDto {
   registeredTeamCount?: number;
   /** @format int32 */
   maxTeamCount?: number;
+  newApiCompetition: boolean;
 }
 
 export interface CompetitionResultsDto {
@@ -211,6 +215,7 @@ export interface SeasonTeamDto {
 export interface CompetitionSearchResultDto {
   season: SeasonDto;
   urlPart: string;
+  slug?: string;
   name: string;
   type: CompetitionType;
   country?: string;
@@ -218,6 +223,7 @@ export interface CompetitionSearchResultDto {
   date?: string;
   /** @format date */
   endDate?: string;
+  newApiCompetition: boolean;
 }
 
 export interface SearchResultItemDto {

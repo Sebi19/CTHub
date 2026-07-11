@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useState } from 'react';
 import { MantineReactTable, useMantineReactTable, type MRT_ColumnDef } from 'mantine-react-table';
-import {Badge, Text, Anchor, Box, useMantineColorScheme } from '@mantine/core';
+import {Badge, Text, Anchor, Box, useMantineColorScheme} from '@mantine/core';
 import {type OverallRobotGameEntryDto, type SeasonTeamSummaryDto} from '../../api/generated';
 import { client } from '../../api';
 import {useTranslation} from "react-i18next";
@@ -20,25 +20,29 @@ const ROW_HOVER_DARK_MODE = 'rgba(255, 255, 255, 0.1)'
 const ROW_HOVER_LIGHT_MODE = 'rgba(0, 0, 0, 0.05)'
 const MAX_ROWS = 10000;
 
+interface Props {
+    seasonId: string;
+}
 
-export const RobotGameLeaderboard = () => {
+
+export const RobotGameLeaderboard = ({seasonId}: Props) => {
     const { i18n, t } = useTranslation();
     const currentLang = i18n.resolvedLanguage || 'de'; // Default to German if not resolved
     const currentTableLocale = useMemo(() => tableLocales[currentLang as keyof typeof tableLocales], [currentLang]);
-
 
     const [data, setData] = useState<OverallRobotGameEntryDto[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const colorScheme = useMantineColorScheme();
 
+
     useEffect(() => {
-        client.api.getOverallRobotGameLeaderboard()
+        client.api.getOverallRobotGameLeaderboard({seasonId: seasonId})
             .then((res) => {
                 setData(res.data);
                 setIsLoading(false);
             })
             .catch(() => setIsLoading(false));
-    }, []);
+    }, [seasonId]);
 
     const formatName = (team: SeasonTeamSummaryDto): string => {
         return `${team.name} [${team.fllId}]`;
@@ -213,5 +217,7 @@ export const RobotGameLeaderboard = () => {
         }),
     });
 
-    return <MantineReactTable table={table} />;
+    return (
+            <MantineReactTable table={table} />
+    );
 };

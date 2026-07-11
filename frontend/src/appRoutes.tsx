@@ -27,6 +27,8 @@ export function AppRoutes() {
                 {/* Public Pages */}
                 <Route path="leaderboard" element={<RobotGameLeaderboardPage/>}/>
 
+                <Route path="leaderboard/:seasonId" element={<RobotGameLeaderboardPage/>}/>
+
                 <Route path="competitions" element={<SeasonOverview/>}/>
 
                 <Route path="competitions/:seasonId" element={<SeasonOverview/>}/>

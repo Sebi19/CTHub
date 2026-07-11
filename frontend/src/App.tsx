@@ -35,7 +35,7 @@ export default function App() {
 
     const NAV_LINKS = [
         { link: '/competitions', label: t("app.header.competitions"), icon: IconCalendarStats },
-        { link: '/leaderboard', label: t("app.header.leaderboard"), icon: IconTrophy },
+        { link: '/leaderboard/2025-26', label: t("app.header.leaderboard"), icon: IconTrophy },
     ];
 
     const navigate = useNavigate();

@@ -18,7 +18,7 @@ import {
 } from '@mantine/core';
 import {IconCalendar, IconLayoutGrid, IconList, IconTag} from '@tabler/icons-react';
 import {useTranslation} from 'react-i18next';
-import {useSessionStorage} from '@mantine/hooks';
+import {useDocumentTitle, useSessionStorage} from '@mantine/hooks';
 import dayjs from 'dayjs';
 import {CompetitionCard} from "../common/CompetitionCard.tsx";
 import {CompetitionsTable} from "../common/CompetitionsTable.tsx";
@@ -83,6 +83,8 @@ export const SeasonOverview = () => {
     const season = useMemo(() => {
         return getSeasonDto(targetSeasonId);
     }, [targetSeasonId, seasonsLoaded, getSeasonDto]);
+
+    useDocumentTitle(t('app.competition.overview.doc_title', { seasonId: season.id, seasonName: season.name}));
 
     // Fetch Competitions whenever the targeted season changes
     useEffect(() => {
@@ -153,7 +155,7 @@ export const SeasonOverview = () => {
             <Stack gap="xl">
                 <Group justify="space-between" align="flex-end" mb="md">
                     <Box>
-                        <SeasonBadge season={season} hideIfActive={true}/>
+                        <SeasonBadge season={season}/>
                         <Title order={2}>{t('app.competition.overview.title')}</Title>
                         <Text c="dimmed">
                             {t('app.competition.overview.eventsFound', { count: processedCompetitions.length })}

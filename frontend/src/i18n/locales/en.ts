@@ -51,7 +51,7 @@ export const en: I18nLocale = {
             },
         },
         header: {
-            competitions: "Competitions",
+            competitions: "Locations",
             leaderboard: "Leaderboard",
             login: "Login",
             toggleTheme: "Change Theme",
@@ -251,7 +251,8 @@ export const en: I18nLocale = {
                 }
             },
             overview: {
-                title: "Competitions Overview",
+                title: "Locations",
+                doc_title: "Locations {{seasonId}} | CTH",
                 eventsFound: "{{count}} competitions found",
                 selectSeason: "Season",
                 sort: {

@@ -51,7 +51,7 @@ export const de = {
             },
         },
         header: {
-            competitions: "Wettbewerbe",
+            competitions: "Austragungsorte",
             leaderboard: "Rangliste",
             login: "Anmelden",
             toggleTheme: "Farbschema wechseln",
@@ -252,6 +252,7 @@ export const de = {
             },
             overview: {
                 title: "Austragungsorte",
+                doc_title: "Wettbewerbe {{seasonId}} | CTH",
                 eventsFound: "{{count}} Wettbewerbe gefunden",
                 selectSeason: "Saison",
                 sort: {

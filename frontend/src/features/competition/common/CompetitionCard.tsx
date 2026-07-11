@@ -61,12 +61,11 @@ export const CompetitionCard = ({ competition }: CompetitionCardProps) => {
 
                 <Text fw={700} size="lg" lineClamp={2}>{competition.name}</Text>
 
-                {competition.date && (
-                    <Group gap="xs" c="dimmed" mt="auto">
-                        <IconCalendar size={16} />
-                        <Text size="sm">{getFormattedCompetitionDate(competition)}</Text>
-                    </Group>
-                )}
+
+                <Group gap="xs" c="dimmed" mt="auto">
+                    <IconCalendar size={16} />
+                    <Text size="sm">{getFormattedCompetitionDate(competition)}</Text>
+                </Group>
             </Stack>
 
             {/* Visual Capacity Bar - Now using theme color */}

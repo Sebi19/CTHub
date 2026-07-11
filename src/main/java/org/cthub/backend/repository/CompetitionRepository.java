@@ -33,6 +33,20 @@ public interface CompetitionRepository extends JpaRepository<Competition, Long> 
         @Param("seasonId") String seasonId);
 
     @Query("SELECT c FROM Competition c " +
+        "LEFT JOIN FETCH c.links " +
+        "WHERE c.flowId = :flowId")
+    Optional<Competition> findByFlowId(
+        @Param("flowId") Integer flowId);
+
+    @Query("SELECT c FROM Competition c " +
+        "JOIN FETCH c.season s " +
+        "LEFT JOIN FETCH c.links " +
+        "WHERE c.slug = :slug AND s.id = :seasonId")
+    Optional<Competition> findBySlugAndSeasonId(
+        @Param("slug") String slug,
+        @Param("seasonId") String seasonId);
+
+    @Query("SELECT c FROM Competition c " +
         "JOIN FETCH c.season s " +
         "WHERE c.active = true " +
         "AND c.qualificationUrlPart = :qualificationUrlPart AND s.id = :seasonId")
@@ -50,7 +64,8 @@ public interface CompetitionRepository extends JpaRepository<Competition, Long> 
 
     @Query("SELECT c FROM Competition c " +
         "JOIN FETCH c.season s " +
-        "WHERE s.id = :seasonId"
+        "WHERE s.id = :seasonId " +
+        "AND c.active = true"
     )
     List<Competition> findAllBySeasonId(
         @Param("seasonId") String seasonId);

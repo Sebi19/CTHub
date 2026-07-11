@@ -51,6 +51,7 @@ public class SeedProfilesTask implements CommandLineRunner {
             "rootbots",
             "ROOTBOTS Avatar.png",
             List.of(
+                new SeasonTeamProfileRecord("2026-27", "1010", SeasonTeamProfile.AvatarMode.INHERIT, null),
                 new SeasonTeamProfileRecord("2025-26", "1011", SeasonTeamProfile.AvatarMode.INHERIT, null),
                 new SeasonTeamProfileRecord("2024-25", "1046", SeasonTeamProfile.AvatarMode.INHERIT, null),
                 new SeasonTeamProfileRecord("2023-24", "1042", SeasonTeamProfile.AvatarMode.INHERIT, null),

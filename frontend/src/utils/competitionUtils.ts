@@ -15,6 +15,7 @@ import {
 import type {MantineColor} from "@mantine/core";
 import {checkExhaustive} from "./typeUtils.ts";
 import dayjs from "dayjs";
+import i18n from "i18next";
 
 /**
  * Returns the standardized Mantine color for a competition type.
@@ -83,9 +84,9 @@ export const getCategoryConfig = (category: CompetitionAwardCategoryDto): Catego
 };
 
 export const getFormattedCompetitionDate = (competition: CompetitionSearchResultDto): string => {
-    if (!competition.date) return 'N/A';
+    if (!competition.date) return i18n.t('app.common.date.not_set');
 
-    if (!competition.endDate) {
+    if (!competition.endDate || dayjs(competition.date).isSame(dayjs(competition.endDate), 'day')) {
         return dayjs(competition.date).format('L');
     }
 

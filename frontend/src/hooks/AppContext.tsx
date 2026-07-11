@@ -15,8 +15,8 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
     const [availableSeasons, setAvailableSeasons] = useState<SeasonDto[]>([]);
-    const [availableSeasonIds, setAvailableSeasonIds] = useState<string[]>(['2025-26']);
-    const [globalDefaultSeason, setGlobalDefaultSeason] = useState('2025-26');
+    const [availableSeasonIds, setAvailableSeasonIds] = useState<string[]>(['2026-27']);
+    const [globalDefaultSeason, setGlobalDefaultSeason] = useState('2026-27');
     const [activeSeason, setActiveSeason] = useState(globalDefaultSeason);
     const [seasonsLoaded, setSeasonsLoaded] = useState(false);
 

@@ -32,6 +32,9 @@ export const de = {
             navigation: {
                 back: "Zurück",
             },
+            date: {
+                not_set: "Nicht bekanntgegeben",
+            }
         },
         error: {
             error_404: {
@@ -146,6 +149,7 @@ export const de = {
             teams: {
                 title: "Registrierte Teams ({{registeredCount}}/{{maxCount}})",
                 empty: "Es sind noch keine Teams für diesen Wettbewerb registriert.",
+                unavailable: "Die Teamliste ist derzeit nicht verfügbar.",
                 country: "Unbekanntes Land",
                 country_DE: "Deutschland",
                 country_AT: "Österreich",

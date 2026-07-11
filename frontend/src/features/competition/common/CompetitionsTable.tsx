@@ -53,14 +53,10 @@ export const CompetitionsTable = ({ competitions }: CompetitionTableProps) => {
                                 </Anchor>
                             </Table.Td>
                             <Table.Td>
-                                {comp.date ? (
-                                    <Group gap="xs" c="dimmed" wrap="nowrap">
-                                        <IconCalendar size={16} />
-                                        <Text size="sm">{getFormattedCompetitionDate(comp)}</Text>
-                                    </Group>
-                                ) : (
-                                    <Text c="dimmed">-</Text>
-                                )}
+                                <Group gap="xs" c="dimmed" wrap="nowrap">
+                                    <IconCalendar size={16} />
+                                    <Text size="sm">{getFormattedCompetitionDate(comp)}</Text>
+                                </Group>
                             </Table.Td>
                             <Table.Td>
                                 <CompetitionTypeBadge type={comp.type} />

@@ -44,10 +44,11 @@ export const CompetitionTeamsTab = ({ competition }: Props) => {
     // Safety check just in case
     const teams = competition.registeredTeams;
 
-    const teamCount = teams.length;
-
-    if (teamCount === 0) {
-        return <Text c="dimmed" ta="center" py="xl">{t("app.competition.teams.empty")}</Text>;
+    if (teams.length === 0) {
+        if (competition.registeredTeamCount === 0) {
+            return <Text c="dimmed" ta="center" py="xl">{t("app.competition.teams.empty")}</Text>;
+        }
+        return <Text c="dimmed" ta="center" py="xl">{t("app.competition.teams.unavailable")}</Text>;
     }
 
     const TeamExtraLinksMenu = ({ team }: { team: SeasonTeamDto }) => {

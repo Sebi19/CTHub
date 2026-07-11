@@ -191,12 +191,10 @@ export function GlobalSearchSpotlight() {
 
                                             <Group gap="xs" wrap="nowrap" style={{ flexShrink: 0 }}>
                                                 {!seasonContext && <SeasonBadge season={comp.season} variant="light" short/>}
-                                                {comp.date && (
-                                                    <Group gap={2}>
-                                                        <IconCalendar size={14} style={{ color: 'var(--mantine-color-dimmed)' }} />
-                                                        <Text size="xs" c="dimmed" style={{ whiteSpace: 'nowrap' }}>{getFormattedCompetitionDate(comp)}</Text>
-                                                    </Group>
-                                                )}
+                                                <Group gap={2}>
+                                                    <IconCalendar size={14} style={{ color: 'var(--mantine-color-dimmed)' }} />
+                                                    <Text size="xs" c="dimmed" style={{ whiteSpace: 'nowrap' }}>{getFormattedCompetitionDate(comp)}</Text>
+                                                </Group>
                                             </Group>
                                         </div>
                                         <Text size="xs" c="dimmed" mt={2} truncate="end">

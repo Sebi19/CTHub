@@ -26,6 +26,13 @@ public class Competition {
     @NotNull
     private Season season;
 
+    private String slug; // "weinviertel"
+    private Integer flowId;
+    private Integer challengeId;
+
+    private Double latitude; // 48.603
+    private Double longitude; // 16.192
+
     @NotNull
     @Column(nullable = false)
     private boolean active;

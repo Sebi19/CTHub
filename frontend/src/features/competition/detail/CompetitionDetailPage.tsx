@@ -64,7 +64,12 @@ export const CompetitionDetailPage = () => {
         };
     }, [seasonId, setActiveSeason, globalDefaultSeason]);
 
-    const teamCount = competition ? competition.registeredTeams.length : 0;
+    const teamCount = useMemo(() => {
+        if (!competition) return 0;
+        const length = competition.registeredTeams?.length || 0;
+        if (length > 0) return length;
+        return competition.registeredTeamCount;
+    }, [competition]);
 
     useDocumentTitle(t('app.competition.detail.doc_title', {competitionName: competition?.name || '', seasonId: competition?.season.id || ''}))
 
@@ -190,15 +195,13 @@ export const CompetitionDetailPage = () => {
                                 w={{base: '100%', xs: 'fit-content'}}>
 
                         {/* Date Card */}
-                        {competition.date && (
-                            <Card withBorder radius="md" p="md" bg="transparent">
-                                <Group gap="xs" mb="xs" c="dimmed">
-                                    <IconCalendar size={20}/>
-                                    <Text fw={500}>{t('app.competition.detail.date')}</Text>
-                                </Group>
-                                    <Text>{getFormattedCompetitionDate(competition)}</Text>
-                            </Card>
-                        )}
+                        <Card withBorder radius="md" p="md" bg="transparent">
+                            <Group gap="xs" mb="xs" c="dimmed">
+                                <IconCalendar size={20}/>
+                                <Text fw={500}>{t('app.competition.detail.date')}</Text>
+                            </Group>
+                                <Text>{getFormattedCompetitionDate(competition)}</Text>
+                        </Card>
 
                         {/* Location Card */}
                         {competition.location && (

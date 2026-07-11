@@ -20,7 +20,7 @@ export function AppRoutes() {
             <Route path="/" element={<App/>}>
 
                 {/* Index: Redirect to dach final */}
-                <Route index element={<Navigate to="/competition/2025-26/finale-2025-26" replace/>}/>
+                <Route index element={<Navigate to="/competitions/2026-27" replace/>}/>
 
                 <Route path="/login" element={!isAuthenticated ? <LoginPage/> : <Navigate to="/"/>}/>
 

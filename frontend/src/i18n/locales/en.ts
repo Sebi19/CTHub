@@ -31,7 +31,10 @@ export const en: I18nLocale = {
             },
             navigation: {
                 back: "Back",
-            }
+            },
+            date: {
+                not_set: "Not announced",
+            },
         },
         error: {
             error_404: {
@@ -146,6 +149,7 @@ export const en: I18nLocale = {
             teams: {
                 title: "Registered Teams ({{registeredCount}}/{{maxCount}})",
                 empty: "There are no teams registered for this competition yet.",
+                unavailable: "Team data is not available for this competition.",
                 country: "Unknown Country",
                 country_DE: "Germany",
                 country_AT: "Austria",

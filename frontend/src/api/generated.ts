@@ -524,6 +524,20 @@ export class Api<
     /**
      * No description
      *
+     * @tags sync-test-controller
+     * @name TriggerFullSync
+     * @request GET:/api/syncer/trigger-sync
+     */
+    triggerFullSync: (params: RequestParams = {}) =>
+      this.request<string, any>({
+        path: `/api/syncer/trigger-sync`,
+        method: "GET",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
      * @tags season-team-controller
      * @name GetTeamDetails
      * @request GET:/api/seasons/{seasonId}/teams/{fllId}

@@ -144,7 +144,7 @@ export const SeasonOverview = () => {
     }
 
     // Catch 500s, 502s, network timeouts, etc.
-    if (errorCode || competitions.length === 0) {
+    if (errorCode) {
         return <ServerErrorPage handleBackNavigation={handleBackNavigation} />;
     }
 

@@ -164,6 +164,9 @@ public class FlowApiPersister {
             team.setName(apiTeam.getName());
             team.setInstitution(apiTeam.getOrganization());
             team.setCity(apiTeam.getLocation());
+            if(comp.getType().equals(Competition.CompetitionType.REGIONAL)) {
+                team.setCountry(comp.getCountry());
+            }
             team.setActive(true);
 
             team.getRegisteredCompetitions().add(comp);

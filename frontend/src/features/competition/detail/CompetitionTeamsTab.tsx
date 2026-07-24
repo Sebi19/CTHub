@@ -2,7 +2,6 @@ import {
     SimpleGrid,
     Card,
     Text,
-    Badge,
     Group,
     Stack,
     Tooltip,
@@ -26,6 +25,7 @@ import {getTeamLink} from "../../../utils/routingUtils.ts";
 import {useSessionStorage} from "@mantine/hooks";
 import {parseTeamLink} from "../../../utils/linkUtils.tsx";
 import {SeasonTeamAvatar} from "../../common/team/avatar/SeasonTeamAvatar.tsx";
+import {CountryBadge} from "../../common/CountryBadge.tsx";
 
 interface Props {
     competition: CompetitionDetailDto;
@@ -175,12 +175,8 @@ export const CompetitionTeamsTab = ({ competition }: Props) => {
                                             <Text size="xs" c="dimmed">#{team.fllId}</Text>
                                         </Stack>
                                     </Group>
-                                    {competition.type === 'FINAL' && team.country && (
-                                        <Tooltip label={t("app.competition.teams.country", {context: team.country})}>
-                                            <Badge color='gray' variant='light'>
-                                                {team.country}
-                                            </Badge>
-                                        </Tooltip>
+                                    {competition.type === 'FINAL' && (
+                                            <CountryBadge country={team.country}/>
                                     )}
                                 </Group>
 
@@ -231,13 +227,9 @@ export const CompetitionTeamsTab = ({ competition }: Props) => {
                                         style={{ cursor: 'pointer' }}
                                     >
                                         <Table.Td><Text fw={500} c="dimmed">{team.fllId}</Text></Table.Td>
-                                        {competition.type === 'FINAL' && team.country && (
+                                        {competition.type === 'FINAL' && (
                                             <Table.Td>
-                                                <Tooltip label={t("app.competition.teams.country", {context: team.country})}>
-                                                    <Badge color='gray' variant='light'>
-                                                        {team.country}
-                                                    </Badge>
-                                                </Tooltip>
+                                                <CountryBadge country={team.country}/>
                                             </Table.Td>
                                         )}
                                         <Table.Td>

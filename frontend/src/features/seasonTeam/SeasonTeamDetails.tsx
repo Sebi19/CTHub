@@ -11,6 +11,7 @@ import {CompetitionTypeIcon} from "../common/competition/CompetitionTypeIcon.tsx
 import {SeasonTeamAvatar} from "../common/team/avatar/SeasonTeamAvatar.tsx";
 import {useState} from "react";
 import {TeamRobotgameStats} from "../common/team/TeamRobotgameStats.tsx";
+import {CountryBadge} from "../common/CountryBadge.tsx";
 
 interface SeasonTeamDetailsProps {
     teamDetails: SeasonTeamDetailsDto;
@@ -46,11 +47,7 @@ export const SeasonTeamDetails = ({teamDetails, hideSeasonBadge}: SeasonTeamDeta
 
                         <Badge size="lg" variant="light" color="blue">#{teamDetails.fllId}</Badge>
 
-                        {teamDetails.country && (
-                            <Badge variant="outline" color="gray">
-                                {teamDetails.country}
-                            </Badge>
-                        )}
+                        <CountryBadge country={teamDetails.country} />
                     </Group>
                     <Group wrap='wrap'>
                         <SeasonTeamAvatar

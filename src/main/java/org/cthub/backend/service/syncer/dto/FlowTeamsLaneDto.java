@@ -7,8 +7,7 @@ import java.util.List;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class FlowChallengeCategoryDto {
-    private Integer capacity;
-    private Integer registered;
-    private List<FlowTeamDto> list;
+public class FlowTeamsLaneDto {
+    private String name;
+    private List<FlowTeamDto> teams;
 }

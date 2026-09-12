@@ -191,12 +191,14 @@ export const CompetitionTeamsTab = ({ competition }: Props) => {
                                 )}
 
                                 {/* City */}
-                                <Tooltip label={t("app.competition.teams.tooltip.city")}>
-                                    <Group gap="xs" c="dimmed" mt="sm" style={{ width: 'fit-content' }}>
-                                        <IconMapPin size={16}/>
-                                        <Text size="sm">{team.city || 'Unknown City'}</Text>
-                                    </Group>
-                                </Tooltip>
+                                {team.city && (
+                                    <Tooltip label={t("app.competition.teams.tooltip.city")}>
+                                        <Group gap="xs" c="dimmed" mt="sm" style={{ width: 'fit-content' }}>
+                                            <IconMapPin size={16}/>
+                                            <Text size="sm">{team.city}</Text>
+                                        </Group>
+                                    </Tooltip>
+                                )}
                             </Card>
                         </TooltipGroup>
                     ))}

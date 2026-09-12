@@ -6,5 +6,14 @@ import lombok.Data;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FlowTeamsWrapperDto {
-    private FlowChallengeCategoryDto challenge;
+    private FlowTeamsLaneDto[] lanes;
+
+    public FlowTeamsLaneDto getChallengeLane() {
+        for (FlowTeamsLaneDto lane : lanes) {
+            if ("Challenge".equalsIgnoreCase(lane.getName())) {
+                return lane;
+            }
+        }
+        return null;
+    }
 }

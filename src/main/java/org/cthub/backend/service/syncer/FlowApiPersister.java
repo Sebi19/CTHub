@@ -62,7 +62,7 @@ public class FlowApiPersister {
         Competition comp = existingOpt.orElseGet(() -> Competition.builder().season(activeSeason).build());
 
         comp.setFlowId(eventDto.getId());
-        comp.setChallengeId(eventDto.getChallengeId());
+        comp.setChallengeId(eventDto.getChallengeProgram().getEvent());
         comp.setSlug(eventDto.getSlug());
         comp.setUrlPart(eventDto.getSlug().replace("-challenge", "")); // Fallback for old routing logic until fully migrated
         comp.setName(eventDto.getName());
@@ -108,8 +108,8 @@ public class FlowApiPersister {
         competitionRepository.save(comp);
 
         // 2. UPSERT TEAMS
-        if (publicInfo != null && publicInfo.getTeams() != null && publicInfo.getTeams().getChallenge() != null) {
-            syncTeams(comp, activeSeason, publicInfo.getTeams().getChallenge().getList());
+        if (publicInfo != null && publicInfo.getTeams() != null && publicInfo.getTeams().getChallengeLane() != null) {
+            syncTeams(comp, activeSeason, publicInfo.getTeams().getChallengeLane().getTeams());
         }
 
         return true;
@@ -162,8 +162,8 @@ public class FlowApiPersister {
             }
 
             team.setName(apiTeam.getName());
-            team.setInstitution(apiTeam.getOrganization());
-            team.setCity(apiTeam.getLocation());
+            //team.setInstitution(apiTeam.getOrganization());
+            //team.setCity(apiTeam.getLocation());
             if(comp.getType().equals(Competition.CompetitionType.REGIONAL)) {
                 team.setCountry(comp.getCountry());
             }

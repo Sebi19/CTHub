@@ -65,7 +65,9 @@ public class FlowApiSyncerService {
                     .retrieve()
                     .body(FlowEventDto.class);
 
-                if (event == null || event.getChallengeId() == null) continue;
+                if (event == null || event.getChallengeProgram() == null) {
+                    continue;
+                }
 
                 if (!Objects.equals(event.getSeasonRel().getYear(), activeSeason.getStartYear())) {
                     log.info("Skipping event {} as it belongs to season {}.", slug, event.getSeasonRel().getYear());
@@ -82,13 +84,15 @@ public class FlowApiSyncerService {
                 }
 
                 // Look up the country and coordinates from our pre-fetched map
-                DrahtVenueDto venueData = venueMap.get(event.getChallengeId());
+                DrahtVenueDto venueData = venueMap.get(event.getChallengeProgram().getDrahtId());
 
                 boolean isSavedAndActive = persister.upsertEventAndTeams(activeSeason, event, publicInfo, venueData);
 
                 if (isSavedAndActive) {
                     processedActiveSlugs.add(event.getSlug());
                     successCount++;
+                } else {
+                    log.info("Event {} was skipped or deactivated due to missing venue data.", slug);
                 }
 
             } catch (Exception e) {

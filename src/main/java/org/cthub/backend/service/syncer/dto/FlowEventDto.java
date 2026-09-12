@@ -13,12 +13,21 @@ public class FlowEventDto {
     private String date;
     private String endDate;
 
-    @JsonProperty("event_challenge")
-    private Integer challengeId; // Nullable if it's an explore-only event
+    private FlowProgramDto[] programs;
 
     @JsonProperty("seasonRel")
     private FlowSeasonRelDto seasonRel;
 
     @JsonProperty("levelRel")
     private FlowLevelRelDto levelRel;
+
+    public FlowProgramDto getChallengeProgram() {
+        if (programs == null) return null;
+        for (FlowProgramDto program : programs) {
+            if ("CHALLENGE".equalsIgnoreCase(program.getName())) {
+                return program;
+            }
+        }
+        return null;
+    }
 }

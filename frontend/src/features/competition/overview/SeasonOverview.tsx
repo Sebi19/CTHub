@@ -29,6 +29,7 @@ import {getCompetitionsListLink, navigateBack} from "../../../utils/routingUtils
 import {CompetitionType} from "../../../api/generated.ts";
 import {SeasonBadge} from "../../common/season/SeasonBadge.tsx";
 import {useAppContext} from "../../../hooks/AppContext.tsx";
+import {useMemoryState} from "../../../utils/memoryUtils.ts";
 
 export const SeasonOverview = () => {
     const { seasonId } = useParams<{ seasonId: string }>();
@@ -53,9 +54,9 @@ export const SeasonOverview = () => {
         key: 'season-overview-view-mode',
         defaultValue: 'grid',
     });
-    const [sortBy, setSortBy] = useState<string>('date');
-    const [countryFilter, setCountryFilter] = useState<string>('ALL');
-    const [typeFilter, setTypeFilter] = useState<string>('ALL');
+    const [sortBy, setSortBy] = useMemoryState<string>(`season-overview-sort`, 'date');
+    const [countryFilter, setCountryFilter] = useMemoryState<string>(`season-overview-filter-country`,'ALL');
+    const [typeFilter, setTypeFilter] = useMemoryState<string>(`season-overview-filter-type`,'ALL');
 
     useEffect(() => {
         // If there is a seasonId in the URL, tell the global context about it

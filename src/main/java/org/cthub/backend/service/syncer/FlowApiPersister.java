@@ -66,7 +66,13 @@ public class FlowApiPersister {
         comp.setFlowId(eventDto.getId());
         comp.setChallengeId(eventDto.getChallengeProgram().getEvent());
         comp.setSlug(eventDto.getSlug());
-        comp.setUrlPart(eventDto.getSlug().replace("-c", "").replace("-ec","")); // Fallback for old routing logic until fully migrated
+        if (eventDto.getSlug().endsWith("-c")) {
+            comp.setUrlPart(eventDto.getSlug().substring(0, eventDto.getSlug().length() - 2));
+            } else if (eventDto.getSlug().endsWith("-ec")) {
+            comp.setUrlPart(eventDto.getSlug().substring(0, eventDto.getSlug().length() - 3));
+        } else {
+            comp.setUrlPart(eventDto.getSlug());
+        }
         comp.setName(eventDto.getName());
         comp.setActive(true);
 

@@ -57,8 +57,12 @@ public class FlowApiSyncerService {
 
         // --- STEP 2 & 3: Process individual events ---
         for (String slug : slugMap.keySet()) {
-            if (slug.endsWith("-e")) continue;
-            if (slug.contains("hause-")) continue;
+            if (slug.endsWith("-e")) {
+                continue;
+            }
+            if (slug.contains("hause-")) {
+                continue;
+            }
 
             try {
                 FlowEventDto event = flowClient.get()

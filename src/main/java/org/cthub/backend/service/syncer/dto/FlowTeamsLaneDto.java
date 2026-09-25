@@ -10,4 +10,5 @@ import java.util.List;
 public class FlowTeamsLaneDto {
     private String name;
     private List<FlowTeamDto> teams;
+    private int capacity;
 }

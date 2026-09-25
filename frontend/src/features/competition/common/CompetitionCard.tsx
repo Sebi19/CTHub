@@ -69,7 +69,7 @@ export const CompetitionCard = ({ competition }: CompetitionCardProps) => {
             </Stack>
 
             {/* Visual Capacity Bar - Now using theme color */}
-            {hasCapacity && (
+            {hasCapacity ? (
                 <Stack gap="xs" mt="md">
                     <Group justify="space-between" align="center">
                         <Text size="xs" c="dimmed">{t('app.competition.overview.capacity') || 'Capacity'}</Text>
@@ -77,6 +77,16 @@ export const CompetitionCard = ({ competition }: CompetitionCardProps) => {
                             {registered} / {max} {t('app.competition.overview.teams') || 'Teams'}
                         </Text>
                     </Group>
+                    <Progress
+                        value={capacityPercentage}
+                        color={themeColor}
+                        size="sm"
+                        radius="xl"
+                    />
+                </Stack>
+            ) : (
+                <Stack gap="xs" mt="md">
+                    <Text size="xs" c="dimmed">{t('app.competition.overview.noCapacity')}</Text>
                     <Progress
                         value={capacityPercentage}
                         color={themeColor}

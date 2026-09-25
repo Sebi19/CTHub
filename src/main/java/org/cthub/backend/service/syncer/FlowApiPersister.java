@@ -45,17 +45,19 @@ public class FlowApiPersister {
 
         // 2. HARD DEPENDENCY CHECK: Missing Venue Data
         if (venueDto == null) {
-            if (existingOpt.isPresent()) {
-                Competition comp = existingOpt.get();
-                if (comp.isActive()) {
-                    comp.setActive(false);
-                    competitionRepository.save(comp);
-                    log.info("📉 Deactivated {} because Draht venue data went missing.", comp.getName());
+            if (!(eventDto.getSlug().contains("finale-2") || eventDto.getName().toLowerCase().contains("qualifikation"))) {
+                if (existingOpt.isPresent()) {
+                    Competition comp = existingOpt.get();
+                    if (comp.isActive()) {
+                        comp.setActive(false);
+                        competitionRepository.save(comp);
+                        log.info("📉 Deactivated {} because Draht venue data went missing.", comp.getName());
+                    }
+                } else {
+                    log.warn("⏭️ Skipped new event {} because Draht venue data is missing.", eventDto.getName());
                 }
-            } else {
-                log.warn("⏭️ Skipped new event {} because Draht venue data is missing.", eventDto.getName());
+                return false;
             }
-            return false;
         }
 
         // 3. UPSERT ACTIVE COMPETITION
@@ -64,34 +66,51 @@ public class FlowApiPersister {
         comp.setFlowId(eventDto.getId());
         comp.setChallengeId(eventDto.getChallengeProgram().getEvent());
         comp.setSlug(eventDto.getSlug());
-        comp.setUrlPart(eventDto.getSlug().replace("-challenge", "")); // Fallback for old routing logic until fully migrated
+        comp.setUrlPart(eventDto.getSlug().replace("-c", "")); // Fallback for old routing logic until fully migrated
         comp.setName(eventDto.getName());
         comp.setActive(true);
 
         // Map Level to CompetitionType
-        if (eventDto.getLevelRel() != null && eventDto.getLevelRel().getId() != null) {
-            int level = eventDto.getLevelRel().getId();
-            if (level == 1) {
-                comp.setType(Competition.CompetitionType.REGIONAL);
-            } else if (level == 2) {
-                comp.setType(Competition.CompetitionType.QUALIFICATION);
-            } else {
-                comp.setType(Competition.CompetitionType.FINAL);
-            }
+        int level = eventDto.getLevel();
+        if (level == 1) {
+            comp.setType(Competition.CompetitionType.REGIONAL);
+        } else if (level == 2) {
+            comp.setType(Competition.CompetitionType.QUALIFICATION);
+        } else {
+            comp.setType(Competition.CompetitionType.FINAL);
         }
 
-        comp.setDate(parseEventDate(venueDto.getDate()));
-        comp.setEndDate(parseEventDate(venueDto.getEndDate()));
+        LocalDate startDate = parseEventDate(eventDto.getDate());
+        int days = eventDto.getDays() != null ? eventDto.getDays() : 1;
+        LocalDate endDate = startDate != null ? startDate.plusDays(days - 1) : null;
+        comp.setDate(startDate);
+        comp.setEndDate(endDate);
 
-        if (venueDto.getCountry() != null) {
+        if (venueDto != null && venueDto.getCountry() != null) {
             comp.setCountry(venueDto.getCountry().toUpperCase());
+        } else if (level == 2) {
+            if (eventDto.getName().toLowerCase().contains("deutschland")) {
+                comp.setCountry("DE");
+            }
+            if (eventDto.getName().toLowerCase().contains("schweiz")) {
+                comp.setCountry("CH");
+            }
+            if (eventDto.getName().toLowerCase().contains("österreich")) {
+                comp.setCountry("AT");
+            }
+        } else if (level == 3) {
+            comp.setCountry("DE"); // Hardcode to germany for 2027 final
         }
 
-        comp.setLatitude(venueDto.getLat());
-        comp.setLongitude(venueDto.getLon());
+        if (venueDto != null) {
+            comp.setLatitude(venueDto.getLat());
+            comp.setLongitude(venueDto.getLon());
+        }
 
-        comp.setMaxTeamCount(venueDto.getCapacity());
-        comp.setRegisteredTeamCount(venueDto.getRegistered());
+        if (publicInfo != null && publicInfo.getTeams() != null && publicInfo.getTeams().getChallengeLane() != null) {
+            comp.setMaxTeamCount(publicInfo.getTeams().getChallengeLane().getCapacity());
+            comp.setRegisteredTeamCount(publicInfo.getTeams().getChallengeLane().getTeams().size());
+        }
 
         // Map Details from Public Info
         if (publicInfo != null) {
@@ -162,8 +181,8 @@ public class FlowApiPersister {
             }
 
             team.setName(apiTeam.getName());
-            //team.setInstitution(apiTeam.getOrganization());
-            //team.setCity(apiTeam.getLocation());
+            team.setInstitution(apiTeam.getOrganization());
+            team.setCity(apiTeam.getLocation());
             if(comp.getType().equals(Competition.CompetitionType.REGIONAL)) {
                 team.setCountry(comp.getCountry());
             }

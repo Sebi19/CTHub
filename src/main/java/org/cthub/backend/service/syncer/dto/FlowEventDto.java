@@ -11,7 +11,8 @@ public class FlowEventDto {
     private String name;
     private String slug;
     private String date;
-    private String endDate;
+    private Integer days;
+    private Integer level;
 
     private FlowProgramDto[] programs;
 

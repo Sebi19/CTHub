@@ -9,6 +9,6 @@ public class FlowTeamDto {
     @JsonProperty("ref")
     private String fllId;
     private String name;
-    //private String organization;
-    //private String location; // Mapped to City
+    private String organization;
+    private String location;
 }

@@ -268,6 +268,7 @@ export const en: I18nLocale = {
                 },
                 noResults: "No competitions found for the selected filters.",
                 capacity: "Registrations",
+                noCapacity: "No Registrations",
                 teams: "Teams",
             }
         },

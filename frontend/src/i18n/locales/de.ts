@@ -268,6 +268,7 @@ export const de = {
                 },
                 noResults: "Keine Wettbewerbe gefunden, die den Filterkriterien entsprechen.",
                 capacity: "Anmeldungen",
+                noCapacity: "Keine Anmeldungen",
                 teams: "Teams",
             }
         },

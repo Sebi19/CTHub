@@ -9,3 +9,7 @@ app:
     base-url: "https://dev.challengeteamhub.org"
     zeptomail:
       token: "${ZEPTOMAIL_TOKEN}"
+    from:
+      address: "noreply@dev.challengeteamhub.org"
+      name: "Challenge Team Hub DEV"
+    reply-to: "info@dev.challengeteamhub.org"

@@ -32,3 +32,25 @@ management:
     web:
       exposure:
         include: "health,metrics"
+# Prevent Spring Boot's Thymeleaf web-view auto-config from registering on classpath:/templates/ and
+# intercepting SpaConfig's 404-to-index.html forwarding. Mail rendering uses its own engine, see
+# org.cthub.backend.mail.config.MailAutoConfig.
+spring.thymeleaf.enabled: false
+app:
+  mail:
+    enabled: true
+    provider: logging
+    base-url: "http://localhost:5173"
+    from:
+      address: "noreply@challengeteamhub.org"
+      name: "Challenge Team Hub"
+    reply-to: "info@challengeteamhub.org"
+    redirect-all-to: ""
+    outbox:
+      poll-interval: 15s
+      batch-size: 25
+      max-attempts: 5
+      retention-days: 30
+    zeptomail:
+      base-url: "https://api.zeptomail.eu/v1.1/email"
+      token: "${ZEPTOMAIL_TOKEN:}"

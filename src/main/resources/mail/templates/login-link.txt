@@ -1,0 +1,11 @@
+﻿[(${firstName} != null ? #{mail.greeting(${firstName})} : #{mail.greeting.anonymous})]
+
+[(#{mail.loginLink.body})]
+
+[(${loginUrl})]
+
+[(#{mail.loginLink.expiry(${validityMinutes})})]
+
+[(#{mail.loginLink.ignore})]
+
+[# th:replace="~{footer.txt}"/]

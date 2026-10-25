@@ -1,0 +1,12 @@
+<div xmlns:th="http://www.thymeleaf.org" th:fragment="button(url, label)">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:28px 0;">
+        <tr>
+            <td style="border-radius:6px;background-color:#2563eb;">
+                <a th:href="${url}" th:text="${label}"
+                   style="display:inline-block;padding:13px 26px;color:#ffffff;font-family:'Geist Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;text-decoration:none;border-radius:6px;">
+                    Button
+                </a>
+            </td>
+        </tr>
+    </table>
+</div>

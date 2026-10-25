@@ -1,0 +1,11 @@
+﻿--
+Challenge Team Hub
+[(#{mail.footer.copyright(${currentYear})})]
+[(#{mail.footer.imprint})]
+
+[(#{mail.footer.imprintLink})]: [(${baseUrl})]/impressum
+[(#{mail.footer.privacyLink})]: [(${baseUrl})]/privacy
+
+[(#{mail.footer.disclaimer})]
+
+[(#{mail.footer.automated})]

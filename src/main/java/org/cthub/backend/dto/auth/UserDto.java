@@ -15,9 +15,15 @@ public class UserDto {
     private Long id;
     @NotNull
     private String email;
-    @NotNull
+    /** {@code null} until the user completes their profile. */
     private String firstName;
-    @NotNull
+    /** {@code null} until the user completes their profile. */
     private String lastName;
     private String role;
+    /** Language the user last chose in the UI, as a BCP-47 tag. */
+    private String preferredLocale;
+    /** {@code false} while the account still needs to go through the complete-profile step. */
+    private boolean profileComplete;
+    /** {@code false} for passwordless accounts, which sign in via e-mailed links. */
+    private boolean passwordSet;
 }

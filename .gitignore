@@ -38,3 +38,4 @@ node_modules
 dist
 dist-ssr
 .env
+application-local-secrets.yaml

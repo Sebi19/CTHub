@@ -26,11 +26,16 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    // 3. Logged in, but wrong role? -> Robotgame
+    // 3. Registration abandoned before naming yourself? -> Finish the profile first
+    if (user && !user.profileComplete && location.pathname !== '/complete-profile') {
+        return <Navigate to="/complete-profile" replace />;
+    }
+
+    // 4. Logged in, but wrong role? -> Robotgame
     if (allowedRoles && user && !allowedRoles.includes(user.role || '')) {
         return <Navigate to="/" replace />;
     }
 
-    // 4. Access Granted
+    // 5. Access Granted
     return <>{children}</>;
 }

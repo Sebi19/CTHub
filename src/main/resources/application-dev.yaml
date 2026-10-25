@@ -4,3 +4,8 @@ app:
   security:
       remember-me-key: "${REMEMBER_ME_KEY}"
       admin-password: "${ADMIN_PASSWORD}"
+  mail:
+    provider: zeptomail
+    base-url: "https://dev.challengeteamhub.org"
+    zeptomail:
+      token: "${ZEPTOMAIL_TOKEN}"

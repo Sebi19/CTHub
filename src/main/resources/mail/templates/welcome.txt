@@ -1,0 +1,5 @@
+﻿[(${firstName} != null ? #{mail.greeting(${firstName})} : #{mail.greeting.anonymous})]
+
+[(#{mail.welcome.body})]
+
+[# th:replace="~{footer.txt}"/]

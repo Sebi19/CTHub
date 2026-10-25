@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:fragment="page(title, content)">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="color-scheme" content="light"/>
+    <title th:text="${title}">Challenge Team Hub</title>
+</head>
+<!--/*
+  Table-based layout with inline styles throughout: Outlook ignores <style> blocks and flexbox, so
+  anything structural has to be a table. Geist Sans is the app typeface but is not installed on
+  recipients' machines, so it leads a stack that degrades to the same system fonts the app falls
+  back to. Colours mirror theme.ts (primary = blue 600 #2563eb, slate greys).
+*/-->
+<body style="margin:0;padding:0;background-color:#f1f5f9;-webkit-font-smoothing:antialiased;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+       style="background-color:#f1f5f9;padding:32px 12px;">
+    <tr>
+        <td align="center">
+            <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"
+                   style="max-width:600px;width:100%;background-color:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #e2e8f0;">
+
+                <!-- Header: logo lockup. The wordmark is live text so the brand survives blocked images. -->
+                <tr>
+                    <td style="background-color:#0f172a;padding:20px 32px;">
+                        <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td style="padding-right:12px;vertical-align:middle;">
+                                    <img th:src="|${baseUrl}/icon-192.png|" width="36" height="36" alt=""
+                                         src="https://challengeteamhub.org/icon-192.png"
+                                         style="display:block;width:36px;height:36px;border:0;border-radius:6px;"/>
+                                </td>
+                                <td style="vertical-align:middle;">
+                                    <span style="color:#ffffff;font-family:'Geist Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:18px;font-weight:600;letter-spacing:-0.2px;">Challenge Team Hub</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- Body -->
+                <tr>
+                    <td style="padding:32px 40px;color:#0f172a;font-family:'Geist Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;">
+                        <div th:replace="${content}">Content goes here.</div>
+                    </td>
+                </tr>
+
+                <!-- Footer: imprint, legal links and the FIRST disclaimer, mirroring the site footer. -->
+                <tr>
+                    <td style="padding:24px 40px;background-color:#f8fafc;border-top:1px solid #e2e8f0;font-family:'Geist Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+
+                        <p style="margin:0 0 4px 0;color:#0f172a;font-size:13px;font-weight:600;">Challenge Team Hub</p>
+                        <p style="margin:0 0 12px 0;color:#64748b;font-size:12px;line-height:1.5;"
+                           th:text="#{mail.footer.copyright(${currentYear})}">
+                            &copy; 2026 by Sebastian Schreitter
+                        </p>
+
+                        <p style="margin:0 0 12px 0;color:#64748b;font-size:12px;line-height:1.5;"
+                           th:text="#{mail.footer.imprint}">
+                            Sebastian Schreitter, Example Street 1, 1010 Vienna, Austria
+                        </p>
+
+                        <p style="margin:0 0 12px 0;font-size:12px;">
+                            <a th:href="|${baseUrl}/impressum|" href="https://challengeteamhub.org/impressum"
+                               style="color:#2563eb;text-decoration:underline;"
+                               th:text="#{mail.footer.imprintLink}">Imprint</a>
+                            <span style="color:#cbd5e1;padding:0 6px;">|</span>
+                            <a th:href="|${baseUrl}/privacy|" href="https://challengeteamhub.org/privacy"
+                               style="color:#2563eb;text-decoration:underline;"
+                               th:text="#{mail.footer.privacyLink}">Privacy Policy</a>
+                        </p>
+
+                        <p style="margin:0 0 12px 0;color:#94a3b8;font-size:10.5px;line-height:1.5;"
+                           th:text="#{mail.footer.disclaimer}">
+                            FIRST&reg; LEGO&reg; League is a jointly held trademark of FIRST&reg; and the LEGO Group.
+                        </p>
+
+                        <p style="margin:0;color:#94a3b8;font-size:11px;line-height:1.5;"
+                           th:text="#{mail.footer.automated}">
+                            This e-mail was sent automatically. Please do not reply.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

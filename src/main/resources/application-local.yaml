@@ -1,10 +1,21 @@
 cors:
   allowed-origins: "http://localhost:5173"
   allowed-patterns: "http://192.168.*.*:5173"
+# Optional, gitignored file for local-only secrets (e.g. a real ZeptoMail token) that should never be
+# committed. Copy application-local-secrets.yaml to application-local-secrets.yaml (repo root)
+# and fill in real values; it's imported here with higher precedence than the rest of this file.
+spring:
+  config:
+    import: "optional:file:./application-local-secrets.yaml"
+  jpa:
+    show-sql: true
 app:
   security:
     remember-me-key: "local-remember-me-key"
     admin-password: "admin123"
-spring:
-  jpa:
-    show-sql: true
+  mail:
+    provider: logging        # dumps rendered mail to target/mail/ and logs instead of sending
+    # Safety net for when application-local-secrets.yaml switches the provider to zeptomail:
+    # only these recipients are ever really sent to, everything else is CANCELLED in the outbox.
+    # Set your own address (or a whole domain, e.g. "@challengeteamhub.org") in the secrets file.
+    allowed-recipients: []

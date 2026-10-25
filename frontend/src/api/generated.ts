@@ -10,6 +10,30 @@
  * ---------------------------------------------------------------
  */
 
+export enum MailOutboxStatus {
+  PENDING = "PENDING",
+  SENDING = "SENDING",
+  SENT = "SENT",
+  FAILED = "FAILED",
+  CANCELLED = "CANCELLED",
+}
+
+export enum RegistrationStatus {
+  PENDING = "PENDING",
+  AWAITING_CONFIRMATION = "AWAITING_CONFIRMATION",
+  VERIFIED = "VERIFIED",
+  CLAIMED_ELSEWHERE = "CLAIMED_ELSEWHERE",
+  CANCELLED = "CANCELLED",
+  UNKNOWN = "UNKNOWN",
+}
+
+export enum ChallengeKind {
+  CHALLENGE = "CHALLENGE",
+  SAME_BROWSER = "SAME_BROWSER",
+  NO_CHALLENGE = "NO_CHALLENGE",
+  INVALID = "INVALID",
+}
+
 export enum SearchResultTypeDto {
   SEASON_TEAM = "SEASON_TEAM",
   TEAM_PROFILE = "TEAM_PROFILE",
@@ -32,18 +56,142 @@ export enum CompetitionAwardCategoryDto {
   ROBOT_GAME = "ROBOT_GAME",
 }
 
-export interface LoginRequestDto {
-  email: string;
-  password: string;
+export enum RegistrationStartStatus {
+  PENDING = "PENDING",
+  ALREADY_REGISTERED = "ALREADY_REGISTERED",
+}
+
+export interface VerifyEmailRequestDto {
+  /** @minLength 1 */
+  token: string;
 }
 
 export interface UserDto {
   /** @format int64 */
   id: number;
   email: string;
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
   role?: string;
+  preferredLocale?: string;
+  profileComplete?: boolean;
+  passwordSet?: boolean;
+}
+
+export interface RegistrationResponseDto {
+  message?: string;
+}
+
+export interface ConfirmChallengeRequestDto {
+  /** @minLength 1 */
+  token: string;
+  /**
+   * @format int32
+   * @min 10
+   * @max 99
+   */
+  number: number;
+}
+
+export interface ResetPasswordRequestDto {
+  /** @minLength 1 */
+  token: string;
+  /**
+   * @minLength 8
+   * @maxLength 2147483647
+   */
+  password: string;
+}
+
+export interface ResendVerificationRequestDto {
+  /**
+   * @format email
+   * @minLength 1
+   */
+  email: string;
+  locale?: string;
+}
+
+export interface ClaimRegistrationRequestDto {
+  /** @minLength 1 */
+  registrationId: string;
+}
+
+export interface RegisterRequestDto {
+  /**
+   * @format email
+   * @minLength 1
+   */
+  email: string;
+  locale?: string;
+}
+
+export interface RegistrationStartResponseDto {
+  status: RegistrationStartStatus;
+  registrationId?: string;
+  /** @format int32 */
+  challengeNumber?: number;
+}
+
+export interface LoginRequestDto {
+  /** @minLength 1 */
+  email: string;
+  /** @minLength 1 */
+  password: string;
+}
+
+export interface EmailLinkRequestDto {
+  /**
+   * @format email
+   * @minLength 1
+   */
+  email: string;
+  locale?: string;
+}
+
+export interface CompleteProfileRequestDto {
+  /**
+   * @minLength 0
+   * @maxLength 100
+   */
+  firstName: string;
+  /**
+   * @minLength 0
+   * @maxLength 100
+   */
+  lastName: string;
+  /**
+   * @minLength 8
+   * @maxLength 2147483647
+   */
+  password?: string;
+}
+
+export interface TestMailRequestDto {
+  /**
+   * @format email
+   * @minLength 1
+   */
+  email: string;
+}
+
+export interface MailOutboxEntryDto {
+  /** @format int64 */
+  id?: number;
+  recipientEmail?: string;
+  subject?: string;
+  template?: string;
+  category?: string;
+  status?: string;
+  /** @format int32 */
+  attempts?: number;
+  lastError?: string;
+  /** @format date-time */
+  nextAttemptAt?: string;
+  /** @format date-time */
+  createdAt?: string;
+  /** @format date-time */
+  sentAt?: string;
 }
 
 export interface CompetitionNominationDto {
@@ -313,6 +461,16 @@ export interface SeasonTeamSummaryDto {
   seasonTeamProfile?: SeasonTeamProfileDto;
 }
 
+export interface VerificationChallengeResponseDto {
+  kind?: ChallengeKind;
+  numbers?: number[];
+  email?: string;
+}
+
+export interface RegistrationStatusResponseDto {
+  status: RegistrationStatus;
+}
+
 import type {
   AxiosInstance,
   AxiosRequestConfig,
@@ -501,6 +659,133 @@ export class Api<
      * No description
      *
      * @tags auth-controller
+     * @name VerifyEmail
+     * @request POST:/api/auth/verify-email
+     */
+    verifyEmail: (data: VerifyEmailRequestDto, params: RequestParams = {}) =>
+      this.request<UserDto, any>({
+        path: `/api/auth/verify-email`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags auth-controller
+     * @name RejectRegistration
+     * @request POST:/api/auth/verification-reject
+     */
+    rejectRegistration: (
+      data: VerifyEmailRequestDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<RegistrationResponseDto, any>({
+        path: `/api/auth/verification-reject`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags auth-controller
+     * @name ConfirmChallenge
+     * @request POST:/api/auth/verification-confirm
+     */
+    confirmChallenge: (
+      data: ConfirmChallengeRequestDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<RegistrationResponseDto, any>({
+        path: `/api/auth/verification-confirm`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags auth-controller
+     * @name ResetPassword
+     * @request POST:/api/auth/reset-password
+     */
+    resetPassword: (
+      data: ResetPasswordRequestDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<UserDto, any>({
+        path: `/api/auth/reset-password`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags auth-controller
+     * @name ResendVerification
+     * @request POST:/api/auth/resend-verification
+     */
+    resendVerification: (
+      data: ResendVerificationRequestDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<RegistrationResponseDto, any>({
+        path: `/api/auth/resend-verification`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags auth-controller
+     * @name ClaimRegistration
+     * @request POST:/api/auth/registration-claim
+     */
+    claimRegistration: (
+      data: ClaimRegistrationRequestDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<UserDto, any>({
+        path: `/api/auth/registration-claim`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags auth-controller
+     * @name Register
+     * @request POST:/api/auth/register
+     */
+    register: (data: RegisterRequestDto, params: RequestParams = {}) =>
+      this.request<RegistrationStartResponseDto, any>({
+        path: `/api/auth/register`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags auth-controller
      * @name Logout
      * @request POST:/api/auth/logout
      */
@@ -524,6 +809,106 @@ export class Api<
         method: "POST",
         body: data,
         type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags auth-controller
+     * @name RequestLoginLink
+     * @request POST:/api/auth/login-link
+     */
+    requestLoginLink: (data: EmailLinkRequestDto, params: RequestParams = {}) =>
+      this.request<RegistrationResponseDto, any>({
+        path: `/api/auth/login-link`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags auth-controller
+     * @name ConsumeLoginLink
+     * @request POST:/api/auth/login-link/consume
+     */
+    consumeLoginLink: (
+      data: VerifyEmailRequestDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<UserDto, any>({
+        path: `/api/auth/login-link/consume`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags auth-controller
+     * @name ForgotPassword
+     * @request POST:/api/auth/forgot-password
+     */
+    forgotPassword: (data: EmailLinkRequestDto, params: RequestParams = {}) =>
+      this.request<RegistrationResponseDto, any>({
+        path: `/api/auth/forgot-password`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags auth-controller
+     * @name CompleteProfile
+     * @request POST:/api/auth/complete-profile
+     */
+    completeProfile: (
+      data: CompleteProfileRequestDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<UserDto, any>({
+        path: `/api/auth/complete-profile`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags admin-mail-controller
+     * @name SendTestMail
+     * @request POST:/api/admin/mail/test
+     */
+    sendTestMail: (data: TestMailRequestDto, params: RequestParams = {}) =>
+      this.request<object, any>({
+        path: `/api/admin/mail/test`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags admin-mail-controller
+     * @name Requeue
+     * @request POST:/api/admin/mail/outbox/{id}/requeue
+     */
+    requeue: (id: number, params: RequestParams = {}) =>
+      this.request<MailOutboxEntryDto, any>({
+        path: `/api/admin/mail/outbox/${id}/requeue`,
+        method: "POST",
         ...params,
       }),
 
@@ -764,9 +1149,49 @@ export class Api<
      * @request GET:/api/images/{id}
      */
     downloadImage: (id: string, params: RequestParams = {}) =>
-      this.request<string[], any>({
+      this.request<string, any>({
         path: `/api/images/${id}`,
         method: "GET",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags auth-controller
+     * @name VerificationChallenge
+     * @request GET:/api/auth/verification-challenge
+     */
+    verificationChallenge: (
+      query: {
+        token: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<VerificationChallengeResponseDto, any>({
+        path: `/api/auth/verification-challenge`,
+        method: "GET",
+        query: query,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags auth-controller
+     * @name RegistrationStatus
+     * @request GET:/api/auth/registration-status
+     */
+    registrationStatus: (
+      query: {
+        registrationId: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<RegistrationStatusResponseDto, any>({
+        path: `/api/auth/registration-status`,
+        method: "GET",
+        query: query,
         ...params,
       }),
 
@@ -781,6 +1206,27 @@ export class Api<
       this.request<UserDto, any>({
         path: `/api/auth/me`,
         method: "GET",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags admin-mail-controller
+     * @name ListOutbox
+     * @request GET:/api/admin/mail/outbox
+     */
+    listOutbox: (
+      query?: {
+        /** @default "FAILED" */
+        status?: MailOutboxStatus;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<MailOutboxEntryDto[], any>({
+        path: `/api/admin/mail/outbox`,
+        method: "GET",
+        query: query,
         ...params,
       }),
   };

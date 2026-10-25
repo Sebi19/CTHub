@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout.html :: page(title=#{mail.welcome.subject}, content=~{::content})}">
+<body>
+<th:block th:fragment="content">
+    <p th:text="${firstName} != null ? #{mail.greeting(${firstName})} : #{mail.greeting.anonymous}">Welcome!</p>
+    <p th:text="#{mail.welcome.body}">Your account is now active.</p>
+</th:block>
+</body>
+</html>

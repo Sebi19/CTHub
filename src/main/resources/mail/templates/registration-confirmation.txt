@@ -1,0 +1,11 @@
+﻿[(${firstName} != null ? #{mail.greeting(${firstName})} : #{mail.greeting.anonymous})]
+
+[(#{mail.registrationConfirmation.body})]
+
+[(${confirmUrl})]
+
+[(#{mail.registrationConfirmation.expiry(${validityHours})})]
+
+[(#{mail.registrationConfirmation.ignore})]
+
+[# th:replace="~{footer.txt}"/]

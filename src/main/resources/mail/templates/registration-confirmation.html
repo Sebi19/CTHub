@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout.html :: page(title=#{mail.registrationConfirmation.subject},  content=~{::content})}">
+<body>
+<th:block th:fragment="content">
+    <p th:text="${firstName} != null ? #{mail.greeting(${firstName})} : #{mail.greeting.anonymous}">Hi there,</p>
+    <p th:text="#{mail.registrationConfirmation.body}">Please confirm your e-mail address.</p>
+
+    <div th:replace="~{components/button.html :: button(url=${confirmUrl}, label=#{mail.registrationConfirmation.cta})}"></div>
+
+    <div th:replace="~{components/info-box.html :: infoBox(text=#{mail.registrationConfirmation.expiry(${validityHours})})}"></div>
+
+    <p style="color:#6b7280;font-size:13px;" th:text="#{mail.registrationConfirmation.ignore}">
+        If you did not create an account, you can ignore this e-mail.
+    </p>
+</th:block>
+</body>
+</html>

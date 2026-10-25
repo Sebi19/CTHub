@@ -33,6 +33,8 @@ public class DataSeeder implements CommandLineRunner {
                 .email("admin@challengeteamhub.org")
                 .password(passwordEncoder.encode(initialPassword))
                 .role(User.Role.ADMIN)
+                .enabled(true)
+                .emailVerifiedAt(java.time.Instant.now())
                 .build();
 
             userRepository.save(admin);

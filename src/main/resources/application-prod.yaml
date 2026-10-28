@@ -1,3 +1,7 @@
+# Behind Railway's TLS-terminating proxy: honour X-Forwarded-Proto/Host so generated URLs
+# (e.g. springdoc's server url used by Swagger UI) are https instead of http.
+server:
+  forward-headers-strategy: framework
 cors:
   allowed-origins: "https://challengeteamhub.org,https://cthub.up.railway.app"
 app:

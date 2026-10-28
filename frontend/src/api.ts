@@ -7,6 +7,9 @@ import { reportProfileIncomplete } from "./features/auth/profileIncomplete";
 //    - Otherwise (Local), use window.location.origin to let the Vite Proxy handle it.
 const backendUrl = import.meta.env.VITE_API_URL || window.location.origin;
 
+/** Absolute URL for endpoints the generated client cannot call, e.g. server-sent-event streams. */
+export const backendEndpoint = (path: string) => new URL(path, backendUrl).toString();
+
 // 2. Create the single instance
 export const client = new Api({
     baseURL: backendUrl,

@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from '
 import { Center, Loader } from '@mantine/core';
 import {client} from "../../api.ts";
 import type {UserDto} from "../../api/generated.ts"; // Import Loader
+import {releasePushSubscription} from "../notifications/push/pushSupport.ts";
 
 interface AuthContextType {
     isAuthenticated: boolean;
@@ -41,6 +42,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const logout = async () => {
+        // While the session still exists, so the server-side device record can be removed too.
+        await releasePushSubscription();
         try {
             await client.api.logout();
         } catch (e) { /* ignore */ }

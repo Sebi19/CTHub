@@ -17,6 +17,9 @@ import {SeasonTeamDetailPage} from "./features/seasonTeam/SeasonTeamDetailPage.t
 import {TeamProfileDetailPage} from "./features/teamProfile/TeamProfileDetailPage.tsx";
 import {NotFoundPage} from "./features/error/NotFoundPage.tsx";
 import {SeasonOverview} from "./features/competition/overview/SeasonOverview.tsx";
+import {NotificationsPage} from "./features/notifications/NotificationsPage.tsx";
+import {NotificationSettingsPage} from "./features/notifications/NotificationSettingsPage.tsx";
+import {NOTIFICATION_SETTINGS_PATH, NOTIFICATIONS_PAGE_PATH} from "./features/notifications/NotificationsContext.tsx";
 
 export function AppRoutes() {
     const {isAuthenticated} = useAuth();
@@ -50,6 +53,15 @@ export function AppRoutes() {
                 <Route
                     path="/complete-profile"
                     element={<ProtectedRoute><CompleteProfilePage/></ProtectedRoute>}
+                />
+
+                <Route
+                    path={NOTIFICATIONS_PAGE_PATH}
+                    element={<ProtectedRoute><NotificationsPage/></ProtectedRoute>}
+                />
+                <Route
+                    path={NOTIFICATION_SETTINGS_PATH}
+                    element={<ProtectedRoute><NotificationSettingsPage/></ProtectedRoute>}
                 />
 
                 {/* Public Pages */}

@@ -129,6 +129,46 @@ class ThymeleafMailRendererTest {
         assertThat(message.htmlBody()).containsPattern("\u00a9 \\d{4} by");
     }
 
+    /**
+     * Notification texts are user-supplied (e.g. an admin announcement): they become the subject
+     * verbatim, keep their paragraph structure, and are always escaped in the HTML part.
+     */
+    @Test
+    void rendersNotificationWithSubjectParagraphsAndEscaping() {
+        NotificationMailModel model = new NotificationMailModel(
+            "Tom", "Season's <b>kick-off</b>", "First line\nsecond line\n\n<script>alert(1)</script>",
+            "https://example.org/competition/2025", "Announcements");
+
+        assertRendersCleanly(MailTemplate.NOTIFICATION, model);
+        for (Locale locale : LOCALES) {
+            MailMessage message = renderer.render(MailTemplate.NOTIFICATION, model, locale, MailAddress.of("tom@example.org"));
+
+            assertThat(message.subject()).isEqualTo("Season's <b>kick-off</b>");
+            assertThat(message.htmlBody())
+                .contains("Season&#39;s &lt;b&gt;kick-off&lt;/b&gt;")
+                .containsPattern("First line<br\\s*/?>second line")
+                .contains("&lt;script&gt;")
+                .doesNotContain("<script>")
+                .contains("https://example.org/competition/2025")
+                .contains("https://example.org/account/notifications/settings")
+                .contains("Announcements");
+            assertThat(message.textBody())
+                .contains("First line\nsecond line")
+                .contains("https://example.org/competition/2025")
+                .contains("https://example.org/account/notifications/settings");
+            assertThat(UNRESOLVED_KEY.matcher(message.htmlBody()).find()).isFalse();
+            assertThat(UNRESOLVED_KEY.matcher(message.textBody()).find()).isFalse();
+        }
+    }
+
+    @Test
+    void notificationTitleIsFlattenedToASingleLine() {
+        NotificationMailModel model = new NotificationMailModel(null, " Line one\r\n  line two ", "", "https://example.org", "x");
+
+        assertThat(model.title()).isEqualTo("Line one line two");
+        assertThat(model.paragraphs()).isEmpty();
+    }
+
     private void assertRendersCleanly(MailTemplate template, MailTemplateModel model) {
         for (Locale locale : LOCALES) {
             MailMessage message = renderer.render(template, model, locale, MailAddress.of("test@example.org"));

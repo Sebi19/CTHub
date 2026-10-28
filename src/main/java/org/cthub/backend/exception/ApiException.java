@@ -33,6 +33,10 @@ public class ApiException extends RuntimeException {
         return new ApiException(HttpStatus.FORBIDDEN, code, message);
     }
 
+    public static ApiException notFound(String code, String message) {
+        return new ApiException(HttpStatus.NOT_FOUND, code, message);
+    }
+
     public static ApiException tooManyRequests(String message) {
         return new ApiException(HttpStatus.TOO_MANY_REQUESTS, "RATE_LIMITED", message);
     }

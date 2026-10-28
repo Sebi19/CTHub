@@ -35,7 +35,7 @@ public class ThymeleafMailRenderer implements MailRenderer {
 
         String html = mailTemplateEngine.process(template.templatePath() + ".html", context);
         String text = mailTemplateEngine.process(template.templatePath() + ".txt", context);
-        String subject = mailMessageSource.getMessage(template.subjectKey(), null, locale);
+        String subject = mailMessageSource.getMessage(template.subjectKey(), model.subjectArgs(), locale);
 
         return new MailMessage(null, recipient, null, null, null, subject, html, text, null, null,
             List.of(template.name()));
@@ -68,6 +68,14 @@ public class ThymeleafMailRenderer implements MailRenderer {
                 variables.put("firstName", m.firstName());
                 variables.put("loginUrl", m.loginUrl());
                 variables.put("validityMinutes", m.validity().toMinutes());
+            }
+            case NotificationMailModel m -> {
+                variables.put("firstName", m.firstName());
+                variables.put("title", m.title());
+                variables.put("body", m.body());
+                variables.put("paragraphs", m.paragraphs());
+                variables.put("actionUrl", m.actionUrl());
+                variables.put("typeLabel", m.typeLabel());
             }
             default -> throw new IllegalArgumentException(
                 "Unsupported mail template model " + model.getClass().getSimpleName() + " for template " + template);

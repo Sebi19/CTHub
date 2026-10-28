@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout.html :: page(title=${title}, content=~{::content})}">
+<body>
+<th:block th:fragment="content">
+    <p th:text="${firstName} != null ? #{mail.greeting(${firstName})} : #{mail.greeting.anonymous}">Hi there,</p>
+
+    <h1 style="margin:0 0 16px 0;font-size:20px;line-height:1.35;font-weight:600;color:#0f172a;"
+        th:text="${title}">Notification title</h1>
+
+    <!--/* Lines are rendered as escaped text joined by <br/>, so user-supplied text can never inject markup. */-->
+    <p th:each="paragraph : ${paragraphs}" style="margin:0 0 16px 0;"><th:block
+            th:each="line, state : ${paragraph}"><th:block th:text="${line}">Line</th:block><br
+            th:unless="${state.last}"/></th:block></p>
+
+    <div th:replace="~{components/button.html :: button(url=${actionUrl}, label=#{mail.notification.cta})}"></div>
+
+    <p style="margin:24px 0 0 0;padding-top:16px;border-top:1px solid #e2e8f0;color:#64748b;font-size:13px;">
+        <span th:text="#{mail.notification.reason(${typeLabel})}">You are receiving this e-mail because you turned on e-mail notifications.</span>
+        <br/>
+        <a th:href="|${baseUrl}/account/notifications/settings|" href="https://challengeteamhub.org/account/notifications/settings"
+           style="color:#2563eb;text-decoration:underline;"
+           th:text="#{mail.notification.settingsLink}">Change notification settings</a>
+    </p>
+</th:block>
+</body>
+</html>

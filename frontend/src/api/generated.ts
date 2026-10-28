@@ -61,6 +61,95 @@ export enum RegistrationStartStatus {
   ALREADY_REGISTERED = "ALREADY_REGISTERED",
 }
 
+export enum NotificationTypeDto {
+  WELCOME = "WELCOME",
+  ANNOUNCEMENT = "ANNOUNCEMENT",
+}
+
+export enum NotificationChannelDto {
+  EMAIL = "EMAIL",
+  PUSH = "PUSH",
+}
+
+export interface PushSubscriptionRequestDto {
+  /**
+   * @minLength 0
+   * @maxLength 2048
+   */
+  endpoint: string;
+  /**
+   * @minLength 0
+   * @maxLength 128
+   */
+  p256dh: string;
+  /**
+   * @minLength 0
+   * @maxLength 64
+   */
+  auth: string;
+  installed: boolean;
+  /**
+   * @minLength 0
+   * @maxLength 2048
+   */
+  previousEndpoint?: string;
+  renewOnly?: boolean;
+}
+
+export interface PushSubscriptionDto {
+  /** @format int64 */
+  id: number;
+  userAgent?: string;
+  installed: boolean;
+  /** @format date-time */
+  createdAt: string;
+  /** @format date-time */
+  lastSeenAt: string;
+}
+
+export interface NotificationPreferenceDto {
+  type: NotificationTypeDto;
+  channel: NotificationChannelDto;
+  enabled: boolean;
+}
+
+export interface NotificationDto {
+  /** @format int64 */
+  id: number;
+  type: NotificationTypeDto;
+  params: Record<string, string>;
+  link?: string;
+  /** @format date-time */
+  createdAt: string;
+  /** @format date-time */
+  readAt?: string;
+}
+
+export interface MarkAllReadRequestDto {
+  /** @format int64 */
+  upToId: number;
+}
+
+export interface UnreadCountDto {
+  /** @format int64 */
+  count?: number;
+}
+
+export interface PushTestResultDto {
+  /** @format int32 */
+  devices: number;
+  /** @format int32 */
+  delivered: number;
+}
+
+export interface PushUnregisterRequestDto {
+  /**
+   * @minLength 0
+   * @maxLength 2048
+   */
+  endpoint: string;
+}
+
 export interface VerifyEmailRequestDto {
   /** @minLength 1 */
   token: string;
@@ -165,6 +254,31 @@ export interface CompleteProfileRequestDto {
    * @maxLength 2147483647
    */
   password?: string;
+}
+
+export interface AnnouncementRequestDto {
+  /**
+   * @minLength 0
+   * @maxLength 200
+   */
+  title: string;
+  /**
+   * @minLength 0
+   * @maxLength 2000
+   */
+  body: string;
+  /**
+   * @minLength 0
+   * @maxLength 2048
+   */
+  link?: string;
+  /** @format int64 */
+  userId?: number;
+}
+
+export interface AnnouncementResultDto {
+  /** @format int32 */
+  recipients?: number;
 }
 
 export interface TestMailRequestDto {
@@ -415,6 +529,17 @@ export interface TeamProfileDetailsDto {
   seasons: SeasonTeamDetailsDto[];
 }
 
+export interface NotificationPageDto {
+  items: NotificationDto[];
+  /** @format int64 */
+  nextCursor?: number;
+}
+
+export interface PushConfigDto {
+  enabled: boolean;
+  publicKey?: string;
+}
+
 export interface OverallRobotGameEntryDto {
   /** @format int32 */
   rank: number;
@@ -658,6 +783,152 @@ export class Api<
     /**
      * No description
      *
+     * @tags push-controller
+     * @name ListPushSubscriptions
+     * @request GET:/api/notifications/push/subscriptions
+     */
+    listPushSubscriptions: (params: RequestParams = {}) =>
+      this.request<PushSubscriptionDto[], any>({
+        path: `/api/notifications/push/subscriptions`,
+        method: "GET",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags push-controller
+     * @name RegisterPushSubscription
+     * @request PUT:/api/notifications/push/subscriptions
+     */
+    registerPushSubscription: (
+      data: PushSubscriptionRequestDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<PushSubscriptionDto, any>({
+        path: `/api/notifications/push/subscriptions`,
+        method: "PUT",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags notification-controller
+     * @name GetNotificationPreferences
+     * @request GET:/api/notifications/preferences
+     */
+    getNotificationPreferences: (params: RequestParams = {}) =>
+      this.request<NotificationPreferenceDto[], any>({
+        path: `/api/notifications/preferences`,
+        method: "GET",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags notification-controller
+     * @name UpdateNotificationPreference
+     * @request PUT:/api/notifications/preferences
+     */
+    updateNotificationPreference: (
+      data: NotificationPreferenceDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<NotificationPreferenceDto, any>({
+        path: `/api/notifications/preferences`,
+        method: "PUT",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags notification-controller
+     * @name MarkNotificationUnread
+     * @request POST:/api/notifications/{id}/unread
+     */
+    markNotificationUnread: (id: number, params: RequestParams = {}) =>
+      this.request<NotificationDto, any>({
+        path: `/api/notifications/${id}/unread`,
+        method: "POST",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags notification-controller
+     * @name MarkNotificationRead
+     * @request POST:/api/notifications/{id}/read
+     */
+    markNotificationRead: (id: number, params: RequestParams = {}) =>
+      this.request<NotificationDto, any>({
+        path: `/api/notifications/${id}/read`,
+        method: "POST",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags notification-controller
+     * @name MarkAllNotificationsRead
+     * @request POST:/api/notifications/read-all
+     */
+    markAllNotificationsRead: (
+      data: MarkAllReadRequestDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<UnreadCountDto, any>({
+        path: `/api/notifications/read-all`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags push-controller
+     * @name SendTestPush
+     * @request POST:/api/notifications/push/test
+     */
+    sendTestPush: (params: RequestParams = {}) =>
+      this.request<PushTestResultDto, any>({
+        path: `/api/notifications/push/test`,
+        method: "POST",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags push-controller
+     * @name UnregisterPushSubscription
+     * @request POST:/api/notifications/push/subscriptions/unregister
+     */
+    unregisterPushSubscription: (
+      data: PushUnregisterRequestDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<void, any>({
+        path: `/api/notifications/push/subscriptions/unregister`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
      * @tags auth-controller
      * @name VerifyEmail
      * @request POST:/api/auth/verify-email
@@ -876,6 +1147,25 @@ export class Api<
     ) =>
       this.request<UserDto, any>({
         path: `/api/auth/complete-profile`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags admin-notification-controller
+     * @name SendAnnouncement
+     * @request POST:/api/admin/notifications/announcement
+     */
+    sendAnnouncement: (
+      data: AnnouncementRequestDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<AnnouncementResultDto, any>({
+        path: `/api/admin/notifications/announcement`,
         method: "POST",
         body: data,
         type: ContentType.Json,
@@ -1124,6 +1414,83 @@ export class Api<
     /**
      * No description
      *
+     * @tags notification-controller
+     * @name ListNotifications
+     * @request GET:/api/notifications
+     */
+    listNotifications: (
+      query?: {
+        /** @format int64 */
+        cursor?: number;
+        /**
+         * @format int32
+         * @default 20
+         */
+        size?: number;
+        /** @default false */
+        unreadOnly?: boolean;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<NotificationPageDto, any>({
+        path: `/api/notifications`,
+        method: "GET",
+        query: query,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags notification-controller
+     * @name GetUnreadCount
+     * @request GET:/api/notifications/unread-count
+     */
+    getUnreadCount: (params: RequestParams = {}) =>
+      this.request<UnreadCountDto, any>({
+        path: `/api/notifications/unread-count`,
+        method: "GET",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags notification-controller
+     * @name ReplayNotifications
+     * @request GET:/api/notifications/replay
+     */
+    replayNotifications: (
+      query: {
+        /** @format int64 */
+        after: number;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<NotificationDto[], any>({
+        path: `/api/notifications/replay`,
+        method: "GET",
+        query: query,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags push-controller
+     * @name GetPushConfig
+     * @request GET:/api/notifications/push/config
+     */
+    getPushConfig: (params: RequestParams = {}) =>
+      this.request<PushConfigDto, any>({
+        path: `/api/notifications/push/config`,
+        method: "GET",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
      * @tags leaderboard-controller
      * @name GetOverallRobotGameLeaderboard
      * @request GET:/api/leaderboard/overall-robot-game
@@ -1227,6 +1594,20 @@ export class Api<
         path: `/api/admin/mail/outbox`,
         method: "GET",
         query: query,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags push-controller
+     * @name DeletePushSubscription
+     * @request DELETE:/api/notifications/push/subscriptions/{id}
+     */
+    deletePushSubscription: (id: number, params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/api/notifications/push/subscriptions/${id}`,
+        method: "DELETE",
         ...params,
       }),
   };

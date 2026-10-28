@@ -1,0 +1,12 @@
+[(${firstName} != null ? #{mail.greeting(${firstName})} : #{mail.greeting.anonymous})]
+
+[(${title})]
+
+[(${body})]
+
+[(#{mail.notification.cta})]: [(${actionUrl})]
+
+[(#{mail.notification.reason(${typeLabel})})]
+[(#{mail.notification.settingsLink})]: [(${baseUrl})]/account/notifications/settings
+
+[# th:replace="~{footer.txt}"/]

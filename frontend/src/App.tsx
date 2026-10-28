@@ -17,7 +17,7 @@ import {
     IconLogin,
     IconChevronDown,
     IconLogout,
-    IconUser, IconSearch, IconBrandGithub, IconCalendarStats
+    IconUser, IconSearch, IconBrandGithub, IconCalendarStats, IconBell
 } from '@tabler/icons-react';
 import logo from './assets/CTH.svg';
 import {useDisclosure} from "@mantine/hooks";
@@ -27,6 +27,9 @@ import {LanguageSwitcher} from "./features/navbar/LanguageSwitcher.tsx";
 import {Trans, useTranslation} from "react-i18next";
 import {GlobalSearchSpotlight} from "./features/globalSearch/GlobalSearchSpotlight.tsx";
 import {spotlight} from "@mantine/spotlight";
+import {NotificationBell} from "./features/notifications/NotificationBell.tsx";
+import {NOTIFICATIONS_PAGE_PATH} from "./features/notifications/NotificationsContext.tsx";
+import {PushPromptBanner} from "./features/notifications/push/PushPromptBanner.tsx";
 
 
 
@@ -102,6 +105,12 @@ export default function App() {
                         component="div"
                     >{userDisplayName(user)}</Menu.Item>
                     <Menu.Label>Account</Menu.Label>
+                    <Menu.Item
+                        leftSection={<IconBell style={{ width: rem(14), height: rem(14) }} />}
+                        onClick={() => navigate(NOTIFICATIONS_PAGE_PATH)}
+                    >
+                        {t("app.notifications.menu_item")}
+                    </Menu.Item>
                     <Menu.Divider />
                     <Menu.Item
                         color="red"
@@ -176,7 +185,10 @@ export default function App() {
                             </>
 
                         ) : (
-                            <UserMenu user={user} logout={handleLogout} />
+                            <>
+                                <NotificationBell />
+                                <UserMenu user={user} logout={handleLogout} />
+                            </>
                         )}
 
                         {/* Theme Toggle */}
@@ -290,6 +302,7 @@ export default function App() {
 
                 </Stack>
             </AppShell.Main>
+            <PushPromptBanner />
         </AppShell>
     );
 }

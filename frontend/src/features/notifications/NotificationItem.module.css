@@ -1,0 +1,19 @@
+.item {
+    cursor: pointer;
+    transition: background-color 120ms ease;
+}
+
+.item:hover,
+.item:focus-visible {
+    background-color: var(--mantine-color-default-hover);
+    outline: none;
+}
+
+.item[data-unread] {
+    background-color: light-dark(var(--mantine-color-blue-0), rgba(34, 139, 230, 0.08));
+}
+
+.item[data-unread]:hover,
+.item[data-unread]:focus-visible {
+    background-color: light-dark(var(--mantine-color-blue-1), rgba(34, 139, 230, 0.14));
+}

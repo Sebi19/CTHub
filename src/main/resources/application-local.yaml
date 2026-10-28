@@ -19,3 +19,8 @@ app:
     # only these recipients are ever really sent to, everything else is CANCELLED in the outbox.
     # Set your own address (or a whole domain, e.g. "@challengeteamhub.org") in the secrets file.
     allowed-recipients: []
+  push:
+    # Local-only VAPID pair so push works out of the box on localhost. Never use it elsewhere.
+    vapid:
+      public-key: "BJr2YuyGIGMMCbEfmdLYy4wevSVzZJb8ZqGK82owFErsdLM82cykzWtvdl-3etjuWlnXEoxc9n9w8VBVwHUpNSw"
+      private-key: "VPRTZKpxn0ncbEVtPd-hyWz0AkHa4uabpM1MvI7dNE8"

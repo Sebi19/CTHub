@@ -6,4 +6,9 @@ package org.cthub.backend.mail.render;
  * {@code RegistrationConfirmationModel(String firstName, String confirmUrl, Duration validity)}).
  */
 public interface MailTemplateModel {
+
+    /** Arguments for the template's subject message; {@code null} when the subject is fixed text. */
+    default Object[] subjectArgs() {
+        return null;
+    }
 }

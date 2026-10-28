@@ -14,6 +14,9 @@ import org.cthub.backend.model.RegistrationOutcome;
 import org.cthub.backend.model.User;
 import org.cthub.backend.model.UserToken;
 import org.cthub.backend.model.UserTokenType;
+import org.cthub.backend.notification.NotificationRequest;
+import org.cthub.backend.notification.NotificationService;
+import org.cthub.backend.notification.model.NotificationType;
 import org.cthub.backend.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -43,6 +47,10 @@ public class RegistrationService {
     private final TokenService tokenService;
     private final MailService mailService;
     private final MailProperties mailProperties;
+    private final NotificationService notificationService;
+
+    /** A user is welcomed once, even if their profile is somehow completed twice. */
+    static final String WELCOME_DEDUPE_KEY = "welcome";
 
     /** Outcome of starting a registration. */
     public record RegistrationStart(Status status, String registrationId, Short challengeNumber) {
@@ -383,6 +391,13 @@ public class RegistrationService {
                 toMailAddress(managed),
                 new WelcomeModel(managed.getFirstName()),
                 localeOf(managed, null));
+            notificationService.notify(
+                NotificationRequest.builder()
+                    .type(NotificationType.WELCOME)
+                    .params(Map.of("firstName", managed.getFirstName()))
+                    .dedupeKey(WELCOME_DEDUPE_KEY)
+                    .build(),
+                managed.getId());
         }
 
         return managed;

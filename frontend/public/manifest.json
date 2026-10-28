@@ -1,6 +1,9 @@
 {
+  "id": "/",
   "name": "Challenge Team Hub",
   "short_name": "CT-Hub",
+  "start_url": "/",
+  "scope": "/",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",

@@ -54,3 +54,14 @@ app:
     zeptomail:
       base-url: "https://api.zeptomail.eu/v1.1/email"
       token: "${ZEPTOMAIL_TOKEN:}"
+  notifications:
+    # Read notifications older than this are deleted daily; unread ones are kept.
+    retention-days: 90
+  push:
+    # Web Push (VAPID). Push is disabled unless both keys are set. Generate a pair once per
+    # environment (e.g. `npx web-push generate-vapid-keys`) and keep it: rotating the keys
+    # invalidates every existing browser subscription.
+    vapid:
+      public-key: ${VAPID_PUBLIC_KEY:}
+      private-key: ${VAPID_PRIVATE_KEY:}
+      subject: ${VAPID_SUBJECT:mailto:info@challengeteamhub.org}

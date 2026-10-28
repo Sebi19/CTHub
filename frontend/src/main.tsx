@@ -9,6 +9,7 @@ import './i18n/config.ts';
 import '@mantine/core/styles.css';
 import '@mantine/dates/styles.css';
 import '@mantine/spotlight/styles.css';
+import '@mantine/notifications/styles.css';
 import '@fontsource/geist-sans/400.css';
 import '@fontsource/geist-sans/500.css';
 import '@fontsource/geist-sans/600.css';
@@ -23,6 +24,8 @@ import { shadcnCssVariableResolver } from "./cssVariableResolver.ts";
 import { shadcnTheme } from "./theme.ts";
 import "./style.css";
 import {AppProvider} from "./hooks/AppContext.tsx";
+import {NotificationsProvider} from "./features/notifications/NotificationsContext.tsx";
+import {PushProvider} from "./features/notifications/push/PushContext.tsx";
 
 // 3. Create a wrapper component
 function RootWrapper() {
@@ -47,9 +50,13 @@ function RootWrapper() {
             <ModalsProvider>
                 <AuthProvider>
                     <BrowserRouter>
-                        <AppProvider>
-                            <AppRoutes />
-                        </AppProvider>
+                        <NotificationsProvider>
+                            <PushProvider>
+                                <AppProvider>
+                                    <AppRoutes />
+                                </AppProvider>
+                            </PushProvider>
+                        </NotificationsProvider>
                     </BrowserRouter>
                 </AuthProvider>
             </ModalsProvider>

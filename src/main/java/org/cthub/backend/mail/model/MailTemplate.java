@@ -9,7 +9,9 @@ public enum MailTemplate {
     REGISTRATION_CONFIRMATION("registration-confirmation", "mail.registrationConfirmation.subject", MailCategory.TRANSACTIONAL),
     WELCOME("welcome", "mail.welcome.subject", MailCategory.TRANSACTIONAL),
     PASSWORD_RESET("password-reset", "mail.passwordReset.subject", MailCategory.TRANSACTIONAL),
-    LOGIN_LINK("login-link", "mail.loginLink.subject", MailCategory.TRANSACTIONAL);
+    LOGIN_LINK("login-link", "mail.loginLink.subject", MailCategory.TRANSACTIONAL),
+    /** Any opted-in in-app notification, see {@code EmailNotificationChannel}. */
+    NOTIFICATION("notification", "mail.notification.subject", MailCategory.NOTIFICATION);
 
     private final String templatePath;
     private final String subjectKey;

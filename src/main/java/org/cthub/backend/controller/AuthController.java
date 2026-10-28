@@ -37,6 +37,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.cthub.backend.notification.live.LiveNotificationBroker;
 import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
@@ -68,6 +69,7 @@ public class AuthController {
     private final UserRepository userRepository;
     private final RegistrationService registrationService;
     private final RateLimiterService rateLimiterService;
+    private final LiveNotificationBroker liveNotificationBroker;
 
     // POST /api/auth/login
     @PostMapping("/login")
@@ -113,6 +115,7 @@ public class AuthController {
     public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response) {
         HttpSession session = request.getSession(false);
         if (session != null) {
+            liveNotificationBroker.closeSession(session.getId());
             session.invalidate();
         }
         SecurityContextHolder.clearContext();

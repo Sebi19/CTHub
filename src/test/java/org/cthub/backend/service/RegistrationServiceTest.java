@@ -8,6 +8,9 @@ import org.cthub.backend.model.RegistrationOutcome;
 import org.cthub.backend.model.User;
 import org.cthub.backend.model.UserToken;
 import org.cthub.backend.model.UserTokenType;
+import org.cthub.backend.notification.NotificationRequest;
+import org.cthub.backend.notification.NotificationService;
+import org.cthub.backend.notification.model.NotificationType;
 import org.cthub.backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,6 +40,8 @@ class RegistrationServiceTest {
     private TokenService tokenService;
     @Mock
     private MailService mailService;
+    @Mock
+    private NotificationService notificationService;
 
     private RegistrationService registrationService;
 
@@ -60,7 +65,7 @@ class RegistrationServiceTest {
         MailProperties mailProperties = new MailProperties();
         mailProperties.setBaseUrl("https://app.example.org");
         registrationService = new RegistrationService(
-            userRepository, passwordEncoder, tokenService, mailService, mailProperties);
+            userRepository, passwordEncoder, tokenService, mailService, mailProperties, notificationService);
     }
 
     // --- register -------------------------------------------------------------------------
@@ -216,10 +221,16 @@ class RegistrationServiceTest {
         assertThat(result.hasPassword()).isTrue();
         assertThat(result.isProfileComplete()).isTrue();
         verify(mailService).enqueue(eq(MailTemplate.WELCOME), any(MailAddress.class), any(), eq(Locale.ENGLISH));
+        verify(notificationService).notify(
+            argThat((NotificationRequest r) -> r.type() == NotificationType.WELCOME
+                && "Ada".equals(r.params().get("firstName"))
+                && RegistrationService.WELCOME_DEDUPE_KEY.equals(r.dedupeKey())),
+            eq(4L));
 
         // A second call is an ordinary profile edit and must not re-send the welcome mail.
         registrationService.completeProfile(user, "Ada", "Lovelace", null);
         verify(mailService, times(1)).enqueue(eq(MailTemplate.WELCOME), any(MailAddress.class), any(), any(Locale.class));
+        verify(notificationService, times(1)).notify(any(NotificationRequest.class), anyLong());
     }
 
     @Test

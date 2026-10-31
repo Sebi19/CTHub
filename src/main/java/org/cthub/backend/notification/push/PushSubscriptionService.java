@@ -2,8 +2,11 @@ package org.cthub.backend.notification.push;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.cthub.backend.auth.session.AuthSessionRepository;
+import org.cthub.backend.auth.session.AuthSessionRevokedEvent;
 import org.cthub.backend.exception.ApiException;
 import org.cthub.backend.repository.UserRepository;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,6 +15,7 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 /** Registers, lists and removes the signed-in user's push devices. */
 @Service
@@ -24,6 +28,7 @@ public class PushSubscriptionService {
 
     private final PushSubscriptionRepository repository;
     private final UserRepository userRepository;
+    private final AuthSessionRepository sessionRepository;
     private final PushProperties properties;
 
     /** A subscription as the browser reports it ({@code PushSubscription.toJSON()}). */
@@ -32,13 +37,13 @@ public class PushSubscriptionService {
     }
 
     /**
-     * Idempotent: re-registering a known endpoint refreshes it. An endpoint registered by another
-     * user moves to this one (same browser, different account). {@code previousEndpoint} is removed;
-     * browsers rotate subscriptions now and then. With {@code renewOnly}, only an existing registration
-     * of this user is refreshed.
+     * Idempotent: re-registering a known endpoint refreshes it. A known endpoint moves to the calling
+     * session (and user): it is the same browser, now signed in again or as someone else.
+     * {@code previousEndpoint} is removed; browsers rotate subscriptions now and then. With
+     * {@code renewOnly}, only an existing registration of this user is refreshed.
      */
     @Transactional
-    public PushSubscription register(long userId, Registration registration, String userAgent) {
+    public PushSubscription register(long userId, UUID authSessionId, Registration registration, String userAgent) {
         validate(registration);
 
         if (registration.renewOnly()) {
@@ -62,6 +67,7 @@ public class PushSubscriptionService {
             subscription.setCreatedAt(now);
         }
         subscription.setUser(userRepository.getReferenceById(userId));
+        subscription.setAuthSession(sessionRepository.getReferenceById(authSessionId));
         subscription.setP256dh(registration.p256dh().strip());
         subscription.setAuth(registration.auth().strip());
         subscription.setUserAgent(truncate(userAgent));
@@ -89,6 +95,27 @@ public class PushSubscriptionService {
     @Transactional
     public void unregister(long userId, String endpoint) {
         repository.deleteByEndpointAndUserId(endpoint, userId);
+    }
+
+    /**
+     * Drops a subscription of a browser that is signed out (it is starting a login), whoever it
+     * belonged to: a signed-out device must not receive pushes, least of all its own login approval.
+     */
+    @Transactional
+    public void removeOrphan(String endpoint) {
+        if (endpoint != null && endpoint.length() <= MAX_ENDPOINT_LENGTH) {
+            repository.deleteByEndpoint(endpoint.strip());
+        }
+    }
+
+    /** A session ended, so its device stops receiving pushes. Runs in the revoking transaction. */
+    @EventListener
+    @Transactional
+    public void onSessionRevoked(AuthSessionRevokedEvent event) {
+        int removed = repository.deleteByAuthSessionId(event.sessionId());
+        if (removed > 0) {
+            log.debug("Removed {} push subscription(s) of ended session {}.", removed, event.sessionId());
+        }
     }
 
     private void enforceLimit(long userId) {

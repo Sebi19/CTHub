@@ -9,6 +9,8 @@ import org.cthub.backend.notification.model.NotificationType;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -40,6 +42,7 @@ public class PushDispatcher {
     private static final int QUEUE_CAPACITY = 500;
     private static final long BATCH_TIMEOUT_SECONDS = 120;
     private static final long TEST_TIMEOUT_SECONDS = 20;
+    private static final Duration DISMISS_TTL = Duration.ofMinutes(15);
     private static final JsonMapper JSON = JsonMapper.builder().build();
 
     private final VapidAuth vapid;
@@ -140,18 +143,68 @@ public class PushDispatcher {
     public record TestResult(int devices, int delivered) {
     }
 
+    /** Live devices of {@code userId} that would receive a login approval, minus {@code excludedEndpoint}. */
+    public List<PushTarget> loginApprovalTargets(long userId, String excludedEndpoint) {
+        if (!vapid.isEnabled()) {
+            return List.of();
+        }
+        return repository.findDeliverable(Set.of(userId), Instant.now()).stream()
+            .filter(target -> excludedEndpoint == null || !excludedEndpoint.strip().equals(target.endpoint()))
+            .toList();
+    }
+
+    /**
+     * Fans a login approval request out to the given devices, urgently: somebody is waiting for it.
+     * {@code message.tag()} doubles as the topic, so {@link #dismiss} can replace it if undelivered.
+     */
+    public void sendLoginApproval(List<PushTarget> targets, PushMessage message, Duration ttl) {
+        if (!vapid.isEnabled() || targets.isEmpty()) {
+            return;
+        }
+        byte[] payload = JSON.writeValueAsBytes(message);
+        executor.execute(() -> await(targets.stream()
+            .map(device -> sendWithResult(device, payload, message.tag(), ttl, WebPushSender.Urgency.HIGH))
+            .toList(), BATCH_TIMEOUT_SECONDS));
+    }
+
+    /** Silently closes the login approval with this tag on every device of the user. */
+    public void dismiss(long userId, String tag) {
+        if (!vapid.isEnabled()) {
+            return;
+        }
+        executor.execute(() -> {
+            try {
+                List<PushTarget> devices = repository.findDeliverable(Set.of(userId), Instant.now());
+                byte[] payload = JSON.writeValueAsBytes(PushMessageComposer.dismiss(tag));
+                await(devices.stream()
+                    .map(device -> sendWithResult(device, payload, tag, DISMISS_TTL, WebPushSender.Urgency.HIGH))
+                    .toList(), BATCH_TIMEOUT_SECONDS);
+            } catch (RuntimeException e) {
+                log.warn("Could not dismiss login approval {} for user {}.", tag, userId, e);
+            }
+        });
+    }
+
     private CompletableFuture<Void> send(PushTarget device, byte[] payload, String topic) {
         return sendWithResult(device, payload, topic).thenAccept(result -> { });
     }
 
     private CompletableFuture<PushResult> sendWithResult(PushTarget device, byte[] payload, String topic) {
         return sender.send(device, payload, properties.getTtl(), topic)
-            .thenApply(result -> {
-                if (result == PushResult.GONE) {
-                    removeGone(device);
-                }
-                return result;
-            });
+            .thenApply(result -> handle(device, result));
+    }
+
+    private CompletableFuture<PushResult> sendWithResult(PushTarget device, byte[] payload, String topic,
+                                                         Duration ttl, WebPushSender.Urgency urgency) {
+        return sender.send(device, payload, ttl, topic, urgency)
+            .thenApply(result -> handle(device, result));
+    }
+
+    private PushResult handle(PushTarget device, PushResult result) {
+        if (result == PushResult.GONE) {
+            removeGone(device);
+        }
+        return result;
     }
 
     private void removeGone(PushTarget device) {
@@ -167,7 +220,7 @@ public class PushDispatcher {
         List<Long> ids = new ArrayList<>(new LinkedHashSet<>(userIds));
         List<PushTarget> targets = new ArrayList<>();
         for (int i = 0; i < ids.size(); i += LOOKUP_CHUNK) {
-            targets.addAll(repository.findDeliverable(ids.subList(i, Math.min(i + LOOKUP_CHUNK, ids.size()))));
+            targets.addAll(repository.findDeliverable(ids.subList(i, Math.min(i + LOOKUP_CHUNK, ids.size())), Instant.now()));
         }
         return targets.stream().collect(Collectors.groupingBy(PushTarget::userId));
     }

@@ -75,6 +75,18 @@ export async function getCurrentSubscription(): Promise<PushSubscription | null>
 }
 
 /**
+ * This browser's push endpoint, if it has one - sent along when starting a sign-in so the server
+ * does not ask this very browser to approve itself.
+ */
+export async function getCurrentPushEndpoint(): Promise<string | undefined> {
+    try {
+        return (await getCurrentSubscription())?.endpoint ?? undefined;
+    } catch {
+        return undefined;
+    }
+}
+
+/**
  * Sends this browser's subscription to the backend; returns the server-side device id.
  * With `renewOnly` the server only refreshes a device it already knows (404 otherwise), so a device
  * removed from another device's settings is not silently re-added on its next start.

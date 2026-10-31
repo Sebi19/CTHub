@@ -28,6 +28,22 @@ self.addEventListener('push', (event) => {
     }
 
     event.waitUntil((async () => {
+        if (message.type === 'DISMISS') {
+            await dismiss(message.tag);
+            return;
+        }
+        if (message.type === 'LOGIN_APPROVAL') {
+            // Always shown: there is no in-app toast for approval requests, and it must stay until acted on.
+            await self.registration.showNotification(message.title || 'CT-Hub', {
+                body: message.body || '',
+                tag: message.tag || undefined,
+                renotify: true,
+                requireInteraction: true,
+                icon: NOTIFICATION_ICON,
+                data: { url: sameOriginPath(message.url), notificationId: null },
+            });
+            return;
+        }
         if (!IS_WEBKIT) {
             // A focused app window already shows the live toast (SSE); skip the duplicate system notification.
             const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
@@ -44,6 +60,26 @@ self.addEventListener('push', (event) => {
         });
     })());
 });
+
+// A sign-in request was settled elsewhere: remove its notification from this device.
+async function dismiss(tag) {
+    const open = tag ? await self.registration.getNotifications({ tag }) : [];
+    open.forEach((notification) => notification.close());
+    if (!IS_WEBKIT || !tag) {
+        return;
+    }
+    // WebKit needs a visible notification for every push; show a short one and take it away again.
+    const german = (self.navigator.language || 'de').toLowerCase().startsWith('de');
+    await self.registration.showNotification('CT-Hub', {
+        body: german ? 'Die Anmeldeanfrage wurde erledigt.' : 'The sign-in request was handled.',
+        tag,
+        silent: true,
+        icon: NOTIFICATION_ICON,
+        data: { url: '/', notificationId: null },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    (await self.registration.getNotifications({ tag })).forEach((notification) => notification.close());
+}
 
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();

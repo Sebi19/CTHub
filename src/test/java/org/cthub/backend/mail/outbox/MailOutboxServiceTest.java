@@ -35,7 +35,7 @@ class MailOutboxServiceTest {
     void setUp() {
         MailProperties properties = new MailProperties();
         properties.getOutbox().setMaxAttempts(3);
-        service = new MailOutboxService(repository, properties, new SimpleMeterRegistry());
+        service = new MailOutboxService(repository, properties, new SimpleMeterRegistry(), event -> { });
     }
 
     private MailMessage rendered() {

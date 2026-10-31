@@ -1,12 +1,13 @@
 package org.cthub.backend.config;
 
+import org.cthub.backend.auth.AuthCookies;
+import org.cthub.backend.auth.session.AuthSessionService;
+import org.cthub.backend.auth.session.SessionAuthenticationFilter;
+import org.cthub.backend.auth.session.SessionIssuer;
 import org.cthub.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -15,14 +16,19 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.RememberMeServices;
-import org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Authentication is session based: a 90-day {@code AuthSession} with a rotating refresh cookie,
+ * cached per browser in a short-lived HTTP session (see {@link SessionAuthenticationFilter}).
+ * Logins happen in the auth controllers, never through Spring Security's form/basic login.
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -34,20 +40,19 @@ public class SecurityConfig {
     @Value("${cors.allowed-patterns:}")
     private String corsAllowedPatterns;
 
-    @Value("${app.security.remember-me-key}")
-    private String rememberMeKey;
-
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, RememberMeServices rememberMeServices) {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthSessionService sessionService,
+                                                   SessionIssuer issuer, AuthCookies cookies,
+                                                   UserRepository userRepository) {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            // 1. Disable CSRF (Common for REST APIs, crucial for Postman testing)
+            // Auth cookies are SameSite=Lax and every mutation is a non-simple JSON request, which
+            // browsers only send cross-origin after a CORS preflight against the allow-list below.
             .csrf(csrf -> csrf.disable())
-            .rememberMe(rm -> rm.rememberMeServices(rememberMeServices))
-            // 2. Allow everything
-            .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll()
-            );
+            .addFilterAfter(new SessionAuthenticationFilter(sessionService, issuer, cookies, userRepository),
+                SecurityContextHolderFilter.class)
+            // Authorization happens per endpoint with @PreAuthorize.
+            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
 
         return http.build();
     }
@@ -57,19 +62,11 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    /** Defined so Spring Boot doesn't auto-configure an in-memory user with a generated password. */
     @Bean
     public UserDetailsService userDetailsService(UserRepository userRepo) {
         return email -> userRepo.findByEmail(email)
             .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(
-        UserDetailsService userDetailsService,
-        PasswordEncoder passwordEncoder) {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder);
-        return new ProviderManager(authProvider);
     }
 
     @Bean
@@ -88,38 +85,12 @@ public class SecurityConfig {
             configuration.setAllowedOriginPatterns(patterns);
         }
 
-        // 2. Allow all standard methods
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-
-        // 3. Allow headers (needed for sending JSON, Auth tokens, etc.)
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
-
-        // 4. Allow credentials (cookies/auth headers)
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
-    }
-
-    @Bean
-    public RememberMeServices rememberMeServices(UserDetailsService userDetailsService) {
-        // Using Spring Security 6's TokenBasedRememberMeServices
-        TokenBasedRememberMeServices.RememberMeTokenAlgorithm encodingAlgorithm =
-            TokenBasedRememberMeServices.RememberMeTokenAlgorithm.SHA256;
-
-        TokenBasedRememberMeServices rememberMe = new TokenBasedRememberMeServices(
-            rememberMeKey,
-            userDetailsService,
-            encodingAlgorithm
-        );
-
-        // Set cookie validity to 90 days (in seconds)
-        rememberMe.setTokenValiditySeconds(60 * 60 * 24 * 90);
-        rememberMe.setCookieName("remember-me");
-
-        rememberMe.setAlwaysRemember(true);
-
-        return rememberMe;
     }
 }

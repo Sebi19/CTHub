@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout.html :: page(title=#{mail.securityAlert.subject}, content=~{::content})}">
+<body>
+<th:block th:fragment="content">
+    <p th:text="${firstName} != null ? #{mail.greeting(${firstName})} : #{mail.greeting.anonymous}">Hi there,</p>
+    <p th:text="#{${messageKey}}">Something changed on your account.</p>
+    <p th:if="${device} != null" th:text="#{mail.securityAlert.device(${device})}">Device: Chrome on Windows</p>
+
+    <div th:replace="~{components/info-box.html :: infoBox(text=#{mail.securityAlert.notYou})}"></div>
+
+    <div th:replace="~{components/button.html :: button(url=${accountUrl}, label=#{mail.securityAlert.cta})}"></div>
+</th:block>
+</body>
+</html>

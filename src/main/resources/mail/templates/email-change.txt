@@ -1,0 +1,11 @@
+[(${firstName} != null ? #{mail.greeting(${firstName})} : #{mail.greeting.anonymous})]
+
+[(#{mail.emailChange.body(${newEmail})})]
+
+[(${confirmUrl})]
+
+[(#{mail.emailChange.expiry(${validityMinutes})})]
+
+[(#{mail.emailChange.ignore})]
+
+[# th:replace="~{footer.txt}"/]

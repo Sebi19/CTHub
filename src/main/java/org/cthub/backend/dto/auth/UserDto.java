@@ -24,6 +24,6 @@ public class UserDto {
     private String preferredLocale;
     /** {@code false} while the account still needs to go through the complete-profile step. */
     private boolean profileComplete;
-    /** {@code false} for passwordless accounts, which sign in via e-mailed links. */
+    /** Whether the optional password is set; the account works without one (passkey, push, e-mail link). */
     private boolean passwordSet;
 }

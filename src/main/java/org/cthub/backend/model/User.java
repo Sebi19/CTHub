@@ -34,7 +34,7 @@ public class User implements UserDetails {
     private String lastName;
 
     @Column
-    private String password; // BCrypt hash; null for passwordless accounts (login link only)
+    private String password; // BCrypt hash; null for passwordless accounts (the default)
 
     @Enumerated(EnumType.STRING)
     private Role role; // ADMIN, USER
@@ -56,6 +56,29 @@ public class User implements UserDetails {
     @Column(name = "profile_completed_at")
     private java.time.Instant profileCompletedAt;
 
+    /** Opaque WebAuthn user handle (base64url), created with the first passkey. */
+    @Column(name = "webauthn_user_handle", length = 64, unique = true)
+    private String webauthnUserHandle;
+
+    /** Encrypted TOTP secret; {@code null} unless an authenticator app is set up. */
+    @Column(name = "totp_secret_enc")
+    private String totpSecretEnc;
+
+    /** Encrypted TOTP secret awaiting its first confirming code. */
+    @Column(name = "totp_pending_secret_enc")
+    private String totpPendingSecretEnc;
+
+    @Column(name = "totp_enabled_at")
+    private java.time.Instant totpEnabledAt;
+
+    /** Last accepted TOTP time step; codes at or before it are rejected as replays. */
+    @Column(name = "totp_last_used_step")
+    private Long totpLastUsedStep;
+
+    public boolean isTotpEnabled() {
+        return totpSecretEnc != null && totpEnabledAt != null;
+    }
+
     /**
      * A profile counts as complete once the user has supplied the details registration no longer
      * asks for up front. Incomplete profiles are allowed to log in but are forced through the
@@ -65,7 +88,7 @@ public class User implements UserDetails {
         return profileCompletedAt != null;
     }
 
-    /** Passwordless accounts (registered but never set a password) can only use e-mail login links. */
+    /** Passwords are optional; accounts without one sign in with passkeys or the push/e-mail challenge. */
     public boolean hasPassword() {
         return password != null && !password.isBlank();
     }

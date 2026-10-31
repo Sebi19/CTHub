@@ -2,9 +2,11 @@ package org.cthub.backend.notification.live;
 
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
+import org.cthub.backend.auth.session.AuthSessionRevokedEvent;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
@@ -120,7 +122,13 @@ public class LiveNotificationBroker {
         }
     }
 
-    /** Ends the streams opened from the given HTTP session, e.g. on logout. Other devices stay connected. */
+    /** A login session ended (logout, revocation, reuse detection): its streams close too. */
+    @TransactionalEventListener(fallbackExecution = true)
+    public void onSessionRevoked(AuthSessionRevokedEvent event) {
+        closeSession(event.sessionId().toString());
+    }
+
+    /** Ends the streams opened from the given login session, e.g. on logout. Other devices stay connected. */
     public void closeSession(String sessionId) {
         if (sessionId == null) {
             return;

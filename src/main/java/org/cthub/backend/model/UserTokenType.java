@@ -1,17 +1,10 @@
 package org.cthub.backend.model;
 
 /**
- * Purpose of a {@link UserToken}.
+ * Purpose of a {@link UserToken}. Sign-in, registration and step-up links are not user tokens; they
+ * run through {@code LoginAttempt}.
  */
 public enum UserTokenType {
-    EMAIL_VERIFICATION,
-    PASSWORD_RESET,
-    /** Single-use passwordless sign-in link, for accounts that never set a password. */
-    LOGIN_LINK,
-    /**
-     * Opaque handle returned to the browser that started a registration so the pending page can
-     * poll for completion. Deliberately never e-mailed: it proves "I started this registration",
-     * not "I own this inbox", so on its own it can never verify an account.
-     */
-    REGISTRATION_STATUS
+    /** Confirms a requested e-mail change; mailed to the new address, which travels in the payload. */
+    EMAIL_CHANGE
 }

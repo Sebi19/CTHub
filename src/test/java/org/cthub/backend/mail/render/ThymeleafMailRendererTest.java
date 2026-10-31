@@ -52,47 +52,50 @@ class ThymeleafMailRendererTest {
     }
 
     @Test
-    void rendersRegistrationConfirmationInGermanAndEnglish() {
-        RegistrationConfirmationModel model =
-            new RegistrationConfirmationModel("Maria", "https://example.org/verify-email?token=abc", Duration.ofHours(24));
+    void rendersLoginLinkInGermanAndEnglish() {
+        LoginLinkModel model = new LoginLinkModel("Maria", "https://example.org/auth/link?token=abc", Duration.ofMinutes(15));
 
         for (Locale locale : LOCALES) {
-            MailMessage message = renderer.render(
-                MailTemplate.REGISTRATION_CONFIRMATION, model, locale, MailAddress.of("maria@example.org"));
+            MailMessage message = renderer.render(MailTemplate.LOGIN_LINK, model, locale, MailAddress.of("maria@example.org"));
 
             assertThat(message.subject()).isNotBlank();
             assertThat(UNRESOLVED_KEY.matcher(message.subject()).find()).isFalse();
-            assertThat(message.htmlBody()).contains("Maria").contains(model.confirmUrl());
-            assertThat(message.textBody()).contains("Maria").contains(model.confirmUrl());
+            assertThat(message.htmlBody()).contains("Maria").contains(model.loginUrl());
+            assertThat(message.textBody()).contains("Maria").contains(model.loginUrl());
+            assertThat(UNRESOLVED_KEY.matcher(message.htmlBody()).find()).isFalse();
+            assertThat(UNRESOLVED_KEY.matcher(message.textBody()).find()).isFalse();
             assertThat(message.htmlBody()).doesNotContain("??");
             assertThat(message.textBody()).doesNotContain("??");
         }
     }
 
     @Test
-    void rendersWelcomeAndPasswordReset() {
+    void rendersWelcomeEmailChangeAndEverySecurityAlert() {
         assertRendersCleanly(MailTemplate.WELCOME, new WelcomeModel("Tom"));
-        assertRendersCleanly(MailTemplate.PASSWORD_RESET,
-            new PasswordResetModel("Tom", "https://example.org/reset-password?token=xyz", Duration.ofHours(1)));
-        assertRendersCleanly(MailTemplate.LOGIN_LINK,
-            new LoginLinkModel("Tom", "https://example.org/login-link?token=xyz", Duration.ofMinutes(15)));
+        assertRendersCleanly(MailTemplate.EMAIL_CHANGE, new EmailChangeModel("Tom", "new@example.org",
+            "https://example.org/account/confirm-email?token=xyz", Duration.ofHours(1)));
+        for (SecurityAlertModel.Kind kind : SecurityAlertModel.Kind.values()) {
+            assertRendersCleanly(MailTemplate.SECURITY_ALERT, new SecurityAlertModel("Tom", kind, "Firefox on Windows"));
+            assertRendersCleanly(MailTemplate.SECURITY_ALERT, new SecurityAlertModel("Tom", kind, null));
+        }
     }
 
     /**
-     * Registration only collects an e-mail address, so mail routinely goes out before a name
-     * exists. Those renders must fall back to an anonymous greeting rather than printing "null".
+     * Sign-in only collects an e-mail address, so mail routinely goes out before a name exists.
+     * Those renders must fall back to an anonymous greeting rather than printing "null".
      */
     @Test
     void rendersAnonymousGreetingWhenFirstNameIsMissing() {
         List<MailTemplateModel> namelessModels = List.of(
-            new RegistrationConfirmationModel(null, "https://example.org/verify-email?token=abc", Duration.ofHours(24)),
-            new PasswordResetModel(null, "https://example.org/reset-password?token=xyz", Duration.ofHours(1)),
-            new LoginLinkModel(null, "https://example.org/login-link?token=xyz", Duration.ofMinutes(15)),
+            new LoginLinkModel(null, "https://example.org/auth/link?token=xyz", Duration.ofMinutes(15)),
+            new EmailChangeModel(null, "new@example.org", "https://example.org/account/confirm-email?token=xyz",
+                Duration.ofHours(1)),
+            new SecurityAlertModel(null, SecurityAlertModel.Kind.PASSWORD_SET, null),
             new WelcomeModel(null));
         List<MailTemplate> templates = List.of(
-            MailTemplate.REGISTRATION_CONFIRMATION,
-            MailTemplate.PASSWORD_RESET,
             MailTemplate.LOGIN_LINK,
+            MailTemplate.EMAIL_CHANGE,
+            MailTemplate.SECURITY_ALERT,
             MailTemplate.WELCOME);
 
         for (int i = 0; i < templates.size(); i++) {
@@ -106,7 +109,6 @@ class ThymeleafMailRendererTest {
             }
         }
     }
-
     /**
      * The logo and the legal links are absolute URLs built from the configured base URL - relative
      * paths are meaningless inside a mail client.
@@ -176,6 +178,8 @@ class ThymeleafMailRendererTest {
             assertThat(UNRESOLVED_KEY.matcher(message.subject()).find()).isFalse();
             assertThat(message.htmlBody()).doesNotContain("??");
             assertThat(message.textBody()).doesNotContain("??");
+            assertThat(UNRESOLVED_KEY.matcher(message.htmlBody()).find()).isFalse();
+            assertThat(UNRESOLVED_KEY.matcher(message.textBody()).find()).isFalse();
         }
     }
 }

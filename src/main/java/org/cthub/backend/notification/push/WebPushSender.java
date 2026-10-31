@@ -37,11 +37,29 @@ public class WebPushSender {
         this.http = http;
     }
 
+    /** RFC 8030 {@code Urgency}: how eagerly a battery-saving device should wake up for the message. */
+    public enum Urgency {
+        NORMAL("normal"),
+        /** Time-critical, e.g. a login approval someone is waiting for right now. */
+        HIGH("high");
+
+        private final String header;
+
+        Urgency(String header) {
+            this.header = header;
+        }
+    }
+
     /**
      * @param topic optional; the push service replaces an undelivered message with the same topic,
      *              so an offline device only gets the latest one
      */
     public CompletableFuture<PushResult> send(PushTarget target, byte[] payload, Duration ttl, String topic) {
+        return send(target, payload, ttl, topic, Urgency.NORMAL);
+    }
+
+    public CompletableFuture<PushResult> send(PushTarget target, byte[] payload, Duration ttl, String topic,
+                                              Urgency urgency) {
         byte[] body;
         URI endpoint;
         try {
@@ -56,7 +74,7 @@ public class WebPushSender {
             .timeout(REQUEST_TIMEOUT)
             .header("Authorization", vapid.authorization(endpoint))
             .header("TTL", Long.toString(Math.max(0, ttl.toSeconds())))
-            .header("Urgency", "normal")
+            .header("Urgency", urgency.header)
             .header("Content-Encoding", "aes128gcm")
             .header("Content-Type", "application/octet-stream")
             .POST(HttpRequest.BodyPublishers.ofByteArray(body));

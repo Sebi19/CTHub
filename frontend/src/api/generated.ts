@@ -10,6 +10,14 @@
  * ---------------------------------------------------------------
  */
 
+export enum AuthMethod {
+  PASSKEY = "PASSKEY",
+  PASSWORD = "PASSWORD",
+  TOTP = "TOTP",
+  EMAIL = "EMAIL",
+  PUSH = "PUSH",
+}
+
 export enum MailOutboxStatus {
   PENDING = "PENDING",
   SENDING = "SENDING",
@@ -18,19 +26,9 @@ export enum MailOutboxStatus {
   CANCELLED = "CANCELLED",
 }
 
-export enum RegistrationStatus {
-  PENDING = "PENDING",
-  AWAITING_CONFIRMATION = "AWAITING_CONFIRMATION",
-  VERIFIED = "VERIFIED",
-  CLAIMED_ELSEWHERE = "CLAIMED_ELSEWHERE",
-  CANCELLED = "CANCELLED",
-  UNKNOWN = "UNKNOWN",
-}
-
-export enum ChallengeKind {
-  CHALLENGE = "CHALLENGE",
+export enum ChallengeViewKind {
   SAME_BROWSER = "SAME_BROWSER",
-  NO_CHALLENGE = "NO_CHALLENGE",
+  CROSS = "CROSS",
   INVALID = "INVALID",
 }
 
@@ -56,9 +54,35 @@ export enum CompetitionAwardCategoryDto {
   ROBOT_GAME = "ROBOT_GAME",
 }
 
-export enum RegistrationStartStatus {
-  PENDING = "PENDING",
-  ALREADY_REGISTERED = "ALREADY_REGISTERED",
+export enum AuthNextStep {
+  PASSKEY = "PASSKEY",
+  PASSWORD = "PASSWORD",
+  CHALLENGE = "CHALLENGE",
+}
+
+export enum ChallengePickResult {
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
+}
+
+export enum LoginResultStatus {
+  SIGNED_IN = "SIGNED_IN",
+  TOTP_REQUIRED = "TOTP_REQUIRED",
+}
+
+export enum LoginAttemptState {
+  WAITING = "WAITING",
+  APPROVED = "APPROVED",
+  COMPLETED = "COMPLETED",
+  REJECTED = "REJECTED",
+  CANCELLED = "CANCELLED",
+  CLAIMED_ELSEWHERE = "CLAIMED_ELSEWHERE",
+  EXPIRED = "EXPIRED",
+}
+
+export enum LoginAttemptPurpose {
+  LOGIN = "LOGIN",
+  STEP_UP = "STEP_UP",
 }
 
 export enum NotificationTypeDto {
@@ -113,6 +137,26 @@ export interface NotificationPreferenceDto {
   enabled: boolean;
 }
 
+export interface SetPasswordRequestDto {
+  /**
+   * @minLength 0
+   * @maxLength 256
+   */
+  password: string;
+}
+
+export interface UserDto {
+  /** @format int64 */
+  id: number;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  role?: string;
+  preferredLocale?: string;
+  profileComplete?: boolean;
+  passwordSet?: boolean;
+}
+
 export interface NotificationDto {
   /** @format int64 */
   id: number;
@@ -150,92 +194,128 @@ export interface PushUnregisterRequestDto {
   endpoint: string;
 }
 
-export interface VerifyEmailRequestDto {
-  /** @minLength 1 */
+export interface TotpCodeRequestDto {
+  /**
+   * @minLength 0
+   * @maxLength 16
+   */
+  code: string;
+}
+
+export interface PasskeyResponseDto {
+  /**
+   * @minLength 0
+   * @maxLength 32768
+   */
+  credentialJson: string;
+}
+
+export interface PasskeyAuthenticationOptionsDto {
+  challenge: string;
+  rpId: string;
+  /** @format int64 */
+  timeout?: number;
+  userVerification: string;
+  allowCredentials: PasskeyDescriptorDto[];
+}
+
+export interface PasskeyDescriptorDto {
+  id: string;
+  type: string;
+  transports?: string[];
+}
+
+export interface PushEndpointRequestDto {
+  /**
+   * @minLength 0
+   * @maxLength 2048
+   */
+  pushEndpoint?: string;
+}
+
+export interface LoginAttemptStateDto {
+  state: LoginAttemptState;
+  purpose: LoginAttemptPurpose;
+  /** @format int32 */
+  challengeNumber?: number;
+  /** @format date-time */
+  expiresAt: string;
+  openedElsewhere?: boolean;
+}
+
+export interface PasswordLoginRequestDto {
+  /**
+   * @format email
+   * @minLength 0
+   * @maxLength 255
+   */
+  email: string;
+  /**
+   * @minLength 0
+   * @maxLength 256
+   */
+  password: string;
+}
+
+export interface LoginResultDto {
+  status: LoginResultStatus;
+  user?: UserDto;
+}
+
+export interface LinkTokenRequestDto {
+  /**
+   * @minLength 0
+   * @maxLength 128
+   */
   token: string;
 }
 
-export interface UserDto {
-  /** @format int64 */
-  id: number;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  role?: string;
-  preferredLocale?: string;
-  profileComplete?: boolean;
-  passwordSet?: boolean;
+export interface AttemptCompletionDto {
+  purpose: LoginAttemptPurpose;
+  user: UserDto;
 }
 
-export interface RegistrationResponseDto {
-  message?: string;
-}
-
-export interface ConfirmChallengeRequestDto {
-  /** @minLength 1 */
+export interface LinkApproveRequestDto {
+  /**
+   * @minLength 0
+   * @maxLength 128
+   */
   token: string;
   /**
    * @format int32
-   * @min 10
+   * @min 0
    * @max 99
    */
-  number: number;
+  number?: number;
 }
 
-export interface ResetPasswordRequestDto {
-  /** @minLength 1 */
-  token: string;
-  /**
-   * @minLength 8
-   * @maxLength 2147483647
-   */
-  password: string;
+export interface ChallengePickResultDto {
+  result: ChallengePickResult;
 }
 
-export interface ResendVerificationRequestDto {
+export interface IdentifyRequestDto {
   /**
    * @format email
-   * @minLength 1
+   * @minLength 0
+   * @maxLength 255
    */
   email: string;
+  /**
+   * @minLength 0
+   * @maxLength 2048
+   */
+  pushEndpoint?: string;
+  /**
+   * @minLength 0
+   * @maxLength 35
+   */
   locale?: string;
 }
 
-export interface ClaimRegistrationRequestDto {
-  /** @minLength 1 */
-  registrationId: string;
-}
-
-export interface RegisterRequestDto {
-  /**
-   * @format email
-   * @minLength 1
-   */
-  email: string;
-  locale?: string;
-}
-
-export interface RegistrationStartResponseDto {
-  status: RegistrationStartStatus;
-  registrationId?: string;
-  /** @format int32 */
-  challengeNumber?: number;
-}
-
-export interface LoginRequestDto {
-  /** @minLength 1 */
-  email: string;
-  /** @minLength 1 */
-  password: string;
-}
-
-export interface EmailLinkRequestDto {
-  /**
-   * @format email
-   * @minLength 1
-   */
-  email: string;
-  locale?: string;
+export interface IdentifyResponseDto {
+  next: AuthNextStep;
+  passwordAvailable?: boolean;
+  attempt?: LoginAttemptStateDto;
 }
 
 export interface CompleteProfileRequestDto {
@@ -249,11 +329,34 @@ export interface CompleteProfileRequestDto {
    * @maxLength 100
    */
   lastName: string;
+}
+
+export interface StartAttemptRequestDto {
   /**
-   * @minLength 8
-   * @maxLength 2147483647
+   * @format email
+   * @minLength 0
+   * @maxLength 255
    */
-  password?: string;
+  email: string;
+  /**
+   * @minLength 0
+   * @maxLength 2048
+   */
+  pushEndpoint?: string;
+  /**
+   * @minLength 0
+   * @maxLength 35
+   */
+  locale?: string;
+}
+
+export interface ApprovalPickRequestDto {
+  /**
+   * @format int32
+   * @min 0
+   * @max 99
+   */
+  number?: number;
 }
 
 export interface AnnouncementRequestDto {
@@ -306,6 +409,74 @@ export interface MailOutboxEntryDto {
   createdAt?: string;
   /** @format date-time */
   sentAt?: string;
+}
+
+export interface TotpEnrollmentDto {
+  secret: string;
+  otpauthUri: string;
+}
+
+export interface PasskeyDto {
+  /** @format int64 */
+  id: number;
+  name: string;
+  /** @format date-time */
+  createdAt: string;
+  /** @format date-time */
+  lastUsedAt?: string;
+  synced?: boolean;
+}
+
+export interface PasskeyAuthenticatorSelectionDto {
+  residentKey: string;
+  requireResidentKey?: boolean;
+  userVerification: string;
+}
+
+export interface PasskeyCredentialParamDto {
+  type: string;
+  /** @format int32 */
+  alg?: number;
+}
+
+export interface PasskeyRegistrationOptionsDto {
+  rp: PasskeyRpDto;
+  user: PasskeyUserDto;
+  challenge: string;
+  pubKeyCredParams: PasskeyCredentialParamDto[];
+  /** @format int64 */
+  timeout?: number;
+  excludeCredentials: PasskeyDescriptorDto[];
+  authenticatorSelection: PasskeyAuthenticatorSelectionDto;
+  attestation: string;
+}
+
+export interface PasskeyRpDto {
+  id: string;
+  name: string;
+}
+
+export interface PasskeyUserDto {
+  id: string;
+  name: string;
+  displayName: string;
+}
+
+export interface EmailChangeRequestDto {
+  /**
+   * @format email
+   * @minLength 0
+   * @maxLength 255
+   */
+  newEmail: string;
+}
+
+export interface RenamePasskeyRequestDto {
+  /**
+   * @minLength 0
+   * @maxLength 64
+   */
+  name: string;
 }
 
 export interface CompetitionNominationDto {
@@ -586,14 +757,39 @@ export interface SeasonTeamSummaryDto {
   seasonTeamProfile?: SeasonTeamProfileDto;
 }
 
-export interface VerificationChallengeResponseDto {
-  kind?: ChallengeKind;
-  numbers?: number[];
-  email?: string;
+export interface StepUpMethodsDto {
+  passkey?: boolean;
+  totp?: boolean;
 }
 
-export interface RegistrationStatusResponseDto {
-  status: RegistrationStatus;
+export interface ChallengeViewDto {
+  kind: ChallengeViewKind;
+  purpose?: LoginAttemptPurpose;
+  options: number[];
+  device?: string;
+  /** @format date-time */
+  requestedAt?: string;
+  /** @format date-time */
+  expiresAt?: string;
+}
+
+export interface SessionDto {
+  /** @format uuid */
+  id: string;
+  device?: string;
+  /** @format date-time */
+  createdAt: string;
+  /** @format date-time */
+  lastUsedAt: string;
+  current?: boolean;
+  methods: AuthMethod[];
+}
+
+export interface AccountSecurityDto {
+  passwordSet?: boolean;
+  totpEnabled?: boolean;
+  totpAvailable?: boolean;
+  passkeys: PasskeyDto[];
 }
 
 import type {
@@ -849,6 +1045,36 @@ export class Api<
     /**
      * No description
      *
+     * @tags account-controller
+     * @name SetPassword
+     * @request PUT:/api/account/password
+     */
+    setPassword: (data: SetPasswordRequestDto, params: RequestParams = {}) =>
+      this.request<UserDto, any>({
+        path: `/api/account/password`,
+        method: "PUT",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags account-controller
+     * @name RemovePassword
+     * @request DELETE:/api/account/password
+     */
+    removePassword: (params: RequestParams = {}) =>
+      this.request<UserDto, any>({
+        path: `/api/account/password`,
+        method: "DELETE",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
      * @tags notification-controller
      * @name MarkNotificationUnread
      * @request POST:/api/notifications/{id}/unread
@@ -929,124 +1155,92 @@ export class Api<
     /**
      * No description
      *
-     * @tags auth-controller
-     * @name VerifyEmail
-     * @request POST:/api/auth/verify-email
+     * @tags step-up-controller
+     * @name StepUpWithTotp
+     * @request POST:/api/auth/step-up/totp
      */
-    verifyEmail: (data: VerifyEmailRequestDto, params: RequestParams = {}) =>
+    stepUpWithTotp: (data: TotpCodeRequestDto, params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/api/auth/step-up/totp`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags step-up-controller
+     * @name StepUpWithPasskey
+     * @request POST:/api/auth/step-up/passkey
+     */
+    stepUpWithPasskey: (data: PasskeyResponseDto, params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/api/auth/step-up/passkey`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags step-up-controller
+     * @name StepUpPasskeyOptions
+     * @request POST:/api/auth/step-up/passkey/options
+     */
+    stepUpPasskeyOptions: (params: RequestParams = {}) =>
+      this.request<PasskeyAuthenticationOptionsDto, any>({
+        path: `/api/auth/step-up/passkey/options`,
+        method: "POST",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags step-up-controller
+     * @name StartStepUpChallenge
+     * @request POST:/api/auth/step-up/challenge
+     */
+    startStepUpChallenge: (
+      data: PushEndpointRequestDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<LoginAttemptStateDto, any>({
+        path: `/api/auth/step-up/challenge`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags auth-controller
+     * @name PasskeyLoginOptions
+     * @request POST:/api/auth/passkey/options
+     */
+    passkeyLoginOptions: (params: RequestParams = {}) =>
+      this.request<PasskeyAuthenticationOptionsDto, any>({
+        path: `/api/auth/passkey/options`,
+        method: "POST",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags auth-controller
+     * @name LoginWithPasskey
+     * @request POST:/api/auth/passkey/login
+     */
+    loginWithPasskey: (data: PasskeyResponseDto, params: RequestParams = {}) =>
       this.request<UserDto, any>({
-        path: `/api/auth/verify-email`,
-        method: "POST",
-        body: data,
-        type: ContentType.Json,
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags auth-controller
-     * @name RejectRegistration
-     * @request POST:/api/auth/verification-reject
-     */
-    rejectRegistration: (
-      data: VerifyEmailRequestDto,
-      params: RequestParams = {},
-    ) =>
-      this.request<RegistrationResponseDto, any>({
-        path: `/api/auth/verification-reject`,
-        method: "POST",
-        body: data,
-        type: ContentType.Json,
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags auth-controller
-     * @name ConfirmChallenge
-     * @request POST:/api/auth/verification-confirm
-     */
-    confirmChallenge: (
-      data: ConfirmChallengeRequestDto,
-      params: RequestParams = {},
-    ) =>
-      this.request<RegistrationResponseDto, any>({
-        path: `/api/auth/verification-confirm`,
-        method: "POST",
-        body: data,
-        type: ContentType.Json,
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags auth-controller
-     * @name ResetPassword
-     * @request POST:/api/auth/reset-password
-     */
-    resetPassword: (
-      data: ResetPasswordRequestDto,
-      params: RequestParams = {},
-    ) =>
-      this.request<UserDto, any>({
-        path: `/api/auth/reset-password`,
-        method: "POST",
-        body: data,
-        type: ContentType.Json,
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags auth-controller
-     * @name ResendVerification
-     * @request POST:/api/auth/resend-verification
-     */
-    resendVerification: (
-      data: ResendVerificationRequestDto,
-      params: RequestParams = {},
-    ) =>
-      this.request<RegistrationResponseDto, any>({
-        path: `/api/auth/resend-verification`,
-        method: "POST",
-        body: data,
-        type: ContentType.Json,
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags auth-controller
-     * @name ClaimRegistration
-     * @request POST:/api/auth/registration-claim
-     */
-    claimRegistration: (
-      data: ClaimRegistrationRequestDto,
-      params: RequestParams = {},
-    ) =>
-      this.request<UserDto, any>({
-        path: `/api/auth/registration-claim`,
-        method: "POST",
-        body: data,
-        type: ContentType.Json,
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags auth-controller
-     * @name Register
-     * @request POST:/api/auth/register
-     */
-    register: (data: RegisterRequestDto, params: RequestParams = {}) =>
-      this.request<RegistrationStartResponseDto, any>({
-        path: `/api/auth/register`,
+        path: `/api/auth/passkey/login`,
         method: "POST",
         body: data,
         type: ContentType.Json,
@@ -1061,7 +1255,7 @@ export class Api<
      * @request POST:/api/auth/logout
      */
     logout: (params: RequestParams = {}) =>
-      this.request<string, any>({
+      this.request<void, any>({
         path: `/api/auth/logout`,
         method: "POST",
         ...params,
@@ -1071,47 +1265,15 @@ export class Api<
      * No description
      *
      * @tags auth-controller
-     * @name Login
-     * @request POST:/api/auth/login
+     * @name LoginWithPassword
+     * @request POST:/api/auth/login/password
      */
-    login: (data: LoginRequestDto, params: RequestParams = {}) =>
-      this.request<UserDto, any>({
-        path: `/api/auth/login`,
-        method: "POST",
-        body: data,
-        type: ContentType.Json,
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags auth-controller
-     * @name RequestLoginLink
-     * @request POST:/api/auth/login-link
-     */
-    requestLoginLink: (data: EmailLinkRequestDto, params: RequestParams = {}) =>
-      this.request<RegistrationResponseDto, any>({
-        path: `/api/auth/login-link`,
-        method: "POST",
-        body: data,
-        type: ContentType.Json,
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags auth-controller
-     * @name ConsumeLoginLink
-     * @request POST:/api/auth/login-link/consume
-     */
-    consumeLoginLink: (
-      data: VerifyEmailRequestDto,
+    loginWithPassword: (
+      data: PasswordLoginRequestDto,
       params: RequestParams = {},
     ) =>
-      this.request<UserDto, any>({
-        path: `/api/auth/login-link/consume`,
+      this.request<LoginResultDto, any>({
+        path: `/api/auth/login/password`,
         method: "POST",
         body: data,
         type: ContentType.Json,
@@ -1122,12 +1284,111 @@ export class Api<
      * No description
      *
      * @tags auth-controller
-     * @name ForgotPassword
-     * @request POST:/api/auth/forgot-password
+     * @name LoginWithPasswordAndTotp
+     * @request POST:/api/auth/login/password/totp
      */
-    forgotPassword: (data: EmailLinkRequestDto, params: RequestParams = {}) =>
-      this.request<RegistrationResponseDto, any>({
-        path: `/api/auth/forgot-password`,
+    loginWithPasswordAndTotp: (
+      data: TotpCodeRequestDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<LoginResultDto, any>({
+        path: `/api/auth/login/password/totp`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags login-attempt-controller
+     * @name RejectLink
+     * @request POST:/api/auth/link/reject
+     */
+    rejectLink: (data: LinkTokenRequestDto, params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/api/auth/link/reject`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags login-attempt-controller
+     * @name LinkOpened
+     * @request POST:/api/auth/link/opened
+     */
+    linkOpened: (data: LinkTokenRequestDto, params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/api/auth/link/opened`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags login-attempt-controller
+     * @name CompleteLink
+     * @request POST:/api/auth/link/complete
+     */
+    completeLink: (data: LinkTokenRequestDto, params: RequestParams = {}) =>
+      this.request<AttemptCompletionDto, any>({
+        path: `/api/auth/link/complete`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags login-attempt-controller
+     * @name ClaimLinkHere
+     * @request POST:/api/auth/link/claim-here
+     */
+    claimLinkHere: (data: LinkTokenRequestDto, params: RequestParams = {}) =>
+      this.request<UserDto, any>({
+        path: `/api/auth/link/claim-here`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags login-attempt-controller
+     * @name ApproveLink
+     * @request POST:/api/auth/link/approve
+     */
+    approveLink: (data: LinkApproveRequestDto, params: RequestParams = {}) =>
+      this.request<ChallengePickResultDto, any>({
+        path: `/api/auth/link/approve`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags auth-controller
+     * @name Identify
+     * @request POST:/api/auth/identify
+     */
+    identify: (data: IdentifyRequestDto, params: RequestParams = {}) =>
+      this.request<IdentifyResponseDto, any>({
+        path: `/api/auth/identify`,
         method: "POST",
         body: data,
         type: ContentType.Json,
@@ -1147,6 +1408,98 @@ export class Api<
     ) =>
       this.request<UserDto, any>({
         path: `/api/auth/complete-profile`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags auth-controller
+     * @name StartAttempt
+     * @request POST:/api/auth/attempts
+     */
+    startAttempt: (data: StartAttemptRequestDto, params: RequestParams = {}) =>
+      this.request<LoginAttemptStateDto, any>({
+        path: `/api/auth/attempts`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags login-attempt-controller
+     * @name SendAttemptEmail
+     * @request POST:/api/auth/attempts/current/email
+     */
+    sendAttemptEmail: (params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/api/auth/attempts/current/email`,
+        method: "POST",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags login-attempt-controller
+     * @name CompleteCurrentAttempt
+     * @request POST:/api/auth/attempts/current/complete
+     */
+    completeCurrentAttempt: (params: RequestParams = {}) =>
+      this.request<AttemptCompletionDto, any>({
+        path: `/api/auth/attempts/current/complete`,
+        method: "POST",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags login-attempt-controller
+     * @name RejectPush
+     * @request POST:/api/auth/approvals/{attemptId}/reject
+     */
+    rejectPush: (attemptId: string, params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/api/auth/approvals/${attemptId}/reject`,
+        method: "POST",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags login-attempt-controller
+     * @name PushApprovalOpened
+     * @request POST:/api/auth/approvals/{attemptId}/opened
+     */
+    pushApprovalOpened: (attemptId: string, params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/api/auth/approvals/${attemptId}/opened`,
+        method: "POST",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags login-attempt-controller
+     * @name ApprovePush
+     * @request POST:/api/auth/approvals/{attemptId}/approve
+     */
+    approvePush: (
+      attemptId: string,
+      data: ApprovalPickRequestDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<ChallengePickResultDto, any>({
+        path: `/api/auth/approvals/${attemptId}/approve`,
         method: "POST",
         body: data,
         type: ContentType.Json,
@@ -1199,6 +1552,180 @@ export class Api<
       this.request<MailOutboxEntryDto, any>({
         path: `/api/admin/mail/outbox/${id}/requeue`,
         method: "POST",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags account-controller
+     * @name BeginTotp
+     * @request POST:/api/account/totp
+     */
+    beginTotp: (params: RequestParams = {}) =>
+      this.request<TotpEnrollmentDto, any>({
+        path: `/api/account/totp`,
+        method: "POST",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags account-controller
+     * @name DisableTotp
+     * @request DELETE:/api/account/totp
+     */
+    disableTotp: (params: RequestParams = {}) =>
+      this.request<UserDto, any>({
+        path: `/api/account/totp`,
+        method: "DELETE",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags account-controller
+     * @name ConfirmTotp
+     * @request POST:/api/account/totp/confirm
+     */
+    confirmTotp: (data: TotpCodeRequestDto, params: RequestParams = {}) =>
+      this.request<UserDto, any>({
+        path: `/api/account/totp/confirm`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags account-controller
+     * @name RevokeOtherSessions
+     * @request POST:/api/account/sessions/revoke-others
+     */
+    revokeOtherSessions: (params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/api/account/sessions/revoke-others`,
+        method: "POST",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags account-controller
+     * @name ListPasskeys
+     * @request GET:/api/account/passkeys
+     */
+    listPasskeys: (params: RequestParams = {}) =>
+      this.request<PasskeyDto[], any>({
+        path: `/api/account/passkeys`,
+        method: "GET",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags account-controller
+     * @name RegisterPasskey
+     * @request POST:/api/account/passkeys
+     */
+    registerPasskey: (data: PasskeyResponseDto, params: RequestParams = {}) =>
+      this.request<PasskeyDto, any>({
+        path: `/api/account/passkeys`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags account-controller
+     * @name PasskeyRegistrationOptions
+     * @request POST:/api/account/passkeys/options
+     */
+    passkeyRegistrationOptions: (params: RequestParams = {}) =>
+      this.request<PasskeyRegistrationOptionsDto, any>({
+        path: `/api/account/passkeys/options`,
+        method: "POST",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags account-controller
+     * @name RequestEmailChange
+     * @request POST:/api/account/email
+     */
+    requestEmailChange: (
+      data: EmailChangeRequestDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<void, any>({
+        path: `/api/account/email`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags account-controller
+     * @name ConfirmEmailChange
+     * @request POST:/api/account/email/confirm
+     */
+    confirmEmailChange: (
+      data: LinkTokenRequestDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<void, any>({
+        path: `/api/account/email/confirm`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags account-controller
+     * @name DeletePasskey
+     * @request DELETE:/api/account/passkeys/{id}
+     */
+    deletePasskey: (id: number, params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/api/account/passkeys/${id}`,
+        method: "DELETE",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags account-controller
+     * @name RenamePasskey
+     * @request PATCH:/api/account/passkeys/{id}
+     */
+    renamePasskey: (
+      id: number,
+      data: RenamePasskeyRequestDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<PasskeyDto, any>({
+        path: `/api/account/passkeys/${id}`,
+        method: "PATCH",
+        body: data,
+        type: ContentType.Json,
         ...params,
       }),
 
@@ -1525,40 +2052,14 @@ export class Api<
     /**
      * No description
      *
-     * @tags auth-controller
-     * @name VerificationChallenge
-     * @request GET:/api/auth/verification-challenge
+     * @tags step-up-controller
+     * @name StepUpMethods
+     * @request GET:/api/auth/step-up/methods
      */
-    verificationChallenge: (
-      query: {
-        token: string;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<VerificationChallengeResponseDto, any>({
-        path: `/api/auth/verification-challenge`,
+    stepUpMethods: (params: RequestParams = {}) =>
+      this.request<StepUpMethodsDto, any>({
+        path: `/api/auth/step-up/methods`,
         method: "GET",
-        query: query,
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags auth-controller
-     * @name RegistrationStatus
-     * @request GET:/api/auth/registration-status
-     */
-    registrationStatus: (
-      query: {
-        registrationId: string;
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<RegistrationStatusResponseDto, any>({
-        path: `/api/auth/registration-status`,
-        method: "GET",
-        query: query,
         ...params,
       }),
 
@@ -1572,6 +2073,68 @@ export class Api<
     getCurrentUser: (params: RequestParams = {}) =>
       this.request<UserDto, any>({
         path: `/api/auth/me`,
+        method: "GET",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags login-attempt-controller
+     * @name ViewLink
+     * @request GET:/api/auth/link
+     */
+    viewLink: (
+      query: {
+        token: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<ChallengeViewDto, any>({
+        path: `/api/auth/link`,
+        method: "GET",
+        query: query,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags login-attempt-controller
+     * @name GetCurrentAttempt
+     * @request GET:/api/auth/attempts/current
+     */
+    getCurrentAttempt: (params: RequestParams = {}) =>
+      this.request<LoginAttemptStateDto, any>({
+        path: `/api/auth/attempts/current`,
+        method: "GET",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags login-attempt-controller
+     * @name CancelCurrentAttempt
+     * @request DELETE:/api/auth/attempts/current
+     */
+    cancelCurrentAttempt: (params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/api/auth/attempts/current`,
+        method: "DELETE",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags login-attempt-controller
+     * @name ViewPushApproval
+     * @request GET:/api/auth/approvals/{attemptId}
+     */
+    viewPushApproval: (attemptId: string, params: RequestParams = {}) =>
+      this.request<ChallengeViewDto, any>({
+        path: `/api/auth/approvals/${attemptId}`,
         method: "GET",
         ...params,
       }),
@@ -1600,6 +2163,34 @@ export class Api<
     /**
      * No description
      *
+     * @tags account-controller
+     * @name ListSessions
+     * @request GET:/api/account/sessions
+     */
+    listSessions: (params: RequestParams = {}) =>
+      this.request<SessionDto[], any>({
+        path: `/api/account/sessions`,
+        method: "GET",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags account-controller
+     * @name GetAccountSecurity
+     * @request GET:/api/account/security
+     */
+    getAccountSecurity: (params: RequestParams = {}) =>
+      this.request<AccountSecurityDto, any>({
+        path: `/api/account/security`,
+        method: "GET",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
      * @tags push-controller
      * @name DeletePushSubscription
      * @request DELETE:/api/notifications/push/subscriptions/{id}
@@ -1607,6 +2198,34 @@ export class Api<
     deletePushSubscription: (id: number, params: RequestParams = {}) =>
       this.request<void, any>({
         path: `/api/notifications/push/subscriptions/${id}`,
+        method: "DELETE",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags account-controller
+     * @name DeleteAccount
+     * @request DELETE:/api/account
+     */
+    deleteAccount: (params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/api/account`,
+        method: "DELETE",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags account-controller
+     * @name RevokeSession
+     * @request DELETE:/api/account/sessions/{id}
+     */
+    revokeSession: (id: string, params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/api/account/sessions/${id}`,
         method: "DELETE",
         ...params,
       }),

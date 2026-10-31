@@ -1,6 +1,8 @@
 // src/api.ts
 import { Api } from "./api/generated"; // Adjust path to your generated code
+import type { InternalAxiosRequestConfig } from "axios";
 import { reportProfileIncomplete } from "./features/auth/profileIncomplete";
+import { requestStepUp } from "./features/auth/stepUp";
 
 // 1. Determine the Base URL ONE time
 //    - If VITE_API_URL is set (Production/Railway), use it.
@@ -18,11 +20,18 @@ export const client = new Api({
 
 // 3. Users who abandoned registration before naming themselves must finish their profile before
 //    they may change anything; the backend enforces this and the UI follows it here.
+// 4. Sensitive account changes need a fresh identity check: verify, then send the request again.
 client.instance.interceptors.response.use(
     (response) => response,
-    (error) => {
-        if (error?.response?.data?.code === 'PROFILE_INCOMPLETE') {
+    async (error) => {
+        const code = error?.response?.data?.code;
+        if (code === 'PROFILE_INCOMPLETE') {
             reportProfileIncomplete();
+        }
+        const config = error?.config as (InternalAxiosRequestConfig & { stepUpRetried?: boolean }) | undefined;
+        if (code === 'STEP_UP_REQUIRED' && config && !config.stepUpRetried && await requestStepUp()) {
+            config.stepUpRetried = true;
+            return client.instance.request(config);
         }
         return Promise.reject(error);
     },

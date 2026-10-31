@@ -2,13 +2,15 @@ import {useAuth} from "./features/auth/AuthContext.tsx";
 import {Navigate, Route, Routes} from "react-router-dom";
 import App from "./App.tsx";
 import {LoginPage} from "./features/auth/LoginPage.tsx";
-import {RegisterPage} from "./features/auth/RegisterPage.tsx";
-import {RegistrationPendingPage} from "./features/auth/RegistrationPendingPage.tsx";
-import {VerifyEmailPage} from "./features/auth/VerifyEmailPage.tsx";
 import {CompleteProfilePage} from "./features/auth/CompleteProfilePage.tsx";
-import {ForgotPasswordPage} from "./features/auth/ForgotPasswordPage.tsx";
-import {ResetPasswordPage} from "./features/auth/ResetPasswordPage.tsx";
-import {LoginLinkPage} from "./features/auth/LoginLinkPage.tsx";
+import {AuthLinkPage} from "./features/auth/AuthLinkPage.tsx";
+import {PushApprovalPage} from "./features/auth/PushApprovalPage.tsx";
+import {
+    ACCOUNT_PAGE_PATH,
+    AccountSecurityPage,
+    CONFIRM_EMAIL_PATH
+} from "./features/account/AccountSecurityPage.tsx";
+import {ConfirmEmailPage} from "./features/account/ConfirmEmailPage.tsx";
 import {ProtectedRoute} from "./features/auth/ProtectedRoute.tsx";
 import {ProfileCompletionRedirect} from "./features/auth/ProfileCompletionRedirect.tsx";
 import {CompetitionDetailPage} from "./features/competition/detail/CompetitionDetailPage.tsx";
@@ -38,17 +40,25 @@ export function AppRoutes() {
 
                 <Route path="/login" element={!isAuthenticated ? <LoginPage/> : <Navigate to="/"/>}/>
 
-                <Route path="/register" element={!isAuthenticated ? <RegisterPage/> : <Navigate to="/"/>}/>
+                {/* Sign-up, e-mail verification and password reset all go through the login page now. */}
+                {['/register', '/registration-pending', '/verify-email', '/login-link', '/forgot-password',
+                    '/reset-password'].map((path) => (
+                    <Route key={path} path={path} element={<Navigate to="/login" replace/>}/>
+                ))}
 
-                <Route path="/registration-pending" element={<RegistrationPendingPage/>}/>
+                <Route path="/auth/link" element={<AuthLinkPage/>}/>
 
-                <Route path="/verify-email" element={<VerifyEmailPage/>}/>
+                <Route
+                    path="/auth/approve/:attemptId"
+                    element={<ProtectedRoute><PushApprovalPage/></ProtectedRoute>}
+                />
 
-                <Route path="/login-link" element={<LoginLinkPage/>}/>
+                <Route
+                    path={ACCOUNT_PAGE_PATH}
+                    element={<ProtectedRoute><AccountSecurityPage/></ProtectedRoute>}
+                />
 
-                <Route path="/forgot-password" element={<ForgotPasswordPage/>}/>
-
-                <Route path="/reset-password" element={<ResetPasswordPage/>}/>
+                <Route path={CONFIRM_EMAIL_PATH} element={<ConfirmEmailPage/>}/>
 
                 <Route
                     path="/complete-profile"

@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Turns a notification into what the device shows. The switch is exhaustive on purpose: adding a
@@ -48,6 +49,39 @@ public class PushMessageComposer {
     /** Also used as the RFC 8030 {@code Topic}, so it must stay within [A-Za-z0-9_-]{1,32}. */
     static String tag(String type) {
         return "cthub-" + type;
+    }
+
+    static final String LOGIN_APPROVAL_TYPE = "LOGIN_APPROVAL";
+    static final String DISMISS_TYPE = "DISMISS";
+
+    /**
+     * Asks a signed-in device to approve a login elsewhere. Opens the approval screen, which shows
+     * the number choice; the push itself never carries the number.
+     *
+     * @param tag also the RFC 8030 topic, unique per login attempt
+     */
+    public PushMessage loginApproval(Locale locale, UUID attemptId, String deviceLabel, String tag) {
+        boolean german = locale == null || "de".equals(locale.getLanguage());
+        String body;
+        if (deviceLabel != null) {
+            body = german
+                ? "Anmeldeversuch über " + deviceLabel + ". Tippe, um ihn zu bestätigen."
+                : "Sign-in attempt from " + deviceLabel + ". Tap to confirm it.";
+        } else {
+            body = german ? "Tippe, um den Anmeldeversuch zu bestätigen." : "Tap to confirm the sign-in attempt.";
+        }
+        return new PushMessage(
+            null,
+            LOGIN_APPROVAL_TYPE,
+            german ? "Bist du das?" : "Is this you?",
+            body,
+            "/auth/approve/" + attemptId,
+            tag);
+    }
+
+    /** Tells the service worker to close the notification with this tag, without showing anything. */
+    static PushMessage dismiss(String tag) {
+        return new PushMessage(null, DISMISS_TYPE, null, null, null, tag);
     }
 
     private static String truncate(String text, int max) {

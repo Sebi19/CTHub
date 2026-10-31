@@ -1,7 +1,9 @@
 package org.cthub.backend.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.cthub.backend.auth.session.SessionIssuer;
 import org.cthub.backend.dto.notification.PushConfigDto;
 import org.cthub.backend.dto.notification.PushSubscriptionDto;
 import org.cthub.backend.dto.notification.PushSubscriptionRequestDto;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 /** The signed-in user's Web Push devices. Which notification types get pushed is a preference. */
 @RestController
@@ -46,9 +49,12 @@ public class PushController {
     public PushSubscriptionDto registerPushSubscription(
         @AuthenticationPrincipal User user,
         @Valid @RequestBody PushSubscriptionRequestDto request,
-        @RequestHeader(value = HttpHeaders.USER_AGENT, required = false) String userAgent) {
+        @RequestHeader(value = HttpHeaders.USER_AGENT, required = false) String userAgent,
+        HttpServletRequest httpRequest) {
         requireEnabled();
-        return mapper.toDto(subscriptionService.register(user.getId(), mapper.toRegistration(request), userAgent));
+        UUID sessionId = SessionIssuer.currentSessionId(httpRequest)
+            .orElseThrow(() -> ApiException.unauthorized("NOT_AUTHENTICATED", "No active session."));
+        return mapper.toDto(subscriptionService.register(user.getId(), sessionId, mapper.toRegistration(request), userAgent));
     }
 
     // GET /api/notifications/push/subscriptions

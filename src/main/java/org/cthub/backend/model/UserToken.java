@@ -6,7 +6,7 @@ import lombok.*;
 import java.time.Instant;
 
 /**
- * A single-use, hashed token used for e-mail verification or password reset. The raw token is never
+ * A single-use, hashed token mailed to a user (currently: e-mail change confirmations). The raw token is never
  * stored - only its SHA-256 hash (see {@code TokenService}).
  */
 @Entity
@@ -44,32 +44,9 @@ public class UserToken {
     @Builder.Default
     private Instant createdAt = Instant.now();
 
-    /**
-     * Correct answer to the cross-device confirmation challenge, 10-99.
-     *
-     * <p>The {@code challenge*} fields describe a registration attempt and are only ever populated
-     * on {@link UserTokenType#REGISTRATION_STATUS} rows - that token is the attempt record, held by
-     * the browser that started the registration. They stay {@code null} on every other token type.
-     */
-    @Column(name = "challenge_number")
-    private Short challengeNumber;
-
-    /** Number of wrong picks so far. Each one burns a verification link; {@code 3} cancels the attempt. */
-    @Column(name = "challenge_attempts", nullable = false)
-    @Builder.Default
-    private short challengeAttempts = 0;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "challenge_outcome", length = 32)
-    private RegistrationOutcome challengeOutcome;
-
-    /** Set the first time the e-mailed link is opened, so the waiting browser can say "check your other device". */
-    @Column(name = "challenge_opened_at")
-    private Instant challengeOpenedAt;
-
-    public boolean isChallengeSettled() {
-        return challengeOutcome != null;
-    }
+    /** Type-specific data, e.g. the new address for {@link UserTokenType#EMAIL_CHANGE}. */
+    @Column(length = 255)
+    private String payload;
 
     public boolean isConsumed() {
         return consumedAt != null;

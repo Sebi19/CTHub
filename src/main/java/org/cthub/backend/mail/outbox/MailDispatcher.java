@@ -11,6 +11,7 @@ import org.cthub.backend.mail.spi.MailSender;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.List;
 
@@ -45,6 +46,19 @@ public class MailDispatcher {
         for (MailOutboxEntry entry : batch) {
             Long id = entry.getId();
             mailExecutor.execute(() -> processEntry(id));
+        }
+    }
+
+    /**
+     * Sends freshly queued mail right after its transaction commits. Safe to race with the poller:
+     * claiming uses {@code for update skip locked}, so every entry is claimed exactly once.
+     */
+    @TransactionalEventListener(fallbackExecution = true)
+    public void onMailEnqueued(MailEnqueuedEvent event) {
+        try {
+            mailExecutor.execute(this::dispatchDueMail);
+        } catch (RuntimeException e) {
+            log.debug("Could not schedule immediate mail dispatch; the poller will pick it up.", e);
         }
     }
 

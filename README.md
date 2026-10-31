@@ -34,7 +34,7 @@ CT Hub
 - Java 21
 - Spring Boot 4.0.1
 - Spring Web MVC
-- Spring Security with session auth and remember-me cookies
+- Spring Security with 90-day rotating refresh-token sessions, passkeys (WebAuthn), optional password + TOTP
 - Spring Data JPA
 - PostgreSQL for local and production data
 - H2 available as a dependency for lightweight environments
@@ -150,7 +150,6 @@ The repository uses Spring profiles and environment variables for local and prod
 Configured in `src/main/resources/application-local.yaml`:
 
 - Allowed frontend origin: `http://localhost:5173`
-- Remember-me key: `local-remember-me-key`
 - Seed admin password: `admin123`
 
 ### Production profile
@@ -164,7 +163,6 @@ Expected environment variables include:
 - `PGDATABASE`
 - `PGUSER`
 - `PGPASSWORD`
-- `REMEMBER_ME_KEY`
 - `ADMIN_PASSWORD`
 - `ZEPTOMAIL_TOKEN` (required when `app.mail.provider=zeptomail`, used in production)
 
@@ -201,94 +199,102 @@ npm run gen:api
 
 ## Authentication & Registration
 
-Authentication is session-based (Spring Security, remember-me cookie). The registration flow is split into
-small steps so that a user only ever fills in one thing at a time.
+There is no separate registration: `/login` asks only for an e-mail address (`autocomplete="username webauthn"`),
+and the response never reveals whether an account exists. An unknown address simply goes through the
+verification flow, and the account is created when that flow completes.
 
-### Flow
+### Login waterfall
 
-1. `/register` asks for **nothing but an e-mail address**. The UI sends the currently selected interface
-   language as `locale`, so all follow-up mails are localized to what the user actually picked (not to the
-   `Accept-Language` header).
-2. The backend returns an opaque `registrationId` and enqueues a confirmation mail. If the address is already
-   registered it returns `ALREADY_REGISTERED` and the frontend shows an inline "log in instead" hint. This is a
-   deliberate, *localized* enumeration tradeoff — `forgot-password`, `login-link` and `resend-verification`
-   remain enumeration-safe and always answer generically.
-3. The browser lands on `/registration-pending`, **displays a two-digit confirmation number**, and polls
-   `GET /api/auth/registration-status` every 3 s. **The polling endpoint never signs anybody in.**
-4. Opening the e-mailed link shows that number among three options (see *Cross-device confirmation* below),
-   plus *Continue on this device instead* and *That wasn't me*.
-5. A correct pick verifies the address and lets the waiting browser claim its session via
-   `POST /api/auth/registration-claim`. The account now exists even if the user stops here — it is simply
-   marked incomplete.
-6. `/complete-profile` collects first/last name (**required**) and a password (**optional**). The welcome mail
-   is sent on first profile completion, not on verification.
+1. **Passkey autofill** (WebAuthn conditional UI) runs while the e-mail field is focused, so a recognised
+   passkey signs in with one tap.
+2. `POST /api/auth/identify` returns which methods to offer, with an identical response shape for known and
+   unknown addresses. If the account has passkeys, the passkey prompt comes first.
+3. If the user has set a **password**, it is offered next. When TOTP is also enabled, it is the **second
+   factor** after the password. TOTP is never a standalone login factor, because six digits carry too little
+   entropy.
+4. The default fallback, and always available via *Use push / e-mail link instead*, is the **number-matching
+   challenge** below.
 
-### Cross-device confirmation
+### Number-matching challenge (`auth/attempt`)
 
-Registering on a laptop but opening the link on a phone used to strand the user on the wrong device. Instead
-of signing the phone in, the link asks *"did you sign up?"* and offers three two-digit numbers; picking the
-one shown on the laptop hands the session back there.
+`POST /api/auth/attempts` creates a `LoginAttempt` (TTL 15 min) and binds it to the initiating browser ("browser
+A") with an HttpOnly `ct_attempt` nonce cookie. Browser A shows the target number out of three
+(`LoginChallenge`; all three are pairwise distinct in **both** digit positions) and polls
+`GET /attempts/current`.
 
-The number is **not a secret** — a random pick succeeds one time in three. What it buys is *deliberation*:
-somebody who never started a registration has to stop and think, with *That wasn't me* sitting right next to
-the choices. The actual protection is the surrounding mechanics:
+- **Push:** every live push subscription of the user's *other* sessions receives a notification. Tapping it
+  opens `/auth/approve/:attemptId`, which shows the initiating device and the three numbers and needs that
+  PWA's authenticated session. The endpoint of browser A's own subscription is excluded, and that orphaned
+  subscription is deleted.
+- **E-mail:** the magic link is sent immediately when there is no push target, and otherwise after 15 s unless
+  the push was opened. Browser A also offers *Send link via e-mail* (30 s cooldown) and uses neutral wording
+  ("tap the number on your other device **or** use the e-mail link").
+- **`GET` never mutates state.** `GET /link` only describes the link, so mail scanners can prefetch it freely.
+  All state changes are `POST`.
+- **Same browser** (the nonce cookie matches): `POST /link/complete` signs in without asking for a number.
+- **Other browser / device / WebView:** the three numbers approve browser A (`POST /link/approve`).
+  *Log in on this browser instead* (`POST /link/claim-here`) cancels A's attempt (`CLAIMED_ELSEWHERE`) and
+  signs in the current browser. *That wasn't me* rejects the attempt.
+- **A correct number** marks the attempt `APPROVED`. Browser A redeems it with
+  `POST /attempts/current/complete` within a 2-minute pickup grace, and a silent `DISMISS` push closes the
+  notification everywhere else.
+- **A wrong number** invalidates the whole attempt on every device (`REJECTED`). Polling endpoints never sign
+  anybody in; only browser A, holding the nonce cookie, can redeem an approval.
 
-- A **wrong pick burns the link** but leaves the attempt alive, so an honest misclick costs one resend rather
-  than a restart. There is never a second pick on the same link — three options with two guesses would be a
-  weaker gate than the one being put up.
-- `RegistrationChallenge.MAX_ATTEMPTS` (3) wrong picks cancel the attempt outright.
-- *That wasn't me* cancels the attempt and **deletes the account** when it is still pristine (unverified, no
-  password, no profile), then blocks that address from being registered again for an hour. This is a genuine
-  improvement over the mainstream "sign up with a password, verify later" flow, where an attacker already
-  holds a working account under someone else's address.
-- *Continue on this device instead* is the plain `POST /verify-email` path. It is not a bypass: whoever holds
-  the e-mailed link owns the mailbox, so signing them in was always legitimate. Any browser still waiting is
-  told to stand down (`CLAIMED_ELSEWHERE`).
-- The prompt is **skipped entirely** when the `ct_registration` cookie shows the link was opened in the
-  browser that started the registration, or when no browser is waiting at all (a resend from the login
-  screen, say) — in both cases there is no session to hand over.
+Statuses: `PENDING`, `APPROVED`, `COMPLETED`, `CLAIMED_ELSEWHERE`, `REJECTED`, `CANCELLED`. Purposes: `LOGIN`,
+`STEP_UP`.
 
-The three numbers are derived deterministically from the attempt's token hash, so reloading the link always
-shows the same options, and they are guaranteed to differ in **both** digit positions. That single rule rules
-out transpositions (69/96), shared-digit twins (66/69) and off-by-one neighbours (47/48), so a legitimate user
-never loses their registration to a glance-alike.
+### Sessions (`auth/session`)
+
+- Every sign-in creates an `AuthSession` that lives for 90 days, with no "remember me" option. The short-lived
+  access session is the servlet HTTP session. The long-lived credential is a **rotating refresh token** in the
+  HttpOnly, Secure, SameSite=Lax `__Host-ct_refresh` cookie (`ct_refresh` when `app.security.cookie-secure=false`
+  locally).
+- When there is no HTTP session, `SessionAuthenticationFilter` rotates the refresh token. Replaying an
+  already-rotated token **revokes the whole session family**.
+- **Grace for parallel tabs:** a token rotated less than 30 s ago, whose direct successor is still the live
+  head, authenticates *that request only* from the session. No new token is issued, so each rotation has
+  exactly one successor.
+- **Push subscriptions belong to sessions, not users.** Revoking or expiring a session (`AuthSessionRevokedEvent`)
+  removes its subscriptions. Subscriptions that answer 404/410 are deleted.
+
+### Credentials & step-up
+
+- **Passkeys:** multiple per user, synced or device-bound (`auth/webauthn`). After a challenge login on a device
+  without one, a dismissible banner suggests registering one.
+- **Password (optional):** 12–64 characters, no composition rules, rejected if found in Have I Been Pwned (only a
+  5-character SHA-1 prefix is sent).
+- **TOTP (optional, RFC 6238):** QR enrolment, which needs a password. It is used as a second factor and for
+  step-up.
+- **Step-up:** endpoints marked `@RequiresStepUp` need a verification within the last 10 minutes on the current
+  session, otherwise they return 403 `STEP_UP_REQUIRED`. Verification can be a passkey, TOTP, or a `STEP_UP`
+  challenge. The axios interceptor opens the step-up modal and retries once.
+  - **Protected:** password set/remove, all TOTP changes, adding/deleting passkeys, changing e-mail (confirmed
+    via an `EMAIL_CHANGE` link to the new address), revoking other sessions, and deleting the account.
 
 ### Incomplete profiles
 
-Users without a completed profile are allowed to log in but not to use the app. A real name is mandatory, so
-`ProfileCompletionInterceptor` rejects every non-exempt `/api/**` call with HTTP 403
-`{"code":"PROFILE_INCOMPLETE"}` — reads included; only the auth endpoints needed to finish or abandon the
-flow (plus CORS preflights) are exempt. The frontend's axios interceptor turns that into a redirect to
-`/complete-profile`.
+Accounts exist from the moment the e-mail is verified. `/complete-profile` then collects the first and last
+name. `ProfileCompletionInterceptor` rejects every non-`/api/auth/` call with 403 `PROFILE_INCOMPLETE` (reads
+included; CORS preflights are exempt), and the frontend redirects to `/complete-profile`. The welcome mail is
+sent on first profile completion.
 
-### Passwordless login
-
-Because the password is optional, an account may have none. `POST /api/auth/login` then answers 403
-`NO_PASSWORD_SET`, and the user can request a one-time login link via `POST /api/auth/login-link`. Login links
-are available to every account, not just passwordless ones.
-
-### Endpoints (`/api/auth`)
+### Endpoints
 
 | Endpoint | Purpose |
 | --- | --- |
-| `POST /login`, `POST /logout`, `GET /me` | Classic session login / logout / current user |
-| `POST /register` | Start registration (e-mail + locale) → `PENDING` or `ALREADY_REGISTERED` |
-| `GET /registration-status?registrationId=` | Poll: `PENDING` / `AWAITING_CONFIRMATION` / `VERIFIED` / `CLAIMED_ELSEWHERE` / `CANCELLED` / `UNKNOWN` — never signs in |
-| `GET /verification-challenge?token=` | What the opening device should be asked: `CHALLENGE` / `SAME_BROWSER` / `NO_CHALLENGE` / `INVALID` |
-| `POST /verification-confirm` | Answer the number challenge; a wrong pick burns the link (400 `CONFIRMATION_MISMATCH`) |
-| `POST /verification-reject` | "That wasn't me" — cancel the attempt and remove a pristine account |
-| `POST /registration-claim` | The waiting browser exchanges its handle for a session once confirmed |
-| `POST /verify-email` | "Continue on this device instead": consume the token, verify and sign in |
-| `POST /resend-verification` | Re-send the confirmation mail (rate limited, generic response) |
-| `POST /complete-profile` | Set name and optionally a password |
-| `POST /forgot-password` / `POST /reset-password` | Password reset; reset signs the user in |
-| `POST /login-link` / `POST /login-link/consume` | Request and consume a passwordless login link |
+| `GET /api/auth/me`, `POST /api/auth/logout` | Current user / revoke the current session |
+| `POST /api/auth/identify` | E-mail step: which methods to offer (enumeration-safe) |
+| `POST /api/auth/login/password`, `POST /api/auth/login/password/totp` | Password login, optionally followed by TOTP |
+| `POST /api/auth/passkey/options`, `POST /api/auth/passkey/login` | Passkey login (also used for autofill) |
+| `POST /api/auth/attempts`, `GET/DELETE /api/auth/attempts/current`, `POST .../complete`, `POST .../email` | Browser A side of the challenge |
+| `GET /api/auth/link`, `POST /api/auth/link/{opened,complete,approve,claim-here,reject}` | E-mail link side |
+| `GET /api/auth/approvals/{id}`, `POST /api/auth/approvals/{id}/{opened,approve,reject}` | Push approval side (signed-in PWA) |
+| `POST /api/auth/complete-profile` | Set the name |
+| `/api/auth/step-up/{methods,totp,passkey/options,passkey,challenge}` | Step-up verification |
+| `/api/account/{security,password,totp,passkeys,email,sessions}`, `DELETE /api/account` | Account & security settings |
 
-Error responses carry a stable `code`: `ACCOUNT_NOT_VERIFIED`, `NO_PASSWORD_SET`, `TOKEN_INVALID`,
-`CONFIRMATION_MISMATCH`, `RATE_LIMITED`, `PROFILE_INCOMPLETE`, `VALIDATION_FAILED`, `UNAUTHENTICATED`,
-`AUTHENTICATION_FAILED`.
-
-All token-issuing endpoints are rate limited (10/h per IP, 3/h per e-mail address).
+Password, TOTP, passkey, challenge and mail-triggering endpoints are rate limited per IP, address and/or user.
 
 ## Outbound Mail
 

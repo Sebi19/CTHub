@@ -47,7 +47,7 @@ class PushDispatcherTest {
     void pushesToEveryDeviceOfUsersWhoKeepPushEnabled() {
         when(preferences.recipientsFor(eq(NotificationType.ANNOUNCEMENT), eq(NotificationChannel.PUSH), anyCollection()))
             .thenReturn(Set.of(1L));
-        when(repository.findDeliverable(List.of(1L))).thenReturn(List.of(alicePhone, aliceLaptop));
+        when(repository.findDeliverable(eq(List.of(1L)), any())).thenReturn(List.of(alicePhone, aliceLaptop));
         when(sender.send(any(), any(), any(), any())).thenReturn(CompletableFuture.completedFuture(PushResult.DELIVERED));
 
         dispatcher.deliver(List.of(announcement(100, 1), announcement(101, 2), welcome(102, 1)));
@@ -68,7 +68,7 @@ class PushDispatcherTest {
     @Test
     void removesSubscriptionsThePushServiceReportsGone() {
         when(preferences.recipientsFor(any(), any(), anyCollection())).thenReturn(Set.of(1L, 2L));
-        when(repository.findDeliverable(any())).thenReturn(List.of(alicePhone, bobPhone));
+        when(repository.findDeliverable(any(), any())).thenReturn(List.of(alicePhone, bobPhone));
         when(sender.send(eq(alicePhone), any(), any(), any())).thenReturn(CompletableFuture.completedFuture(PushResult.GONE));
         when(sender.send(eq(bobPhone), any(), any(), any())).thenReturn(CompletableFuture.completedFuture(PushResult.FAILED));
 
@@ -80,11 +80,19 @@ class PushDispatcherTest {
 
     @Test
     void sendTestReportsDeliveredDevices() {
-        when(repository.findDeliverable(any())).thenReturn(List.of(alicePhone, aliceLaptop));
+        when(repository.findDeliverable(any(), any())).thenReturn(List.of(alicePhone, aliceLaptop));
         when(sender.send(eq(alicePhone), any(), any(), eq("cthub-TEST"))).thenReturn(CompletableFuture.completedFuture(PushResult.DELIVERED));
         when(sender.send(eq(aliceLaptop), any(), any(), any())).thenReturn(CompletableFuture.completedFuture(PushResult.REJECTED));
 
         assertThat(dispatcher.sendTest(1, Locale.ENGLISH)).isEqualTo(new PushDispatcher.TestResult(2, 1));
+    }
+
+    @Test
+    void loginApprovalSkipsTheRequestingBrowsersOwnEndpoint() {
+        when(repository.findDeliverable(any(), any())).thenReturn(List.of(alicePhone, aliceLaptop));
+
+        assertThat(dispatcher.loginApprovalTargets(1, " " + aliceLaptop.endpoint() + " ")).containsExactly(alicePhone);
+        assertThat(dispatcher.loginApprovalTargets(1, null)).containsExactly(alicePhone, aliceLaptop);
     }
 
     @Test

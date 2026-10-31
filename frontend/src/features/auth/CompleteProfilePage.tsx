@@ -1,5 +1,5 @@
 import { useForm } from '@mantine/form';
-import { Container, Center, Paper, Title, Text, TextInput, PasswordInput, Button, Group, Stack, Alert } from '@mantine/core';
+import { Container, Center, Paper, Title, Text, TextInput, Button, Group, Stack, Alert } from '@mantine/core';
 import { useDocumentTitle } from '@mantine/hooks';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -21,13 +21,10 @@ export function CompleteProfilePage() {
         initialValues: {
             firstName: user?.firstName ?? '',
             lastName: user?.lastName ?? '',
-            password: '',
         },
         validate: {
             firstName: (val: string) => (val.trim().length === 0 ? t('app.complete_profile.first_name_required') : null),
             lastName: (val: string) => (val.trim().length === 0 ? t('app.complete_profile.last_name_required') : null),
-            // The password is optional; only validate it once something was typed.
-            password: (val: string) => (val.length > 0 && val.length < 8 ? t('app.complete_profile.password_too_short') : null),
         },
     });
 
@@ -39,7 +36,6 @@ export function CompleteProfilePage() {
             const data: CompleteProfileRequestDto = {
                 firstName: values.firstName.trim(),
                 lastName: values.lastName.trim(),
-                password: values.password.length > 0 ? values.password : undefined,
             };
 
             const response = await client.api.completeProfile(data);
@@ -74,12 +70,6 @@ export function CompleteProfilePage() {
                                 label={t('app.complete_profile.last_name')}
                                 placeholder={t('app.complete_profile.placeholder.last_name')}
                                 {...form.getInputProps('lastName')}
-                            />
-                            <PasswordInput
-                                label={t('app.complete_profile.password')}
-                                placeholder={t('app.complete_profile.placeholder.password')}
-                                description={t('app.complete_profile.password_hint')}
-                                {...form.getInputProps('password')}
                             />
                         </Stack>
 

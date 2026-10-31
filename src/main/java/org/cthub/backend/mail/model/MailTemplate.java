@@ -6,10 +6,13 @@ package org.cthub.backend.mail.model;
  * {@code subjectKey} is looked up in the {@code mail_<locale>.properties} bundles.
  */
 public enum MailTemplate {
-    REGISTRATION_CONFIRMATION("registration-confirmation", "mail.registrationConfirmation.subject", MailCategory.TRANSACTIONAL),
     WELCOME("welcome", "mail.welcome.subject", MailCategory.TRANSACTIONAL),
-    PASSWORD_RESET("password-reset", "mail.passwordReset.subject", MailCategory.TRANSACTIONAL),
+    /** The e-mailed half of a login / step-up challenge; also how new accounts come into being. */
     LOGIN_LINK("login-link", "mail.loginLink.subject", MailCategory.TRANSACTIONAL),
+    /** Confirms a new address before an account's e-mail is changed to it. */
+    EMAIL_CHANGE("email-change", "mail.emailChange.subject", MailCategory.TRANSACTIONAL),
+    /** Tells the account owner about a security-relevant change (password, 2FA, passkeys, e-mail). */
+    SECURITY_ALERT("security-alert", "mail.securityAlert.subject", MailCategory.TRANSACTIONAL),
     /** Any opted-in in-app notification, see {@code EmailNotificationChannel}. */
     NOTIFICATION("notification", "mail.notification.subject", MailCategory.NOTIFICATION);
 

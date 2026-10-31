@@ -3,9 +3,9 @@ package org.cthub.backend.controller;
 import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.cthub.backend.auth.session.SessionIssuer;
 import org.cthub.backend.dto.notification.MarkAllReadRequestDto;
 import org.cthub.backend.dto.notification.NotificationDto;
 import org.cthub.backend.dto.notification.NotificationPageDto;
@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
+import java.util.UUID;
 
 /** The signed-in user's own notifications. Every operation is scoped to the principal. */
 @RestController
@@ -110,7 +111,7 @@ public class NotificationController {
         // Proxies (nginx, Railway) must not buffer the stream.
         response.setHeader("X-Accel-Buffering", "no");
         response.setHeader("Cache-Control", "no-cache");
-        HttpSession session = request.getSession(false);
-        return liveNotificationBroker.connect(user.getId(), session != null ? session.getId() : null);
+        return liveNotificationBroker.connect(user.getId(),
+            SessionIssuer.currentSessionId(request).map(UUID::toString).orElse(null));
     }
 }

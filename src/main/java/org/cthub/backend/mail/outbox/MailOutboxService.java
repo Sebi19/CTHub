@@ -9,6 +9,7 @@ import org.cthub.backend.mail.model.MailMessage;
 import org.cthub.backend.mail.model.MailSendResult;
 import org.cthub.backend.mail.model.MailTemplate;
 import org.cthub.backend.mail.spi.MailDeliveryException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +40,7 @@ public class MailOutboxService {
     private final MailOutboxRepository repository;
     private final MailProperties mailProperties;
     private final MeterRegistry meterRegistry;
+    private final ApplicationEventPublisher eventPublisher;
 
     @jakarta.annotation.PostConstruct
     void registerPendingGauge() {
@@ -85,6 +87,7 @@ public class MailOutboxService {
 
         MailOutboxEntry saved = repository.save(entry);
         counter("mail.enqueued").increment();
+        eventPublisher.publishEvent(new MailEnqueuedEvent(saved.getId()));
         return saved;
     }
 

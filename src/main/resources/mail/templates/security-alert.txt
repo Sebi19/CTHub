@@ -1,0 +1,10 @@
+[(${firstName} != null ? #{mail.greeting(${firstName})} : #{mail.greeting.anonymous})]
+
+[(#{${messageKey}})]
+[# th:if="${device} != null"][(#{mail.securityAlert.device(${device})})]
+[/]
+[(#{mail.securityAlert.notYou})]
+
+[(${accountUrl})]
+
+[# th:replace="~{footer.txt}"/]

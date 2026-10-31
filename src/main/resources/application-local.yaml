@@ -11,8 +11,16 @@ spring:
     show-sql: true
 app:
   security:
-    remember-me-key: "local-remember-me-key"
     admin-password: "admin123"
+    # Plain http on localhost: no Secure flag / __Host- prefix on the auth cookies.
+    cookie-secure: false
+    # Local-only key. Never use it elsewhere.
+    totp-encryption-key: "pmJi+IJ1T5vX8JC3SVIDbhSzOKICj53DoLy9kItxUyA="
+    webauthn:
+      rp-id: "localhost"
+      origins:
+        - "http://localhost:5173"
+        - "http://localhost:8080"
   mail:
     provider: logging        # dumps rendered mail to target/mail/ and logs instead of sending
     # Safety net for when application-local-secrets.yaml switches the provider to zeptomail:

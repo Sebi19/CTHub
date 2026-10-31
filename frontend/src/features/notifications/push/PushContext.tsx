@@ -134,7 +134,10 @@ export function PushProvider({ children }: { children: ReactNode }) {
             if (document.visibilityState !== 'visible') return;
             navigator.serviceWorker.getRegistration('/')
                 .then((reg) => reg?.getNotifications())
-                .then((shown) => shown?.forEach((n) => n.close()))
+                .then((shown) => shown?.forEach((n) => {
+                    // Sign-in requests stay until acted upon (or dismissed by the server).
+                    if (!String(n.data?.url ?? '').startsWith('/auth/approve/')) n.close();
+                }))
                 .catch(() => undefined);
         };
         sweep();

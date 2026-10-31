@@ -40,11 +40,11 @@ class TokenServiceTest {
     @Test
     void issueInvalidatesPreviousUnconsumedTokensOfSameType() {
         User user = user();
-        UserToken previous = UserToken.builder().id(10L).user(user).type(UserTokenType.EMAIL_VERIFICATION).build();
-        when(userTokenRepository.findByUserAndTypeAndConsumedAtIsNull(user, UserTokenType.EMAIL_VERIFICATION))
+        UserToken previous = UserToken.builder().id(10L).user(user).type(UserTokenType.EMAIL_CHANGE).build();
+        when(userTokenRepository.findByUserAndTypeAndConsumedAtIsNull(user, UserTokenType.EMAIL_CHANGE))
             .thenReturn(List.of(previous));
 
-        String rawToken = tokenService.issue(user, UserTokenType.EMAIL_VERIFICATION, Duration.ofHours(24));
+        String rawToken = tokenService.issue(user, UserTokenType.EMAIL_CHANGE, Duration.ofHours(24), "new@example.org");
 
         assertThat(rawToken).isNotBlank();
         assertThat(previous.isConsumed()).isTrue();
@@ -55,46 +55,35 @@ class TokenServiceTest {
     @Test
     void findUsableReturnsEmptyWhenTokenExpired() {
         UserToken expired = UserToken.builder()
-            .type(UserTokenType.EMAIL_VERIFICATION)
+            .type(UserTokenType.EMAIL_CHANGE)
             .expiresAt(Instant.now().minusSeconds(60))
             .build();
         when(userTokenRepository.findByTokenHash(any())).thenReturn(Optional.of(expired));
 
-        assertThat(tokenService.findUsable("raw", UserTokenType.EMAIL_VERIFICATION)).isEmpty();
+        assertThat(tokenService.findUsable("raw", UserTokenType.EMAIL_CHANGE)).isEmpty();
     }
 
     @Test
     void findUsableReturnsEmptyWhenTokenConsumed() {
         UserToken consumed = UserToken.builder()
-            .type(UserTokenType.EMAIL_VERIFICATION)
+            .type(UserTokenType.EMAIL_CHANGE)
             .expiresAt(Instant.now().plusSeconds(60))
             .consumedAt(Instant.now())
             .build();
         when(userTokenRepository.findByTokenHash(any())).thenReturn(Optional.of(consumed));
 
-        assertThat(tokenService.findUsable("raw", UserTokenType.EMAIL_VERIFICATION)).isEmpty();
-    }
-
-    @Test
-    void findUsableReturnsEmptyWhenTypeDoesNotMatch() {
-        UserToken resetToken = UserToken.builder()
-            .type(UserTokenType.PASSWORD_RESET)
-            .expiresAt(Instant.now().plusSeconds(60))
-            .build();
-        when(userTokenRepository.findByTokenHash(any())).thenReturn(Optional.of(resetToken));
-
-        assertThat(tokenService.findUsable("raw", UserTokenType.EMAIL_VERIFICATION)).isEmpty();
+        assertThat(tokenService.findUsable("raw", UserTokenType.EMAIL_CHANGE)).isEmpty();
     }
 
     @Test
     void findUsableReturnsTokenWhenValid() {
         UserToken valid = UserToken.builder()
-            .type(UserTokenType.EMAIL_VERIFICATION)
+            .type(UserTokenType.EMAIL_CHANGE)
             .expiresAt(Instant.now().plusSeconds(60))
             .build();
         when(userTokenRepository.findByTokenHash(any())).thenReturn(Optional.of(valid));
 
-        assertThat(tokenService.findUsable("raw", UserTokenType.EMAIL_VERIFICATION)).contains(valid);
+        assertThat(tokenService.findUsable("raw", UserTokenType.EMAIL_CHANGE)).contains(valid);
     }
 
     @Test
@@ -112,8 +101,8 @@ class TokenServiceTest {
         User user = user();
         when(userTokenRepository.findByUserAndTypeAndConsumedAtIsNull(any(), any())).thenReturn(List.of());
 
-        String first = tokenService.issue(user, UserTokenType.PASSWORD_RESET, Duration.ofHours(1));
-        String second = tokenService.issue(user, UserTokenType.PASSWORD_RESET, Duration.ofHours(1));
+        String first = tokenService.issue(user, UserTokenType.EMAIL_CHANGE, Duration.ofHours(1), null);
+        String second = tokenService.issue(user, UserTokenType.EMAIL_CHANGE, Duration.ofHours(1), null);
 
         assertThat(first).isNotEqualTo(second);
 

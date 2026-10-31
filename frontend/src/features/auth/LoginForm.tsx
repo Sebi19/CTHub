@@ -1,158 +1,338 @@
-import { useForm } from '@mantine/form';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import {
-    TextInput,
-    PasswordInput,
-    Text,
-    Paper,
-    Group,
-    Button,
-    Stack,
     Alert,
     Anchor,
-    Divider,
+    Button,
+    Group,
+    Paper,
+    PasswordInput,
+    Stack,
+    Text,
+    TextInput,
 } from '@mantine/core';
-import { client } from '../../api.ts';
-import { Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
-import { useAuth } from './AuthContext.tsx';
-import { type LoginRequestDto } from '../../api/generated.ts';
+import { IconFingerprint, IconKey } from '@tabler/icons-react';
+import { browserSupportsWebAuthnAutofill, WebAuthnAbortService } from '@simplewebauthn/browser';
 import { useTranslation } from 'react-i18next';
-import { apiErrorCode, apiErrorMessage, apiErrorStatus } from './apiError.ts';
+import { client } from '../../api.ts';
+import {
+    AuthNextStep,
+    LoginResultStatus,
+    type LoginAttemptStateDto,
+} from '../../api/generated.ts';
+import { getCurrentPushEndpoint } from '../notifications/push/pushSupport.ts';
+import { apiErrorCode, apiErrorStatus } from './apiError.ts';
+import { ChallengeWaiting } from './ChallengeWaiting.tsx';
+import { getPasskeyAssertion, isPasskeyCancelled } from './passkey.ts';
+import { useFinishSignIn } from './useFinishSignIn.ts';
 
+type Step = 'email' | 'passkey' | 'password' | 'totp' | 'challenge';
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * One entry point for signing in and signing up. The answer to "Continue" only says how to prove
+ * the address - never whether an account exists: unknown addresses get the same e-mail/push
+ * challenge as passwordless accounts, and the account is created once that challenge succeeds.
+ */
 export function LoginForm() {
     const { t, i18n } = useTranslation();
-    const { login } = useAuth();
-    const navigate = useNavigate();
+    const finishSignIn = useFinishSignIn();
+    const [step, setStep] = useState<Step>('email');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [totp, setTotp] = useState('');
+    const [passwordAvailable, setPasswordAvailable] = useState(false);
+    const [attempt, setAttempt] = useState<LoginAttemptStateDto | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [accountNotVerified, setAccountNotVerified] = useState(false);
-    const [noPasswordSet, setNoPasswordSet] = useState(false);
-    const [loginLinkSent, setLoginLinkSent] = useState(false);
-    const [sendingLoginLink, setSendingLoginLink] = useState(false);
+    const [busy, setBusy] = useState(false);
+    const autoPasskeyStarted = useRef(false);
 
-    const form = useForm({
-        initialValues: { email: '', password: '' },
-        validate: {
-            email: (val: string) => (val.length <= 2 ? t('app.login.email_too_short') : null),
-            password: (val: string) => (val.length <= 2 ? t('app.login.password_too_short') : null),
-        },
-    });
+    const normalizedEmail = email.trim().toLowerCase();
 
-    const resetFeedback = () => {
-        setError(null);
-        setAccountNotVerified(false);
-        setNoPasswordSet(false);
-        setLoginLinkSent(false);
-    };
-
-    const handleSubmit = async (values: typeof form.values) => {
-        resetFeedback();
-
-        try {
-            const loginData: LoginRequestDto = {
-                email: values.email.trim().toLowerCase(),
-                password: values.password,
-            };
-
-            const loginResponse = await client.api.login(loginData);
-
-            login(loginResponse.data);
-            navigate(loginResponse.data.profileComplete ? '/' : '/complete-profile');
-        } catch (err: unknown) {
-            const code = apiErrorCode(err);
-            const status = apiErrorStatus(err);
-            if (code === 'ACCOUNT_NOT_VERIFIED') {
-                setAccountNotVerified(true);
-            } else if (code === 'NO_PASSWORD_SET') {
-                setNoPasswordSet(true);
-            } else if (status === 401 || status === 403) {
-                setError(t('app.login.invalid_credentials'));
-            } else {
-                setError(t('app.login.error') + ' ' + apiErrorMessage(err));
-            }
+    const reportError = useCallback((err: unknown) => {
+        if (apiErrorStatus(err) === 429) {
+            setError(t('app.login.rate_limited'));
+        } else {
+            setError(t('app.login.error'));
         }
-    };
+    }, [t]);
 
-    const handleLoginLink = async () => {
-        const email = form.values.email.trim().toLowerCase();
-        if (email.length <= 2) {
-            resetFeedback();
-            setError(t('app.login.login_link_needs_email'));
+    // 1. Passkey autofill: offered by the browser in the e-mail field before anything is typed.
+    useEffect(() => {
+        if (step !== 'email') return;
+        let active = true;
+        void (async () => {
+            if (!(await browserSupportsWebAuthnAutofill()) || !active) return;
+            try {
+                const { data: options } = await client.api.passkeyLoginOptions();
+                if (!active) return;
+                const credentialJson = await getPasskeyAssertion(options, true);
+                const { data: user } = await client.api.loginWithPasskey({ credentialJson });
+                finishSignIn(user, false);
+            } catch (err) {
+                if (active && !isPasskeyCancelled(err)) {
+                    setError(t('app.login.passkey_failed'));
+                }
+            }
+        })();
+        return () => {
+            active = false;
+            WebAuthnAbortService.cancelCeremony();
+        };
+    }, [step, finishSignIn, t]);
+
+    const toChallenge = (next: LoginAttemptStateDto | undefined) => {
+        if (!next) {
+            setError(t('app.login.error'));
             return;
         }
+        setAttempt(next);
+        setStep('challenge');
+    };
 
-        resetFeedback();
-        setSendingLoginLink(true);
+    const submitEmail = async (event: FormEvent) => {
+        event.preventDefault();
+        if (!EMAIL_PATTERN.test(normalizedEmail)) {
+            setError(t('app.login.email_invalid'));
+            return;
+        }
+        setError(null);
+        setBusy(true);
         try {
-            await client.api.requestLoginLink({ email, locale: i18n.resolvedLanguage });
-        } catch {
-            // Enumeration-safe endpoint (incl. rate limiting): always report the same outcome.
+            const pushEndpoint = await getCurrentPushEndpoint();
+            const { data } = await client.api.identify({
+                email: normalizedEmail,
+                pushEndpoint,
+                locale: i18n.resolvedLanguage,
+            });
+            setPasswordAvailable(!!data.passwordAvailable);
+            if (data.next === AuthNextStep.PASSKEY) {
+                autoPasskeyStarted.current = false;
+                setStep('passkey');
+            } else if (data.next === AuthNextStep.PASSWORD) {
+                setStep('password');
+            } else {
+                toChallenge(data.attempt);
+            }
+        } catch (err) {
+            reportError(err);
         } finally {
-            setLoginLinkSent(true);
-            setSendingLoginLink(false);
+            setBusy(false);
         }
     };
 
-    return (
-        <Paper radius="md" p="xl" withBorder style={{ maxWidth: 400, margin: 'auto' }}>
-            <Text size="lg" fw={500} mb="md">{t('app.login.greeting')}</Text>
+    // 2. Account has passkeys: ask for one straight away.
+    const signInWithPasskey = useCallback(async () => {
+        setError(null);
+        setBusy(true);
+        try {
+            const { data: options } = await client.api.passkeyLoginOptions();
+            const credentialJson = await getPasskeyAssertion(options);
+            const { data: user } = await client.api.loginWithPasskey({ credentialJson });
+            finishSignIn(user, false);
+        } catch (err) {
+            if (!isPasskeyCancelled(err)) setError(t('app.login.passkey_failed'));
+        } finally {
+            setBusy(false);
+        }
+    }, [finishSignIn, t]);
 
-            {error && <Alert color="red" mb="md">{error}</Alert>}
-            {loginLinkSent && <Alert color="green" mb="md">{t('app.login.login_link_sent')}</Alert>}
-            {noPasswordSet && <Alert color="blue" mb="md">{t('app.login.no_password_set')}</Alert>}
-            {accountNotVerified && (
-                <Alert color="yellow" mb="md">
-                    {t('app.login.account_not_verified')}{' '}
-                    <Anchor component={Link} to="/register" size="sm">
-                        {t('app.login.resend_verification_link')}
-                    </Anchor>
-                </Alert>
+    useEffect(() => {
+        if (step === 'passkey' && !autoPasskeyStarted.current) {
+            autoPasskeyStarted.current = true;
+            void signInWithPasskey();
+        }
+    }, [step, signInWithPasskey]);
+
+    // 3. Optional password (+ authenticator code).
+    const submitPassword = async (event: FormEvent) => {
+        event.preventDefault();
+        setError(null);
+        setBusy(true);
+        try {
+            const { data } = await client.api.loginWithPassword({ email: normalizedEmail, password });
+            if (data.status === LoginResultStatus.TOTP_REQUIRED) {
+                setTotp('');
+                setStep('totp');
+            } else if (data.user) {
+                finishSignIn(data.user, false);
+            }
+        } catch (err) {
+            if (apiErrorCode(err) === 'INVALID_CREDENTIALS') {
+                setError(t('app.login.invalid_credentials'));
+            } else {
+                reportError(err);
+            }
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    const submitTotp = async (event: FormEvent) => {
+        event.preventDefault();
+        setError(null);
+        setBusy(true);
+        try {
+            const { data } = await client.api.loginWithPasswordAndTotp({ code: totp.replace(/\s/g, '') });
+            if (data.user) finishSignIn(data.user, false);
+        } catch (err) {
+            const code = apiErrorCode(err);
+            if (code === 'TOTP_SESSION_EXPIRED') {
+                setPassword('');
+                setStep('password');
+                setError(t('app.login.totp_expired'));
+            } else if (code === 'TOTP_INVALID') {
+                setError(t('app.login.totp_invalid'));
+            } else {
+                reportError(err);
+            }
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    // 4. Fallback for every other step: number matching via push and e-mail.
+    const switchToChallenge = async () => {
+        setError(null);
+        setBusy(true);
+        try {
+            const pushEndpoint = await getCurrentPushEndpoint();
+            const { data } = await client.api.startAttempt({
+                email: normalizedEmail,
+                pushEndpoint,
+                locale: i18n.resolvedLanguage,
+            });
+            toChallenge(data);
+        } catch (err) {
+            reportError(err);
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    const restart = () => {
+        setStep('email');
+        setAttempt(null);
+        setPassword('');
+        setTotp('');
+        setError(null);
+    };
+
+    const challengeFallback = (
+        <Anchor component="button" type="button" size="sm" onClick={() => void switchToChallenge()}
+                disabled={busy}>
+            {t('app.login.use_challenge_instead')}
+        </Anchor>
+    );
+
+    return (
+        <Paper radius="md" p="xl" withBorder style={{ width: '100%', maxWidth: 420, margin: 'auto' }}>
+            <Text size="lg" fw={500} mb={4}>{t('app.login.greeting')}</Text>
+            {step === 'email' ? (
+                <Text size="sm" c="dimmed" mb="md">{t('app.login.description')}</Text>
+            ) : (
+                <Group gap={6} mb="md" wrap="nowrap">
+                    <Text size="sm" c="dimmed" truncate>{normalizedEmail}</Text>
+                    {step !== 'challenge' && (
+                        <Anchor component="button" type="button" size="sm" onClick={restart}>
+                            {t('app.login.change_email')}
+                        </Anchor>
+                    )}
+                </Group>
             )}
 
-            <form onSubmit={form.onSubmit(handleSubmit)}>
+            {error && <Alert color="red" mb="md">{error}</Alert>}
+
+            {step === 'email' && (
+                <form onSubmit={(e) => void submitEmail(e)} noValidate>
+                    <Stack gap="md">
+                        <TextInput
+                            required
+                            type="email"
+                            name="username"
+                            autoComplete="username webauthn"
+                            autoFocus
+                            label={t('app.login.email')}
+                            placeholder={t('app.login.placeholder.email')}
+                            value={email}
+                            onChange={(e) => setEmail(e.currentTarget.value)}
+                        />
+                        <Button type="submit" radius="xl" loading={busy}>{t('app.login.continue')}</Button>
+                    </Stack>
+                </form>
+            )}
+
+            {step === 'passkey' && (
                 <Stack gap="md">
-                    <TextInput
-                        required
-                        type="email"
-                        label={t('app.login.email')}
-                        placeholder={t('app.login.placeholder.email')}
-                        {...form.getInputProps('email')}
-                    />
-                    <PasswordInput
-                        required
-                        label={t('app.login.password')}
-                        placeholder={t('app.login.placeholder.password')}
-                        {...form.getInputProps('password')}
-                    />
-                </Stack>
-
-                <Group justify="space-between" mt="xl">
-                    <Button type="submit" radius="xl">
-                        {t('app.login.login_button')}
+                    <Text size="sm">{t('app.login.passkey_prompt')}</Text>
+                    <Button radius="xl" leftSection={<IconFingerprint size={18} />} loading={busy}
+                            onClick={() => void signInWithPasskey()}>
+                        {t('app.login.passkey_button')}
                     </Button>
-                    <Anchor component={Link} to="/forgot-password" size="sm">
-                        {t('app.login.forgot_password_link')}
-                    </Anchor>
-                </Group>
-            </form>
+                    <Stack gap={4} align="center">
+                        {passwordAvailable && (
+                            <Anchor component="button" type="button" size="sm" onClick={() => {
+                                setError(null);
+                                setStep('password');
+                            }}>
+                                {t('app.login.use_password_instead')}
+                            </Anchor>
+                        )}
+                        {challengeFallback}
+                    </Stack>
+                </Stack>
+            )}
 
-            <Divider my="md" label={t('app.login.or_divider')} labelPosition="center" />
+            {step === 'password' && (
+                <form onSubmit={(e) => void submitPassword(e)}>
+                    <Stack gap="md">
+                        {/* Lets password managers file the credential under the right account. */}
+                        <input type="email" name="username" autoComplete="username" value={normalizedEmail}
+                               readOnly hidden />
+                        <PasswordInput
+                            required
+                            autoFocus
+                            autoComplete="current-password"
+                            label={t('app.login.password')}
+                            placeholder={t('app.login.placeholder.password')}
+                            value={password}
+                            onChange={(e) => setPassword(e.currentTarget.value)}
+                        />
+                        <Button type="submit" radius="xl" leftSection={<IconKey size={18} />} loading={busy}>
+                            {t('app.login.login_button')}
+                        </Button>
+                        <Stack gap={4} align="center">{challengeFallback}</Stack>
+                    </Stack>
+                </form>
+            )}
 
-            <Button
-                variant="light"
-                radius="xl"
-                fullWidth
-                loading={sendingLoginLink}
-                onClick={handleLoginLink}
-            >
-                {t('app.login.login_link_button')}
-            </Button>
+            {step === 'totp' && (
+                <form onSubmit={(e) => void submitTotp(e)}>
+                    <Stack gap="md">
+                        <TextInput
+                            required
+                            autoFocus
+                            inputMode="numeric"
+                            autoComplete="one-time-code"
+                            maxLength={8}
+                            label={t('app.login.totp_label')}
+                            description={t('app.login.totp_description')}
+                            value={totp}
+                            onChange={(e) => setTotp(e.currentTarget.value)}
+                        />
+                        <Button type="submit" radius="xl" loading={busy}>{t('app.login.verify_button')}</Button>
+                        <Stack gap={4} align="center">{challengeFallback}</Stack>
+                    </Stack>
+                </form>
+            )}
 
-            <Text size="sm" mt="md" ta="center">
-                {t('app.login.no_account_yet')}{' '}
-                <Anchor component={Link} to="/register" size="sm">
-                    {t('app.login.register_link')}
-                </Anchor>
-            </Text>
+            {step === 'challenge' && attempt && (
+                <ChallengeWaiting
+                    attempt={attempt}
+                    onCompleted={(completion) => finishSignIn(completion.user, true)}
+                    onRestart={restart}
+                />
+            )}
         </Paper>
     );
 }

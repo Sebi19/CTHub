@@ -17,7 +17,7 @@ import {
     IconLogin,
     IconChevronDown,
     IconLogout,
-    IconUser, IconSearch, IconBrandGithub, IconCalendarStats, IconBell
+    IconUser, IconSearch, IconBrandGithub, IconCalendarStats, IconBell, IconShieldLock
 } from '@tabler/icons-react';
 import logo from './assets/CTH.svg';
 import {useDisclosure} from "@mantine/hooks";
@@ -30,6 +30,9 @@ import {spotlight} from "@mantine/spotlight";
 import {NotificationBell} from "./features/notifications/NotificationBell.tsx";
 import {NOTIFICATIONS_PAGE_PATH} from "./features/notifications/NotificationsContext.tsx";
 import {PushPromptBanner} from "./features/notifications/push/PushPromptBanner.tsx";
+import {ACCOUNT_PAGE_PATH} from "./features/account/AccountSecurityPage.tsx";
+import {StepUpModal} from "./features/auth/StepUpModal.tsx";
+import {PasskeyNudgeBanner} from "./features/auth/PasskeyNudgeBanner.tsx";
 
 
 
@@ -105,6 +108,12 @@ export default function App() {
                         component="div"
                     >{userDisplayName(user)}</Menu.Item>
                     <Menu.Label>Account</Menu.Label>
+                    <Menu.Item
+                        leftSection={<IconShieldLock style={{ width: rem(14), height: rem(14) }} />}
+                        onClick={() => navigate(ACCOUNT_PAGE_PATH)}
+                    >
+                        {t("app.account.menu_item")}
+                    </Menu.Item>
                     <Menu.Item
                         leftSection={<IconBell style={{ width: rem(14), height: rem(14) }} />}
                         onClick={() => navigate(NOTIFICATIONS_PAGE_PATH)}
@@ -303,6 +312,8 @@ export default function App() {
                 </Stack>
             </AppShell.Main>
             <PushPromptBanner />
+            <PasskeyNudgeBanner />
+            <StepUpModal />
         </AppShell>
     );
 }

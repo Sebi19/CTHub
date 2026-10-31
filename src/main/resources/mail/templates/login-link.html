@@ -4,7 +4,7 @@
 <body>
 <th:block th:fragment="content">
     <p th:text="${firstName} != null ? #{mail.greeting(${firstName})} : #{mail.greeting.anonymous}">Hi there,</p>
-    <p th:text="#{mail.loginLink.body}">Here is your sign-in link.</p>
+    <p th:text="#{mail.loginLink.body}">Use the button below to sign in.</p>
 
     <div th:replace="~{components/button.html :: button(url=${loginUrl}, label=#{mail.loginLink.cta})}"></div>
 

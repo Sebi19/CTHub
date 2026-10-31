@@ -2,11 +2,16 @@ package org.cthub.backend.notification.push;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.cthub.backend.auth.session.AuthSession;
 import org.cthub.backend.model.User;
 
 import java.time.Instant;
 
-/** One browser/device that receives Web Push notifications for {@link #user}. */
+/**
+ * One browser/device that receives Web Push notifications for {@link #user}. It belongs to the
+ * {@link AuthSession} that registered it: when that session ends (logout, expiry, revocation), the
+ * device stops receiving pushes - in particular login approval requests.
+ */
 @Entity
 @Table(name = "push_subscription")
 @Getter
@@ -24,6 +29,10 @@ public class PushSubscription {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "auth_session_id", nullable = false)
+    private AuthSession authSession;
 
     /** Push service URL; a capability, so it is never exposed through the API. */
     @Column(nullable = false, unique = true, columnDefinition = "text")

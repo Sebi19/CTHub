@@ -1,484 +1,261 @@
 package org.cthub.backend.controller;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.cthub.backend.dto.auth.ClaimRegistrationRequestDto;
+import org.cthub.backend.auth.AccountService;
+import org.cthub.backend.auth.AuthCookies;
+import org.cthub.backend.auth.RequestInfo;
+import org.cthub.backend.auth.attempt.LoginAttemptService;
+import org.cthub.backend.auth.credentials.TotpService;
+import org.cthub.backend.auth.session.AuthMethod;
+import org.cthub.backend.auth.session.SessionIssuer;
+import org.cthub.backend.auth.session.SessionRevokeReason;
+import org.cthub.backend.auth.webauthn.WebAuthnService;
+import org.cthub.backend.dto.auth.AuthNextStep;
 import org.cthub.backend.dto.auth.CompleteProfileRequestDto;
-import org.cthub.backend.dto.auth.ConfirmChallengeRequestDto;
-import org.cthub.backend.dto.auth.EmailLinkRequestDto;
-import org.cthub.backend.dto.auth.LoginRequestDto;
-import org.cthub.backend.dto.auth.RegisterRequestDto;
-import org.cthub.backend.dto.auth.RegistrationResponseDto;
-import org.cthub.backend.dto.auth.RegistrationStartResponseDto;
-import org.cthub.backend.dto.auth.RegistrationStatusResponseDto;
-import org.cthub.backend.dto.auth.ResendVerificationRequestDto;
-import org.cthub.backend.dto.auth.ResetPasswordRequestDto;
+import org.cthub.backend.dto.auth.IdentifyRequestDto;
+import org.cthub.backend.dto.auth.IdentifyResponseDto;
+import org.cthub.backend.dto.auth.LoginAttemptStateDto;
+import org.cthub.backend.dto.auth.LoginResultDto;
+import org.cthub.backend.dto.auth.LoginResultStatus;
+import org.cthub.backend.dto.auth.PasskeyAuthenticationOptionsDto;
+import org.cthub.backend.dto.auth.PasskeyResponseDto;
+import org.cthub.backend.dto.auth.PasswordLoginRequestDto;
+import org.cthub.backend.dto.auth.StartAttemptRequestDto;
+import org.cthub.backend.dto.auth.TotpCodeRequestDto;
 import org.cthub.backend.dto.auth.UserDto;
-import org.cthub.backend.dto.auth.VerificationChallengeResponseDto;
-import org.cthub.backend.dto.auth.VerifyEmailRequestDto;
 import org.cthub.backend.exception.ApiException;
+import org.cthub.backend.mapper.AuthMapper;
 import org.cthub.backend.mapper.UserMapper;
 import org.cthub.backend.model.User;
+import org.cthub.backend.notification.push.PushSubscriptionService;
 import org.cthub.backend.repository.UserRepository;
 import org.cthub.backend.service.RateLimiterService;
-import org.cthub.backend.service.RegistrationService;
-import org.cthub.backend.service.TokenService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.DisabledException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.cthub.backend.notification.live.LiveNotificationBroker;
-import org.springframework.security.web.authentication.RememberMeServices;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+import java.io.Serializable;
+import java.time.Clock;
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.Locale;
+import java.time.Instant;
+import java.util.EnumSet;
 import java.util.Optional;
 
+/**
+ * The identifier-first sign-in (which is also sign-up): one e-mail field, then passkey, password
+ * (+ TOTP) or the number-matching challenge. See {@link LoginAttemptController} for the challenge
+ * itself. Nothing here reveals whether an address has an account unless it opted into a passkey or
+ * a password.
+ */
 @RestController
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @PreAuthorize("isAuthenticated()")
-@RequestMapping("/api/auth")
-@Slf4j
 public class AuthController {
 
-    private static final String GENERIC_LINK_MESSAGE =
-        "If this e-mail address belongs to an account, you will receive further instructions shortly.";
-    private static final String INVALID_TOKEN_MESSAGE =
-        "This link is invalid, expired, or has already been used.";
-    /** Identifies the browser that started a registration, so it can skip its own confirmation prompt. */
-    private static final String REGISTRATION_COOKIE = "ct_registration";
-    private static final String REJECTED_PREFIX = "registration-rejected:";
-    private static final Duration REJECTION_COOLDOWN = Duration.ofHours(1);
+    private static final String PENDING_TOTP = "AUTH_PENDING_TOTP";
+    private static final Duration PENDING_TOTP_TTL = Duration.ofMinutes(5);
 
-    private final AuthenticationManager authenticationManager;
-    private final RememberMeServices rememberMeServices;
-    private final UserMapper userMapper;
+    private final LoginAttemptService attemptService;
+    private final WebAuthnService webAuthnService;
+    private final TotpService totpService;
+    private final AccountService accountService;
+    private final PushSubscriptionService pushSubscriptionService;
+    private final SessionIssuer sessionIssuer;
+    private final AuthCookies cookies;
     private final UserRepository userRepository;
-    private final RegistrationService registrationService;
-    private final RateLimiterService rateLimiterService;
-    private final LiveNotificationBroker liveNotificationBroker;
+    private final PasswordEncoder passwordEncoder;
+    private final RateLimiterService rateLimiter;
+    private final UserMapper userMapper;
+    private final AuthMapper authMapper;
+    private final Clock clock;
 
-    // POST /api/auth/login
-    @PostMapping("/login")
+    /** Compared against when the account has no password, so timing does not tell the cases apart. */
+    private volatile String dummyHash;
+
+    private record PendingTotp(long userId, Instant expiresAt) implements Serializable {
+    }
+
+    @GetMapping("/me")
     @PreAuthorize("permitAll()")
-    public UserDto login(
-        @Valid @RequestBody LoginRequestDto loginRequest,
-        HttpServletRequest request,
-        HttpServletResponse response) {
+    public ResponseEntity<UserDto> getCurrentUser(@AuthenticationPrincipal User user) {
+        return user == null
+            ? ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
+            : ResponseEntity.ok(userMapper.toUserDto(user));
+    }
 
-        String cleanEmail = normalizedEmail(loginRequest.getEmail());
+    @PostMapping("/identify")
+    @PreAuthorize("permitAll()")
+    public IdentifyResponseDto identify(@Valid @RequestBody IdentifyRequestDto body, HttpServletRequest request,
+                                        HttpServletResponse response) {
+        String email = RequestInfo.normalizeEmail(body.email());
+        limitStart(email, request);
+        Optional<User> user = userRepository.findByEmail(email);
+        boolean passwordAvailable = user.map(User::hasPassword).orElse(false);
+        if (user.isPresent() && webAuthnService.hasPasskeys(user.get().getId())) {
+            return new IdentifyResponseDto(AuthNextStep.PASSKEY, passwordAvailable, null);
+        }
+        if (passwordAvailable) {
+            return new IdentifyResponseDto(AuthNextStep.PASSWORD, true, null);
+        }
+        return new IdentifyResponseDto(AuthNextStep.CHALLENGE, false,
+            startChallenge(email, body.pushEndpoint(), body.locale(), request, response));
+    }
 
-        // Passwordless accounts would otherwise fail with a misleading "bad credentials"; point
-        // them at the login-link flow instead.
-        userRepository.findByEmail(cleanEmail).ifPresent(existing -> {
-            if (existing.getEmailVerifiedAt() != null && !existing.hasPassword()) {
-                throw ApiException.forbidden(
-                    "NO_PASSWORD_SET",
-                    "This account signs in with an e-mail link. Request one to continue.");
+    /** "Use push / e-mail link instead" from the passkey or password step. */
+    @PostMapping("/attempts")
+    @PreAuthorize("permitAll()")
+    public LoginAttemptStateDto startAttempt(@Valid @RequestBody StartAttemptRequestDto body,
+                                             HttpServletRequest request, HttpServletResponse response) {
+        String email = RequestInfo.normalizeEmail(body.email());
+        limitStart(email, request);
+        return startChallenge(email, body.pushEndpoint(), body.locale(), request, response);
+    }
+
+    private LoginAttemptStateDto startChallenge(String email, String pushEndpoint, String locale,
+                                                HttpServletRequest request, HttpServletResponse response) {
+        // A signed-out browser cannot own a live subscription; whatever is left of it is an orphan.
+        if (pushEndpoint != null && !pushEndpoint.isBlank() && SessionIssuer.currentSessionId(request).isEmpty()) {
+            pushSubscriptionService.removeOrphan(pushEndpoint.strip());
+        }
+        LoginAttemptService.Started started = attemptService.startLogin(email, RequestInfo.locale(locale, request),
+            RequestInfo.userAgent(request), RequestInfo.clientIp(request), pushEndpoint, cookies.readAttempt(request));
+        cookies.writeAttempt(response, started.nonce(), LoginAttemptService.ATTEMPT_TTL);
+        return authMapper.toStateDto(started.attempt(), clock.instant());
+    }
+
+    // --- password (+ TOTP) ------------------------------------------------------------------
+
+    @PostMapping("/login/password")
+    @PreAuthorize("permitAll()")
+    public LoginResultDto loginWithPassword(@Valid @RequestBody PasswordLoginRequestDto body,
+                                            HttpServletRequest request, HttpServletResponse response) {
+        String email = RequestInfo.normalizeEmail(body.email());
+        if (!rateLimiter.tryAcquire("auth:pw:ip:" + RequestInfo.clientIp(request), 50, Duration.ofHours(1))
+            || !rateLimiter.tryAcquire("auth:pw:email:" + email, 10, Duration.ofMinutes(15))) {
+            throw ApiException.tooManyRequests("Too many sign-in attempts. Please try again later.");
+        }
+        Optional<User> found = userRepository.findByEmail(email).filter(User::hasPassword);
+        String hash = found.map(User::getPassword).orElseGet(this::dummyHash);
+        boolean matches = passwordEncoder.matches(body.password(), hash);
+        if (found.isEmpty() || !matches) {
+            throw ApiException.unauthorized("INVALID_CREDENTIALS", "E-mail or password is incorrect.");
+        }
+        User user = found.get();
+        requireActive(user);
+        if (user.isTotpEnabled()) {
+            if (!totpService.isAvailable()) {
+                // Never silently drop the second factor because of a configuration problem.
+                throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "TOTP_UNAVAILABLE",
+                    "Two-factor sign-in is temporarily unavailable. Use a passkey or the e-mail link.");
             }
-        });
-
-        Authentication authenticationResponse;
-        try {
-            authenticationResponse = authenticationManager.authenticate(
-                UsernamePasswordAuthenticationToken.unauthenticated(cleanEmail, loginRequest.getPassword()));
-        } catch (DisabledException e) {
-            throw ApiException.forbidden(
-                "ACCOUNT_NOT_VERIFIED",
-                "Please verify your e-mail address before logging in.");
+            HttpSession httpSession = request.getSession(true);
+            httpSession.setAttribute(PENDING_TOTP, new PendingTotp(user.getId(), clock.instant().plus(PENDING_TOTP_TTL)));
+            return new LoginResultDto(LoginResultStatus.TOTP_REQUIRED, null);
         }
+        sessionIssuer.signIn(user, EnumSet.of(AuthMethod.PASSWORD), request, response);
+        return new LoginResultDto(LoginResultStatus.SIGNED_IN, userMapper.toUserDto(user));
+    }
 
-        if (!(authenticationResponse.getPrincipal() instanceof User user)) {
-            throw ApiException.unauthorized("AUTHENTICATION_FAILED", "Could not sign you in.");
+    /** Second step after a correct password. There is deliberately no TOTP-only sign-in. */
+    @PostMapping("/login/password/totp")
+    @PreAuthorize("permitAll()")
+    public LoginResultDto loginWithPasswordAndTotp(@Valid @RequestBody TotpCodeRequestDto body, HttpServletRequest request,
+                                    HttpServletResponse response) {
+        HttpSession httpSession = request.getSession(false);
+        Object pending = httpSession == null ? null : httpSession.getAttribute(PENDING_TOTP);
+        if (!(pending instanceof PendingTotp(long userId, Instant expiresAt)) || !expiresAt.isAfter(clock.instant())) {
+            throw ApiException.unauthorized("TOTP_SESSION_EXPIRED", "Please sign in with your password again.");
         }
+        if (!rateLimiter.tryAcquire("auth:totp:user:" + userId, 5, Duration.ofMinutes(5))) {
+            httpSession.removeAttribute(PENDING_TOTP);
+            throw ApiException.tooManyRequests("Too many codes tried. Please sign in again later.");
+        }
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> ApiException.unauthorized("TOTP_SESSION_EXPIRED", "Please sign in again."));
+        if (!totpService.verify(user, body.code())) {
+            throw ApiException.unauthorized("TOTP_INVALID", "That code is not valid.");
+        }
+        requireActive(user);
+        httpSession.removeAttribute(PENDING_TOTP);
+        sessionIssuer.signIn(user, EnumSet.of(AuthMethod.PASSWORD, AuthMethod.TOTP), request, response);
+        return new LoginResultDto(LoginResultStatus.SIGNED_IN, userMapper.toUserDto(user));
+    }
 
-        establishSession(authenticationResponse, request, response);
+    // --- passkeys ---------------------------------------------------------------------------
+
+    /** Also used for autofill (conditional mediation) before any e-mail has been entered. */
+    @PostMapping("/passkey/options")
+    @PreAuthorize("permitAll()")
+    public PasskeyAuthenticationOptionsDto passkeyLoginOptions(HttpServletRequest request) {
+        limitPasskey(request);
+        return webAuthnService.authenticationOptions(request.getSession(true), null);
+    }
+
+    @PostMapping("/passkey/login")
+    @PreAuthorize("permitAll()")
+    public UserDto loginWithPasskey(@Valid @RequestBody PasskeyResponseDto body, HttpServletRequest request,
+                                    HttpServletResponse response) {
+        limitPasskey(request);
+        User user = webAuthnService.authenticate(body.credentialJson(), request.getSession(true), null);
+        requireActive(user);
+        sessionIssuer.signIn(user, EnumSet.of(AuthMethod.PASSKEY), request, response);
         return userMapper.toUserDto(user);
     }
 
-    // POST /api/auth/logout
+    // --- session ----------------------------------------------------------------------------
+
     @PostMapping("/logout")
     @PreAuthorize("permitAll()")
-    public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            liveNotificationBroker.closeSession(session.getId());
-            session.invalidate();
-        }
-        SecurityContextHolder.clearContext();
-        response.addCookie(expiredCookie("remember-me"));
-        response.addCookie(expiredCookie("JSESSIONID"));
-        return ResponseEntity.ok("Logged out successfully");
+    public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
+        sessionIssuer.signOut(request, response, SessionRevokeReason.LOGOUT);
+        return ResponseEntity.noContent().build();
     }
 
-    // GET /api/auth/me (Check current session)
-    @GetMapping("/me")
-    public ResponseEntity<UserDto> getCurrentUser() {
-        return currentUser()
-            .map(user -> ResponseEntity.ok(userMapper.toUserDto(user)))
-            .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
-    }
-
-    // POST /api/auth/register
-    @PostMapping("/register")
-    @PreAuthorize("permitAll()")
-    public RegistrationStartResponseDto register(
-        @Valid @RequestBody RegisterRequestDto registerRequest,
-        HttpServletRequest request,
-        HttpServletResponse response) {
-
-        requireQuota("register", registerRequest.getEmail(), request);
-
-        if (rateLimiterService.isBlocked(REJECTED_PREFIX + normalizedEmail(registerRequest.getEmail()))) {
-            // Indistinguishable from an ordinary rate limit on purpose: confirming that an address
-            // had been rejected would leak that somebody tried to register it.
-            throw ApiException.tooManyRequests("Too many requests. Please try again later.");
-        }
-
-        RegistrationService.RegistrationStart start = registrationService.register(
-            registerRequest.getEmail(),
-            localeOf(registerRequest.getLocale(), request));
-
-        if (start.registrationId() != null) {
-            // Lets the verification page recognise its own browser and skip the confirmation prompt.
-            // A cookie, not sessionStorage: an e-mailed link opens a fresh tab, which inherits
-            // cookies but not sessionStorage, so the originating browser would challenge itself.
-            response.addCookie(registrationCookie(start.registrationId()));
-        }
-
-        return RegistrationStartResponseDto.builder()
-            .status(start.status() == RegistrationService.RegistrationStart.Status.ALREADY_REGISTERED
-                ? RegistrationStartResponseDto.RegistrationStartStatus.ALREADY_REGISTERED
-                : RegistrationStartResponseDto.RegistrationStartStatus.PENDING)
-            .registrationId(start.registrationId())
-            .challengeNumber(start.challengeNumber())
-            .build();
-    }
-
-    // GET /api/auth/registration-status
-    @GetMapping("/registration-status")
-    @PreAuthorize("permitAll()")
-    public RegistrationStatusResponseDto registrationStatus(@RequestParam String registrationId) {
-        RegistrationService.RegistrationState state = registrationService.registrationState(registrationId);
-        return RegistrationStatusResponseDto.builder()
-            .status(RegistrationStatusResponseDto.RegistrationStatus.valueOf(state.name()))
-            .build();
-    }
-
-    // GET /api/auth/verification-challenge
-    @GetMapping("/verification-challenge")
-    @PreAuthorize("permitAll()")
-    public VerificationChallengeResponseDto verificationChallenge(
-        @RequestParam String token,
-        HttpServletRequest request) {
-
-        RegistrationService.ChallengeView view =
-            registrationService.openChallenge(token, readRegistrationCookie(request));
-
-        return switch (view) {
-            case RegistrationService.ChallengeView.Options options -> VerificationChallengeResponseDto.builder()
-                .kind(VerificationChallengeResponseDto.ChallengeKind.CHALLENGE)
-                .numbers(options.numbers())
-                .email(options.email())
-                .build();
-            case RegistrationService.ChallengeView.SameBrowser ignored -> VerificationChallengeResponseDto.builder()
-                .kind(VerificationChallengeResponseDto.ChallengeKind.SAME_BROWSER)
-                .build();
-            case RegistrationService.ChallengeView.None ignored -> VerificationChallengeResponseDto.builder()
-                .kind(VerificationChallengeResponseDto.ChallengeKind.NO_CHALLENGE)
-                .build();
-            case RegistrationService.ChallengeView.Invalid ignored -> VerificationChallengeResponseDto.builder()
-                .kind(VerificationChallengeResponseDto.ChallengeKind.INVALID)
-                .build();
-        };
-    }
-
-    // POST /api/auth/verification-confirm
-    @PostMapping("/verification-confirm")
-    @PreAuthorize("permitAll()")
-    public RegistrationResponseDto confirmChallenge(
-        @Valid @RequestBody ConfirmChallengeRequestDto confirmRequest,
-        HttpServletRequest request) {
-
-        // Guessing is bounded by burning a link per wrong pick, but rate limit it anyway so the
-        // three options cannot be ground down by automation.
-        requireQuota("confirm", confirmRequest.getToken(), request);
-
-        boolean correct;
-        try {
-            correct = registrationService.confirmChallenge(confirmRequest.getToken(), confirmRequest.getNumber());
-        } catch (IllegalArgumentException e) {
-            throw ApiException.badRequest("TOKEN_INVALID", INVALID_TOKEN_MESSAGE);
-        }
-
-        if (!correct) {
-            throw ApiException.badRequest("CONFIRMATION_MISMATCH",
-                "That number does not match. For your safety this link has been deactivated.");
-        }
-
-        // Deliberately no session for this device: a correct pick hands control back to the browser
-        // that started the registration, which claims it via /registration-claim.
-        return RegistrationResponseDto.builder()
-            .message("Confirmed. Continue in the window where you started the registration.")
-            .build();
-    }
-
-    // POST /api/auth/verification-reject
-    @PostMapping("/verification-reject")
-    @PreAuthorize("permitAll()")
-    public RegistrationResponseDto rejectRegistration(
-        @Valid @RequestBody VerifyEmailRequestDto rejectRequest) {
-
-        // A mailbox owner saying "that wasn't me" should not be able to be nagged again straight
-        // away, so the address goes on a short cooling-off period before it can be registered again.
-        registrationService.rejectRegistration(rejectRequest.getToken())
-            .ifPresent(email -> rateLimiterService.block(
-                REJECTED_PREFIX + normalizedEmail(email), REJECTION_COOLDOWN));
-
-        // Always generic: whether the link was still live is not the rejecting party's business.
-        return RegistrationResponseDto.builder()
-            .message("Thanks - the registration has been cancelled.")
-            .build();
-    }
-
-    // POST /api/auth/registration-claim
-    @PostMapping("/registration-claim")
-    @PreAuthorize("permitAll()")
-    public UserDto claimRegistration(
-        @Valid @RequestBody ClaimRegistrationRequestDto claimRequest,
-        HttpServletRequest request,
-        HttpServletResponse response) {
-
-        User user = registrationService.claimRegistration(claimRequest.getRegistrationId())
-            .orElseThrow(() -> ApiException.badRequest("TOKEN_INVALID", INVALID_TOKEN_MESSAGE));
-
-        response.addCookie(expiredCookie(REGISTRATION_COOKIE));
-        return signInAndMap(user, request, response);
-    }
-
-    // POST /api/auth/verify-email
-    @PostMapping("/verify-email")
-    @PreAuthorize("permitAll()")
-    public UserDto verifyEmail(
-        @Valid @RequestBody VerifyEmailRequestDto verifyRequest,
-        HttpServletRequest request,
-        HttpServletResponse response) {
-
-        User user = registrationService.verifyEmail(verifyRequest.getToken())
-            .orElseThrow(() -> ApiException.badRequest("TOKEN_INVALID", INVALID_TOKEN_MESSAGE));
-
-        // Clicking the link proves inbox ownership, so sign this browser in and send it straight to
-        // the complete-profile step instead of asking for credentials it may not even have yet.
-        response.addCookie(expiredCookie(REGISTRATION_COOKIE));
-        return signInAndMap(user, request, response);
-    }
-
-    // POST /api/auth/resend-verification
-    @PostMapping("/resend-verification")
-    @PreAuthorize("permitAll()")
-    public RegistrationResponseDto resendVerification(
-        @Valid @RequestBody ResendVerificationRequestDto resendRequest,
-        HttpServletRequest request) {
-
-        requireQuota("resend", resendRequest.getEmail(), request);
-        registrationService.resendVerification(
-            resendRequest.getEmail(),
-            localeOf(resendRequest.getLocale(), request));
-
-        return RegistrationResponseDto.builder().message(GENERIC_LINK_MESSAGE).build();
-    }
-
-    // POST /api/auth/complete-profile
     @PostMapping("/complete-profile")
-    public UserDto completeProfile(@Valid @RequestBody CompleteProfileRequestDto completeRequest) {
-        User user = currentUser()
-            .orElseThrow(() -> ApiException.unauthorized("UNAUTHENTICATED", "You must be signed in."));
-
-        User updated = registrationService.completeProfile(
-            user,
-            completeRequest.getFirstName(),
-            completeRequest.getLastName(),
-            completeRequest.getPassword());
-
-        // Refresh the principal so the gate and /me immediately see the completed profile.
-        refreshPrincipal(updated);
-        return userMapper.toUserDto(updated);
+    public UserDto completeProfile(@AuthenticationPrincipal User user, @Valid @RequestBody CompleteProfileRequestDto body,
+                                   HttpServletRequest request) {
+        return userMapper.toUserDto(accountService.completeProfile(user, body.getFirstName(), body.getLastName(), request));
     }
 
-    // POST /api/auth/forgot-password
-    @PostMapping("/forgot-password")
-    @PreAuthorize("permitAll()")
-    public RegistrationResponseDto forgotPassword(
-        @Valid @RequestBody EmailLinkRequestDto forgotRequest,
-        HttpServletRequest request) {
+    // --- helpers ----------------------------------------------------------------------------
 
-        requireQuota("forgot-password", forgotRequest.getEmail(), request);
-        registrationService.requestPasswordReset(
-            forgotRequest.getEmail(),
-            localeOf(forgotRequest.getLocale(), request));
-
-        return RegistrationResponseDto.builder().message(GENERIC_LINK_MESSAGE).build();
-    }
-
-    // POST /api/auth/reset-password
-    @PostMapping("/reset-password")
-    @PreAuthorize("permitAll()")
-    public UserDto resetPassword(
-        @Valid @RequestBody ResetPasswordRequestDto resetRequest,
-        HttpServletRequest request,
-        HttpServletResponse response) {
-
-        User user = registrationService.resetPassword(resetRequest.getToken(), resetRequest.getPassword())
-            .orElseThrow(() -> ApiException.badRequest("TOKEN_INVALID", INVALID_TOKEN_MESSAGE));
-
-        return signInAndMap(user, request, response);
-    }
-
-    // POST /api/auth/login-link
-    @PostMapping("/login-link")
-    @PreAuthorize("permitAll()")
-    public RegistrationResponseDto requestLoginLink(
-        @Valid @RequestBody EmailLinkRequestDto linkRequest,
-        HttpServletRequest request) {
-
-        requireQuota("login-link", linkRequest.getEmail(), request);
-        registrationService.requestLoginLink(
-            linkRequest.getEmail(),
-            localeOf(linkRequest.getLocale(), request));
-
-        return RegistrationResponseDto.builder().message(GENERIC_LINK_MESSAGE).build();
-    }
-
-    // POST /api/auth/login-link/consume
-    @PostMapping("/login-link/consume")
-    @PreAuthorize("permitAll()")
-    public UserDto consumeLoginLink(
-        @Valid @RequestBody VerifyEmailRequestDto consumeRequest,
-        HttpServletRequest request,
-        HttpServletResponse response) {
-
-        User user = registrationService.consumeLoginLink(consumeRequest.getToken())
-            .orElseThrow(() -> ApiException.badRequest("TOKEN_INVALID", INVALID_TOKEN_MESSAGE));
-
-        return signInAndMap(user, request, response);
-    }
-
-    /** Signs a user in without a password, for flows where a mailed token already proved ownership. */
-    private UserDto signInAndMap(User user, HttpServletRequest request, HttpServletResponse response) {
-        Authentication authentication =
-            UsernamePasswordAuthenticationToken.authenticated(user, null, user.getAuthorities());
-        establishSession(authentication, request, response);
-        return userMapper.toUserDto(user);
-    }
-
-    private void establishSession(Authentication authentication, HttpServletRequest request, HttpServletResponse response) {
-        SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-        securityContext.setAuthentication(authentication);
-        SecurityContextHolder.setContext(securityContext);
-
-        HttpSession session = request.getSession(true);
-        session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, securityContext);
-
-        rememberMeServices.loginSuccess(request, response, authentication);
-    }
-
-    /** Swaps the stale principal in the current context for a freshly loaded one. */
-    private void refreshPrincipal(User user) {
-        SecurityContext context = SecurityContextHolder.getContext();
-        Authentication current = context.getAuthentication();
-        if (current == null) {
-            return;
-        }
-        context.setAuthentication(
-            UsernamePasswordAuthenticationToken.authenticated(user, null, user.getAuthorities()));
-    }
-
-    private Optional<User> currentUser() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getPrincipal() instanceof User user) {
-            return Optional.of(user);
-        }
-        return Optional.empty();
-    }
-
-    private void requireQuota(String action, String email, HttpServletRequest request) {
-        boolean allowed = rateLimiterService.tryAcquire(action + ":ip:" + clientIp(request), 10, Duration.ofHours(1))
-            && rateLimiterService.tryAcquire(action + ":email:" + normalizedEmail(email), 3, Duration.ofHours(1));
-        if (!allowed) {
-            throw ApiException.tooManyRequests("Too many requests. Please try again later.");
+    private void limitStart(String email, HttpServletRequest request) {
+        if (!rateLimiter.tryAcquire("auth:start:ip:" + RequestInfo.clientIp(request), 30, Duration.ofHours(1))
+            || !rateLimiter.tryAcquire("auth:start:email:" + email, 10, Duration.ofHours(1))) {
+            throw ApiException.tooManyRequests("Too many sign-in requests. Please try again later.");
         }
     }
 
-    /**
-     * Prefers the language the user explicitly selected in the UI over {@code Accept-Language},
-     * which reflects browser configuration rather than an actual choice.
-     */
-    private Locale localeOf(String requestedLocale, HttpServletRequest request) {
-        if (requestedLocale != null && !requestedLocale.isBlank()) {
-            Locale parsed = Locale.forLanguageTag(requestedLocale);
-            if (!parsed.getLanguage().isEmpty()) {
-                return parsed;
-            }
+    private void limitPasskey(HttpServletRequest request) {
+        if (!rateLimiter.tryAcquire("auth:passkey:ip:" + RequestInfo.clientIp(request), 60, Duration.ofMinutes(15))) {
+            throw ApiException.tooManyRequests("Too many sign-in attempts. Please try again later.");
         }
-        Locale locale = request.getLocale();
-        return locale != null ? locale : Locale.GERMAN;
     }
 
-    private Cookie expiredCookie(String name) {
-        Cookie cookie = new Cookie(name, null);
-        cookie.setMaxAge(0);
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
-        return cookie;
-    }
-
-    /**
-     * Marks this browser as the one that started a registration. Lax rather than Strict, because the
-     * verification page is typically reached by following a link out of a mail client.
-     */
-    private Cookie registrationCookie(String registrationId) {
-        Cookie cookie = new Cookie(REGISTRATION_COOKIE, registrationId);
-        cookie.setMaxAge((int) TokenService.REGISTRATION_STATUS_TTL.toSeconds());
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
-        cookie.setAttribute("SameSite", "Lax");
-        return cookie;
-    }
-
-    private String readRegistrationCookie(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies == null) {
-            return null;
+    private static void requireActive(User user) {
+        if (!user.isEnabled()) {
+            throw ApiException.forbidden("ACCOUNT_DISABLED", "This account is disabled.");
         }
-        return Arrays.stream(cookies)
-            .filter(cookie -> REGISTRATION_COOKIE.equals(cookie.getName()))
-            .map(Cookie::getValue)
-            .findFirst()
-            .orElse(null);
     }
 
-    private String normalizedEmail(String email) {
-        return email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
-    }
-
-    private String clientIp(HttpServletRequest request) {
-        String forwardedFor = request.getHeader("X-Forwarded-For");
-        if (forwardedFor != null && !forwardedFor.isBlank()) {
-            return forwardedFor.split(",")[0].trim();
+    private String dummyHash() {
+        String hash = dummyHash;
+        if (hash == null) {
+            hash = passwordEncoder.encode("not-a-real-password-" + System.nanoTime());
+            dummyHash = hash;
         }
-        return request.getRemoteAddr();
+        return hash;
     }
 }

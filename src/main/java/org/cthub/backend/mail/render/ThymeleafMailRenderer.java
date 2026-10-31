@@ -53,21 +53,23 @@ public class ThymeleafMailRenderer implements MailRenderer {
         variables.put("currentYear", String.valueOf(Year.now().getValue()));
 
         switch (model) {
-            case RegistrationConfirmationModel m -> {
-                variables.put("firstName", m.firstName());
-                variables.put("confirmUrl", m.confirmUrl());
-                variables.put("validityHours", m.validity().toHours());
-            }
             case WelcomeModel m -> variables.put("firstName", m.firstName());
-            case PasswordResetModel m -> {
-                variables.put("firstName", m.firstName());
-                variables.put("resetUrl", m.resetUrl());
-                variables.put("validityMinutes", m.validity().toMinutes());
-            }
             case LoginLinkModel m -> {
                 variables.put("firstName", m.firstName());
                 variables.put("loginUrl", m.loginUrl());
                 variables.put("validityMinutes", m.validity().toMinutes());
+            }
+            case EmailChangeModel m -> {
+                variables.put("firstName", m.firstName());
+                variables.put("newEmail", m.newEmail());
+                variables.put("confirmUrl", m.confirmUrl());
+                variables.put("validityMinutes", m.validity().toMinutes());
+            }
+            case SecurityAlertModel m -> {
+                variables.put("firstName", m.firstName());
+                variables.put("messageKey", "mail.securityAlert." + m.kind().name());
+                variables.put("device", m.device());
+                variables.put("accountUrl", mailProperties.getBaseUrl() + "/account");
             }
             case NotificationMailModel m -> {
                 variables.put("firstName", m.firstName());

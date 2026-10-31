@@ -165,6 +165,7 @@ Expected environment variables include:
 - `PGPASSWORD`
 - `ADMIN_PASSWORD`
 - `ZEPTOMAIL_TOKEN` (required when `app.mail.provider=zeptomail`, used in production)
+- `TOTP_ENCRYPTION_KEY` (optional; base64 32-byte AES key, e.g. `openssl rand -base64 32`. Without it, authenticator apps are disabled. Changing it invalidates every enrolled authenticator app)
 
 ## Common Development Commands
 

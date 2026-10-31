@@ -195,7 +195,12 @@ public class TotpService {
         if (base64 == null || base64.isBlank()) {
             return null;
         }
-        byte[] key = Base64.getDecoder().decode(base64.strip());
+        byte[] key;
+        try {
+            key = Base64.getDecoder().decode(base64.strip());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException("app.security.totp-encryption-key is not valid base64.", e);
+        }
         if (key.length != 32) {
             throw new IllegalStateException("app.security.totp-encryption-key must be 32 bytes (base64-encoded).");
         }

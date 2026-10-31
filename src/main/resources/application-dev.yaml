@@ -8,7 +8,8 @@ app:
   security:
       admin-password: "${ADMIN_PASSWORD}"
       # Base64 256-bit AES key encrypting TOTP secrets; rotating it disables every authenticator app.
-      totp-encryption-key: "${TOTP_ENCRYPTION_KEY}"
+      # Unset = authenticator apps are unavailable (the empty default keeps startup from failing).
+      totp-encryption-key: "${TOTP_ENCRYPTION_KEY:}"
       webauthn:
         rp-id: "dev.challengeteamhub.org"
         rp-name: "Challenge Team Hub DEV"

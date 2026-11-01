@@ -2,6 +2,8 @@
 /* global self, fetch, URL */
 
 const NOTIFICATION_ICON = '/icon-192.png';
+// Android status-bar icon: only the alpha channel is used, so this is a white silhouette of the logo.
+const NOTIFICATION_BADGE = '/badge-96.png';
 
 // Safari/WebKit revokes push permission for pushes that show nothing, so it always gets a notification.
 const ua = self.navigator.userAgent;
@@ -40,6 +42,7 @@ self.addEventListener('push', (event) => {
                 renotify: true,
                 requireInteraction: true,
                 icon: NOTIFICATION_ICON,
+                badge: NOTIFICATION_BADGE,
                 data: { url: sameOriginPath(message.url), notificationId: null },
             });
             return;
@@ -56,6 +59,7 @@ self.addEventListener('push', (event) => {
             tag: message.tag || undefined,
             renotify: Boolean(message.tag),
             icon: NOTIFICATION_ICON,
+            badge: NOTIFICATION_BADGE,
             data: { url: sameOriginPath(message.url), notificationId: message.notificationId ?? null },
         });
     })());
@@ -75,6 +79,7 @@ async function dismiss(tag) {
         tag,
         silent: true,
         icon: NOTIFICATION_ICON,
+        badge: NOTIFICATION_BADGE,
         data: { url: '/', notificationId: null },
     });
     await new Promise((resolve) => setTimeout(resolve, 3000));

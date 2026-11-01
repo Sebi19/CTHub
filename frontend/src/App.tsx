@@ -33,6 +33,7 @@ import {PushPromptBanner} from "./features/notifications/push/PushPromptBanner.t
 import {ACCOUNT_PAGE_PATH} from "./features/account/AccountSecurityPage.tsx";
 import {StepUpModal} from "./features/auth/StepUpModal.tsx";
 import {PasskeyNudgeBanner} from "./features/auth/PasskeyNudgeBanner.tsx";
+import {InstallBanner} from "./features/pwa/InstallBanner.tsx";
 
 
 
@@ -312,6 +313,7 @@ export default function App() {
                 </Stack>
             </AppShell.Main>
             <PushPromptBanner />
+            <InstallBanner />
             <PasskeyNudgeBanner />
             <StepUpModal />
         </AppShell>

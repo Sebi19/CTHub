@@ -5,7 +5,8 @@ import { notifications as toasts } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
 import { client } from '../../api.ts';
 import { useAuth } from '../auth/AuthContext.tsx';
-import { accountErrorMessage } from './accountErrors.ts';
+import type { TranslationKey } from '../../i18n/keys.ts';
+import { accountErrorKey } from './accountErrors.ts';
 
 export const PASSWORD_MIN_LENGTH = 12;
 
@@ -21,7 +22,7 @@ export function PasswordCard({ passwordSet, totpEnabled, onChange }: Props) {
     const [editing, setEditing] = useState(false);
     const [password, setPassword] = useState('');
     const [confirm, setConfirm] = useState('');
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<TranslationKey | null>(null);
     const [busy, setBusy] = useState(false);
 
     const reset = () => {
@@ -34,11 +35,11 @@ export function PasswordCard({ passwordSet, totpEnabled, onChange }: Props) {
     const submit = async (event: FormEvent) => {
         event.preventDefault();
         if ([...password].length < PASSWORD_MIN_LENGTH) {
-            setError(t('app.account.errors.password_too_short'));
+            setError('app.account.errors.password_too_short');
             return;
         }
         if (password !== confirm) {
-            setError(t('app.account.password.mismatch'));
+            setError('app.account.password.mismatch');
             return;
         }
         setError(null);
@@ -50,7 +51,7 @@ export function PasswordCard({ passwordSet, totpEnabled, onChange }: Props) {
             reset();
             onChange();
         } catch (err) {
-            setError(accountErrorMessage(t, err));
+            setError(accountErrorKey(err));
         } finally {
             setBusy(false);
         }
@@ -71,7 +72,7 @@ export function PasswordCard({ passwordSet, totpEnabled, onChange }: Props) {
                 login(user);
                 onChange();
             } catch (err) {
-                toasts.show({ color: 'red', message: accountErrorMessage(t, err) });
+                toasts.show({ color: 'red', message: t(accountErrorKey(err)) });
             }
         },
     });
@@ -104,7 +105,7 @@ export function PasswordCard({ passwordSet, totpEnabled, onChange }: Props) {
                 {editing && (
                     <form onSubmit={(e) => void submit(e)}>
                         <Stack gap="sm">
-                            {error && <Alert color="red">{error}</Alert>}
+                            {error && <Alert color="red">{t(error)}</Alert>}
                             <PasswordInput required autoFocus autoComplete="new-password"
                                            label={t('app.account.password.new')}
                                            description={t('app.account.password.hint', { min: PASSWORD_MIN_LENGTH })}

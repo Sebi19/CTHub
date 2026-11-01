@@ -22,12 +22,12 @@ export function PushPromptBanner() {
 
     const onEnable = async () => {
         try {
-            await enable();
+            // Only a dismissed permission dialog snoozes; granted hides the banner, denied disables it.
+            if (!(await enable())) snoozePrompt();
         } catch {
             toasts.show({ color: 'red', message: t('app.notifications.push.enable_error') });
+            snoozePrompt();
         }
-        // Granted, denied or dismissed: either way the question has been answered for now.
-        snoozePrompt();
         setDismissed(true);
     };
 

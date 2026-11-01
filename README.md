@@ -258,6 +258,15 @@ Statuses: `PENDING`, `APPROVED`, `COMPLETED`, `CLAIMED_ELSEWHERE`, `REJECTED`, `
   exactly one successor.
 - **Push subscriptions belong to sessions, not users.** Revoking or expiring a session (`AuthSessionRevokedEvent`)
   removes its subscriptions. Subscriptions that answer 404/410 are deleted.
+- **Re-enabling push after a new sign-in:** logging out drops the device's subscription. If notification
+  permission was already granted, the frontend resubscribes the device silently after the next sign-in
+  (`localStorage` key `cthub.push.resume`). The prompt banner snoozes for 7 days only when the user chooses
+  *Not now*.
+- **Nudges to install the app** (`features/pwa`): on mobile, `InstallBanner` offers a one-tap install when the
+  browser exposes `beforeinstallprompt`, and step-by-step instructions on iOS Safari or when the site is opened
+  via `/?install=1`. On desktop, signed-in users without a mobile push device get a QR code that opens the
+  install link on their phone. The account security page shows the push/app status as a sign-in method
+  (`AppPushCard`).
 
 ### Credentials & step-up
 

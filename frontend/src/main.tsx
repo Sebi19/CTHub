@@ -4,6 +4,7 @@ import { MantineProvider} from '@mantine/core'; // 2. Add Affix and Button
 import { BrowserRouter } from 'react-router-dom'
 import { ModalsProvider } from "@mantine/modals";
 import './i18n/config.ts';
+import './features/pwa/pwaInstall.ts';
 
 // Imports...
 import '@mantine/core/styles.css';

@@ -12,6 +12,7 @@ import {
     registerSubscription,
     setPushOwner,
     snoozePrompt,
+    takePushResume,
     urlBase64ToUint8Array,
 } from './pushSupport.ts';
 
@@ -96,7 +97,14 @@ export function PushProvider({ children }: { children: ReactNode }) {
                     await existing.unsubscribe();
                     if (!ownedByUser) setPushOwner(null);
                 }
-                if (!ownedByUser || Notification.permission !== 'granted') return;
+                if (!ownedByUser) {
+                    // Push was on until this user signed out here: signing in again restores it.
+                    if (Notification.permission === 'granted' && takePushResume(userId)) {
+                        await subscribe(config.publicKey, userId);
+                    }
+                    return;
+                }
+                if (Notification.permission !== 'granted') return;
 
                 const current = await reg.pushManager.getSubscription();
                 if (!current) {
@@ -125,7 +133,7 @@ export function PushProvider({ children }: { children: ReactNode }) {
         return () => {
             cancelled = true;
         };
-    }, [supported, userId, getRegistration]);
+    }, [supported, userId, getRegistration, subscribe]);
 
     // Notifications already shown by the OS are stale once the app is in front; clear them.
     useEffect(() => {

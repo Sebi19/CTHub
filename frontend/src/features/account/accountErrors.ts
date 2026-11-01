@@ -1,5 +1,5 @@
-import type { TFunction } from 'i18next';
 import { apiErrorCode, apiErrorStatus } from '../auth/apiError.ts';
+import type { TranslationKey } from '../../i18n/keys.ts';
 
 const KEYS = {
     PASSWORD_TOO_SHORT: 'password_too_short',
@@ -20,12 +20,12 @@ const KEYS = {
     STEP_UP_REQUIRED: 'step_up_required',
 } as const;
 
-/** Turns a rejected account API call into a message for the user. */
-export function accountErrorMessage(t: TFunction, error: unknown): string {
-    if (apiErrorStatus(error) === 429) return t('app.account.errors.rate_limited');
+/** Translation key of the message for a rejected account API call. */
+export function accountErrorKey(error: unknown): TranslationKey {
+    if (apiErrorStatus(error) === 429) return 'app.account.errors.rate_limited';
     const code = apiErrorCode(error);
     if (code && code in KEYS) {
-        return t(`app.account.errors.${KEYS[code as keyof typeof KEYS]}` as const);
+        return `app.account.errors.${KEYS[code as keyof typeof KEYS]}`;
     }
-    return t('app.account.errors.generic');
+    return 'app.account.errors.generic';
 }

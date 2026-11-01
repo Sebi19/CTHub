@@ -4,6 +4,7 @@ import { IconFingerprint, IconMail, IconShieldLock } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { client } from '../../api.ts';
 import type { LoginAttemptStateDto, StepUpMethodsDto } from '../../api/generated.ts';
+import type { TranslationKey } from '../../i18n/keys.ts';
 import { getCurrentPushEndpoint } from '../notifications/push/pushSupport.ts';
 import { apiErrorCode } from './apiError.ts';
 import { ChallengeWaiting } from './ChallengeWaiting.tsx';
@@ -24,7 +25,7 @@ export function StepUpModal() {
     const [mode, setMode] = useState<Mode>('choose');
     const [attempt, setAttempt] = useState<LoginAttemptStateDto | null>(null);
     const [code, setCode] = useState('');
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<TranslationKey | null>(null);
     const [busy, setBusy] = useState(false);
 
     useEffect(() => {
@@ -65,7 +66,7 @@ export function StepUpModal() {
             await client.api.stepUpWithPasskey({ credentialJson });
             finish(true);
         } catch (err) {
-            if (!isPasskeyCancelled(err)) setError(t('app.step_up.passkey_failed'));
+            if (!isPasskeyCancelled(err)) setError('app.step_up.passkey_failed');
         } finally {
             setBusy(false);
         }
@@ -79,7 +80,7 @@ export function StepUpModal() {
             await client.api.stepUpWithTotp({ code: code.replace(/\s/g, '') });
             finish(true);
         } catch (err) {
-            setError(apiErrorCode(err) === 'TOTP_INVALID' ? t('app.step_up.totp_invalid') : t('app.step_up.error'));
+            setError(apiErrorCode(err) === 'TOTP_INVALID' ? 'app.step_up.totp_invalid' : 'app.step_up.error');
         } finally {
             setBusy(false);
         }
@@ -94,7 +95,7 @@ export function StepUpModal() {
             setAttempt(data);
             setMode('challenge');
         } catch {
-            setError(t('app.step_up.error'));
+            setError('app.step_up.error');
         } finally {
             setBusy(false);
         }
@@ -104,7 +105,7 @@ export function StepUpModal() {
         <Modal opened={opened} onClose={close} title={t('app.step_up.title')} centered>
             <Stack gap="md">
                 {mode !== 'challenge' && <Text size="sm" c="dimmed">{t('app.step_up.description')}</Text>}
-                {error && <Alert color="red">{error}</Alert>}
+                {error && <Alert color="red">{t(error)}</Alert>}
 
                 {mode === 'choose' && !methods && <Loader size="sm" mx="auto" />}
 

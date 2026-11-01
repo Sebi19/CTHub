@@ -15,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -30,6 +31,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -51,6 +53,8 @@ class LoginChallengeFlowTest {
     private MockMvc mvc;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private org.cthub.backend.auth.session.AuthSessionRepository sessionRepository;
     @MockitoBean
     private MailService mailService;
 
@@ -176,6 +180,45 @@ class LoginChallengeFlowTest {
             .andExpect(status().isForbidden());
         mvc.perform(json(post("/api/auth/link/complete"), token(a)).cookie(new Cookie(ATTEMPT_COOKIE, "forged")))
             .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void accountDeletionWorksAfterAStepUpChallenge() throws Exception {
+        String address = email();
+        BrowserA a = start(address);
+        MvcResult login = mvc.perform(json(post("/api/auth/link/complete"), token(a)).cookie(a.attempt()))
+            .andExpect(status().isOk()).andReturn();
+        MockHttpSession session = (MockHttpSession) login.getRequest().getSession(false);
+        Cookie refresh = new Cookie(REFRESH_COOKIE, setCookie(login, REFRESH_COOKIE));
+
+        mvc.perform(json(post("/api/auth/complete-profile"), "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\"}")
+                .session(session).cookie(refresh))
+            .andExpect(status().isOk());
+        // A fresh sign-in counts as verified; age it so the deletion needs a step-up.
+        User user = userRepository.findByEmail(address).orElseThrow();
+        sessionRepository.findLiveByUserId(user.getId(), java.time.Instant.now())
+            .forEach(s -> {
+                s.setStepUpAt(null);
+                sessionRepository.save(s);
+            });
+        mvc.perform(delete("/api/account").session(session).cookie(refresh))
+            .andExpect(status().isForbidden())
+            .andExpect(jsonPath("$.code").value("STEP_UP_REQUIRED"));
+
+        MvcResult stepUp = mvc.perform(json(post("/api/auth/step-up/challenge"), "{}").session(session).cookie(refresh))
+            .andExpect(status().isOk()).andReturn();
+        Cookie stepUpAttempt = new Cookie(ATTEMPT_COOKIE, setCookie(stepUp, ATTEMPT_COOKIE));
+        int number = JsonPath.read(stepUp.getResponse().getContentAsString(), "$.challengeNumber");
+        mvc.perform(json(post("/api/auth/link/approve"),
+                "{\"token\":\"" + lastLinkToken(address) + "\",\"number\":" + number + "}"))
+            .andExpect(jsonPath("$.result").value("APPROVED"));
+        mvc.perform(post("/api/auth/attempts/current/complete").session(session).cookie(refresh, stepUpAttempt))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.purpose").value("STEP_UP"));
+
+        mvc.perform(delete("/api/account").session(session).cookie(refresh))
+            .andExpect(status().isNoContent());
+        assertThat(userRepository.findByEmail(address)).isEmpty();
     }
 
     // --- helpers ----------------------------------------------------------------------------

@@ -209,6 +209,27 @@ export const de = {
             never: "Nicht mehr fragen",
             success: "Passkey eingerichtet.",
         },
+        pwa: {
+            later: "Nicht jetzt",
+            installed_toast: "CT-Hub wurde installiert.",
+            banner: {
+                title: "CT-Hub als App installieren",
+                body: "Mit einem Tipp vom Home-Bildschirm öffnen, Benachrichtigungen erhalten und Anmeldungen per Push bestätigen.",
+                install: "Installieren",
+                ios_steps: "Tippen Sie in Safari unten auf „Teilen“ und dann auf „Zum Home-Bildschirm“. Danach können Sie Anmeldungen per Push bestätigen.",
+                manual_steps: "Öffnen Sie das Menü Ihres Browsers (⋮) und wählen Sie „App installieren“ bzw. „Zum Startbildschirm hinzufügen“.",
+            },
+            desktop: {
+                title: "CT-Hub auf dem Smartphone",
+                body: "Installieren Sie die App auf Ihrem Smartphone: Dann bestätigen Sie neue Anmeldungen mit einem Tipp, statt auf eine E-Mail zu warten.",
+                show_qr: "QR-Code anzeigen",
+            },
+            qr: {
+                title: "Auf dem Smartphone installieren",
+                description: "Scannen Sie den Code mit der Kamera Ihres Smartphones, öffnen Sie CT-Hub und installieren Sie die App.",
+                alt: "QR-Code zu CT-Hub",
+            },
+        },
         account: {
             menu_item: "Konto & Sicherheit",
             doc_title: "Konto & Sicherheit | CTH",
@@ -252,6 +273,20 @@ export const de = {
                 rename: "Umbenennen",
                 delete_title: "Passkey löschen?",
                 delete_confirm: "Mit „{{name}}“ können Sie sich danach nicht mehr anmelden.",
+            },
+            app: {
+                title: "App & Push-Bestätigung",
+                description: "Auf Geräten mit aktivierten Push-Benachrichtigungen bestätigen Sie neue Anmeldungen mit einem Tipp – ohne auf eine E-Mail zu warten.",
+                this_device: "Dieses Gerät",
+                active: "Aktiv",
+                enable: "Push aktivieren",
+                denied: "Benachrichtigungen sind in diesem Browser blockiert.",
+                ios_install: "Auf iPhone und iPad funktioniert Push nur in der installierten App: In Safari „Teilen“ → „Zum Home-Bildschirm“.",
+                devices_one: "{{count}} Gerät erhält Anmeldeanfragen per Push.",
+                devices_other: "{{count}} Geräte erhalten Anmeldeanfragen per Push.",
+                devices_none: "Noch kein Gerät erhält Anmeldeanfragen per Push.",
+                manage: "Geräte verwalten",
+                install_description: "Als App installiert ist CT-Hub mit einem Tipp erreichbar.",
             },
             password: {
                 title: "Passwort",
@@ -395,6 +430,7 @@ export const de = {
                 country_CH: "Schweiz",
                 tooltip: {
                     links: "Links",
+                    team_links: "Team-Links",
                     grid: "Kacheln",
                     table: "Liste",
                     city: "Ort",
@@ -446,6 +482,7 @@ export const de = {
                 winner: "Pokal",
                 nominated: "Nominiert",
                 additional_nominations: "Weitere Nominierungen",
+                winner_unknown: "Gewinner noch nicht bekannt",
                 additional_places: "Weitere Platzierungen",
                 place_1: "Pokal Champion",
                 place_ordinal_one: "{{count}}. Platz",
@@ -643,7 +680,7 @@ export const de = {
                 unknown_os: "unbekanntem System",
                 prompt: {
                     title: "Benachrichtigungen auf diesem Gerät?",
-                    body: "Erhalten Sie Push-Benachrichtigungen, auch wenn CT-Hub geschlossen ist. Sie können das jederzeit in den Einstellungen ändern.",
+                    body: "Erhalten Sie Benachrichtigungen, auch wenn CT-Hub geschlossen ist, und bestätigen Sie neue Anmeldungen mit einem Tipp. Sie können das jederzeit in den Einstellungen ändern.",
                     enable: "Aktivieren",
                     later: "Nicht jetzt",
                 },

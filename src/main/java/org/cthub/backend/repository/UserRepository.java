@@ -20,4 +20,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("update User u set u.totpLastUsedStep = :step where u.id = :id "
         + "and (u.totpLastUsedStep is null or u.totpLastUsedStep < :step)")
     int acceptTotpStep(@Param("id") long id, @Param("step") long step);
+
+    /**
+     * Deletes the account in SQL so the database cascades remove every dependent row. A plain
+     * {@code delete(user)} fails when the same transaction still holds modified entities that
+     * reference the user (e.g. sessions that were just revoked).
+     */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("delete from User u where u.id = :id")
+    int deleteAccountById(@Param("id") long id);
 }

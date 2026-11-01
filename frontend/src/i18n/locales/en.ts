@@ -209,6 +209,27 @@ export const en: I18nLocale = {
             never: "Don't ask again",
             success: "Passkey set up.",
         },
+        pwa: {
+            later: "Not now",
+            installed_toast: "CT-Hub has been installed.",
+            banner: {
+                title: "Install CT-Hub as an app",
+                body: "Open it with one tap from your home screen, get notifications and approve sign-ins via push.",
+                install: "Install",
+                ios_steps: "In Safari, tap “Share” at the bottom, then “Add to Home Screen”. Afterwards you can approve sign-ins via push.",
+                manual_steps: "Open your browser menu (⋮) and choose “Install app” or “Add to Home screen”.",
+            },
+            desktop: {
+                title: "CT-Hub on your phone",
+                body: "Install the app on your phone to approve new sign-ins with one tap instead of waiting for an e-mail.",
+                show_qr: "Show QR code",
+            },
+            qr: {
+                title: "Install on your phone",
+                description: "Scan the code with your phone's camera, open CT-Hub and install the app.",
+                alt: "QR code linking to CT-Hub",
+            },
+        },
         account: {
             menu_item: "Account & security",
             doc_title: "Account & security | CTH",
@@ -252,6 +273,20 @@ export const en: I18nLocale = {
                 rename: "Rename",
                 delete_title: "Delete passkey?",
                 delete_confirm: "You will no longer be able to sign in with “{{name}}”.",
+            },
+            app: {
+                title: "App & push approval",
+                description: "On devices with push notifications enabled, you approve new sign-ins with one tap – no waiting for an e-mail.",
+                this_device: "This device",
+                active: "Active",
+                enable: "Enable push",
+                denied: "Notifications are blocked in this browser.",
+                ios_install: "On iPhone and iPad, push only works in the installed app: in Safari, “Share” → “Add to Home Screen”.",
+                devices_one: "{{count}} device receives sign-in requests via push.",
+                devices_other: "{{count}} devices receive sign-in requests via push.",
+                devices_none: "No device receives sign-in requests via push yet.",
+                manage: "Manage devices",
+                install_description: "Installed as an app, CT-Hub is just one tap away.",
             },
             password: {
                 title: "Password",
@@ -395,6 +430,7 @@ export const en: I18nLocale = {
                 country_CH: "Switzerland",
                 tooltip: {
                     links: "Links",
+                    team_links: "Team links",
                     grid: "Cards",
                     table: "List",
                     city: "City",
@@ -446,6 +482,7 @@ export const en: I18nLocale = {
                 winner: "Award",
                 nominated: "Nominated",
                 additional_nominations: "Addtional Nominations",
+                winner_unknown: "Winner not yet known",
                 additional_places: "Additional Places",
                 place_1: "Award Champion",
                 place_ordinal_one: "{{count}}st Place",
@@ -643,7 +680,7 @@ export const en: I18nLocale = {
                 unknown_os: "unknown system",
                 prompt: {
                     title: "Notifications on this device?",
-                    body: "Get push notifications even when CT-Hub is closed. You can change this anytime in the settings.",
+                    body: "Get notifications even when CT-Hub is closed, and approve new sign-ins with one tap. You can change this anytime in the settings.",
                     enable: "Enable",
                     later: "Not now",
                 },

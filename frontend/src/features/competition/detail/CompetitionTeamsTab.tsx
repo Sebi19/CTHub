@@ -66,7 +66,7 @@ export const CompetitionTeamsTab = ({ competition }: Props) => {
                     </Menu.Target>
 
                     <Menu.Dropdown>
-                        <Menu.Label>Team Links</Menu.Label>
+                        <Menu.Label>{t("app.competition.teams.tooltip.team_links")}</Menu.Label>
                         {team.links.map((link, index) => {
                             const parsed = parseTeamLink(link.url, link.label);
 

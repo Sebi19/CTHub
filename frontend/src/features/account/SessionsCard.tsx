@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { client } from '../../api.ts';
 import { AuthMethod, type SessionDto } from '../../api/generated.ts';
-import { accountErrorMessage } from './accountErrors.ts';
+import { accountErrorKey } from './accountErrors.ts';
 
 const METHOD_KEYS = {
     [AuthMethod.PASSKEY]: 'passkey',
@@ -30,7 +30,7 @@ export function SessionsCard({ sessions, onChange }: Props) {
             await client.api.revokeSession(session.id);
             onChange();
         } catch (err) {
-            toasts.show({ color: 'red', message: accountErrorMessage(t, err) });
+            toasts.show({ color: 'red', message: t(accountErrorKey(err)) });
         }
     };
 
@@ -44,7 +44,7 @@ export function SessionsCard({ sessions, onChange }: Props) {
                 await client.api.revokeOtherSessions();
                 onChange();
             } catch (err) {
-                toasts.show({ color: 'red', message: accountErrorMessage(t, err) });
+                toasts.show({ color: 'red', message: t(accountErrorKey(err)) });
             }
         },
     });

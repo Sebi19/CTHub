@@ -42,7 +42,7 @@ export function CompleteProfilePage() {
             login(response.data);
             navigate('/', { replace: true });
         } catch (err: unknown) {
-            setError(t('app.complete_profile.error') + ' ' + apiErrorMessage(err));
+            setError(apiErrorMessage(err));
         } finally {
             setSubmitting(false);
         }
@@ -55,7 +55,7 @@ export function CompleteProfilePage() {
                     <Title order={3}>{t('app.complete_profile.title')}</Title>
                     <Text size="sm" c="dimmed" mb="md">{t('app.complete_profile.description')}</Text>
 
-                    {error && <Alert color="red" mb="md">{error}</Alert>}
+                    {error && <Alert color="red" mb="md">{t('app.complete_profile.error')} {error}</Alert>}
 
                     <form onSubmit={form.onSubmit(handleSubmit)}>
                         <Stack gap="md">

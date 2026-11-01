@@ -6,7 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { client } from '../../api.ts';
 import { useAuth } from '../auth/AuthContext.tsx';
-import { accountErrorMessage } from './accountErrors.ts';
+import type { TranslationKey } from '../../i18n/keys.ts';
+import { accountErrorKey } from './accountErrors.ts';
 
 export function EmailCard() {
     const { t } = useTranslation();
@@ -14,7 +15,7 @@ export function EmailCard() {
     const [editing, setEditing] = useState(false);
     const [email, setEmail] = useState('');
     const [sentTo, setSentTo] = useState<string | null>(null);
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<TranslationKey | null>(null);
     const [busy, setBusy] = useState(false);
 
     const submit = async (event: FormEvent) => {
@@ -28,7 +29,7 @@ export function EmailCard() {
             setEditing(false);
             setEmail('');
         } catch (err) {
-            setError(accountErrorMessage(t, err));
+            setError(accountErrorKey(err));
         } finally {
             setBusy(false);
         }
@@ -55,7 +56,7 @@ export function EmailCard() {
                 {editing && (
                     <form onSubmit={(e) => void submit(e)}>
                         <Stack gap="sm">
-                            {error && <Alert color="red">{error}</Alert>}
+                            {error && <Alert color="red">{t(error)}</Alert>}
                             <TextInput required autoFocus type="email" autoComplete="email"
                                        label={t('app.account.email.new')}
                                        description={t('app.account.email.hint')}
@@ -92,7 +93,7 @@ export function DeleteAccountCard() {
                 toasts.show({ color: 'green', message: t('app.account.delete_account.done') });
                 navigate('/', { replace: true });
             } catch (err) {
-                toasts.show({ color: 'red', message: accountErrorMessage(t, err) });
+                toasts.show({ color: 'red', message: t(accountErrorKey(err)) });
             }
         },
     });

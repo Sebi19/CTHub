@@ -6,7 +6,8 @@ import QRCode from 'qrcode';
 import { useTranslation } from 'react-i18next';
 import { client } from '../../api.ts';
 import type { TotpEnrollmentDto } from '../../api/generated.ts';
-import { accountErrorMessage } from './accountErrors.ts';
+import type { TranslationKey } from '../../i18n/keys.ts';
+import { accountErrorKey } from './accountErrors.ts';
 
 interface Props {
     enabled: boolean;
@@ -21,7 +22,7 @@ export function TotpCard({ enabled, available, passwordSet, onChange }: Props) {
     const [enrollment, setEnrollment] = useState<TotpEnrollmentDto | null>(null);
     const [qr, setQr] = useState<string | null>(null);
     const [code, setCode] = useState('');
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<TranslationKey | null>(null);
     const [busy, setBusy] = useState(false);
 
     useEffect(() => {
@@ -48,7 +49,7 @@ export function TotpCard({ enabled, available, passwordSet, onChange }: Props) {
             setCode('');
             setEnrollment(data);
         } catch (err) {
-            toasts.show({ color: 'red', message: accountErrorMessage(t, err) });
+            toasts.show({ color: 'red', message: t(accountErrorKey(err)) });
         } finally {
             setBusy(false);
         }
@@ -64,7 +65,7 @@ export function TotpCard({ enabled, available, passwordSet, onChange }: Props) {
             toasts.show({ color: 'green', message: t('app.account.totp.enabled_toast') });
             onChange();
         } catch (err) {
-            setError(accountErrorMessage(t, err));
+            setError(accountErrorKey(err));
         } finally {
             setBusy(false);
         }
@@ -80,7 +81,7 @@ export function TotpCard({ enabled, available, passwordSet, onChange }: Props) {
                 await client.api.disableTotp();
                 onChange();
             } catch (err) {
-                toasts.show({ color: 'red', message: accountErrorMessage(t, err) });
+                toasts.show({ color: 'red', message: t(accountErrorKey(err)) });
             }
         },
     });
@@ -120,7 +121,7 @@ export function TotpCard({ enabled, available, passwordSet, onChange }: Props) {
                             {qr && <Image src={qr} alt={t('app.account.totp.qr_alt')} w={200} h={200} mx="auto" />}
                             <Text size="xs" c="dimmed">{t('app.account.totp.manual')}</Text>
                             <Code block style={{ wordBreak: 'break-all' }}>{enrollment.secret}</Code>
-                            {error && <Alert color="red">{error}</Alert>}
+                            {error && <Alert color="red">{t(error)}</Alert>}
                             <TextInput required inputMode="numeric" autoComplete="one-time-code" maxLength={8}
                                        label={t('app.account.totp.code')} value={code}
                                        onChange={(e) => setCode(e.currentTarget.value)} />

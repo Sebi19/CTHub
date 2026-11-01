@@ -19,6 +19,7 @@ import {
     LoginResultStatus,
     type LoginAttemptStateDto,
 } from '../../api/generated.ts';
+import type { TranslationKey } from '../../i18n/keys.ts';
 import { getCurrentPushEndpoint } from '../notifications/push/pushSupport.ts';
 import { apiErrorCode, apiErrorStatus } from './apiError.ts';
 import { ChallengeWaiting } from './ChallengeWaiting.tsx';
@@ -43,19 +44,15 @@ export function LoginForm() {
     const [totp, setTotp] = useState('');
     const [passwordAvailable, setPasswordAvailable] = useState(false);
     const [attempt, setAttempt] = useState<LoginAttemptStateDto | null>(null);
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<TranslationKey | null>(null);
     const [busy, setBusy] = useState(false);
     const autoPasskeyStarted = useRef(false);
 
     const normalizedEmail = email.trim().toLowerCase();
 
     const reportError = useCallback((err: unknown) => {
-        if (apiErrorStatus(err) === 429) {
-            setError(t('app.login.rate_limited'));
-        } else {
-            setError(t('app.login.error'));
-        }
-    }, [t]);
+        setError(apiErrorStatus(err) === 429 ? 'app.login.rate_limited' : 'app.login.error');
+    }, []);
 
     // 1. Passkey autofill: offered by the browser in the e-mail field before anything is typed.
     useEffect(() => {
@@ -71,7 +68,7 @@ export function LoginForm() {
                 finishSignIn(user, false);
             } catch (err) {
                 if (active && !isPasskeyCancelled(err)) {
-                    setError(t('app.login.passkey_failed'));
+                    setError('app.login.passkey_failed');
                 }
             }
         })();
@@ -79,11 +76,11 @@ export function LoginForm() {
             active = false;
             WebAuthnAbortService.cancelCeremony();
         };
-    }, [step, finishSignIn, t]);
+    }, [step, finishSignIn]);
 
     const toChallenge = (next: LoginAttemptStateDto | undefined) => {
         if (!next) {
-            setError(t('app.login.error'));
+            setError('app.login.error');
             return;
         }
         setAttempt(next);
@@ -93,7 +90,7 @@ export function LoginForm() {
     const submitEmail = async (event: FormEvent) => {
         event.preventDefault();
         if (!EMAIL_PATTERN.test(normalizedEmail)) {
-            setError(t('app.login.email_invalid'));
+            setError('app.login.email_invalid');
             return;
         }
         setError(null);
@@ -131,11 +128,11 @@ export function LoginForm() {
             const { data: user } = await client.api.loginWithPasskey({ credentialJson });
             finishSignIn(user, false);
         } catch (err) {
-            if (!isPasskeyCancelled(err)) setError(t('app.login.passkey_failed'));
+            if (!isPasskeyCancelled(err)) setError('app.login.passkey_failed');
         } finally {
             setBusy(false);
         }
-    }, [finishSignIn, t]);
+    }, [finishSignIn]);
 
     useEffect(() => {
         if (step === 'passkey' && !autoPasskeyStarted.current) {
@@ -159,7 +156,7 @@ export function LoginForm() {
             }
         } catch (err) {
             if (apiErrorCode(err) === 'INVALID_CREDENTIALS') {
-                setError(t('app.login.invalid_credentials'));
+                setError('app.login.invalid_credentials');
             } else {
                 reportError(err);
             }
@@ -180,9 +177,9 @@ export function LoginForm() {
             if (code === 'TOTP_SESSION_EXPIRED') {
                 setPassword('');
                 setStep('password');
-                setError(t('app.login.totp_expired'));
+                setError('app.login.totp_expired');
             } else if (code === 'TOTP_INVALID') {
-                setError(t('app.login.totp_invalid'));
+                setError('app.login.totp_invalid');
             } else {
                 reportError(err);
             }
@@ -241,7 +238,7 @@ export function LoginForm() {
                 </Group>
             )}
 
-            {error && <Alert color="red" mb="md">{error}</Alert>}
+            {error && <Alert color="red" mb="md">{t(error)}</Alert>}
 
             {step === 'email' && (
                 <form onSubmit={(e) => void submitEmail(e)} noValidate>

@@ -229,7 +229,7 @@ public class AccountService {
     public void deleteAccount(User principal, HttpServletRequest request, HttpServletResponse response) {
         User user = load(principal);
         sessionService.revokeAllExcept(user.getId(), null, SessionRevokeReason.ACCOUNT_DISABLED);
-        userRepository.delete(user);
+        userRepository.deleteAccountById(user.getId());
         sessionIssuer.clear(request, response);
         log.info("Deleted account {} on request.", user.getId());
     }

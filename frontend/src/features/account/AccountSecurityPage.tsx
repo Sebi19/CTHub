@@ -4,6 +4,7 @@ import { useDocumentTitle } from '@mantine/hooks';
 import { useTranslation } from 'react-i18next';
 import { client } from '../../api.ts';
 import type { AccountSecurityDto, SessionDto } from '../../api/generated.ts';
+import { AppPushCard } from './AppPushCard.tsx';
 import { DeleteAccountCard, EmailCard } from './EmailCard.tsx';
 import { PasskeysCard } from './PasskeysCard.tsx';
 import { PasswordCard } from './PasswordCard.tsx';
@@ -46,6 +47,7 @@ export function AccountSecurityPage() {
                 {security && (
                     <>
                         <PasskeysCard passkeys={security.passkeys} onChange={reload} />
+                        <AppPushCard />
                         <PasswordCard passwordSet={!!security.passwordSet} totpEnabled={!!security.totpEnabled}
                                       onChange={reload} />
                         <TotpCard enabled={!!security.totpEnabled} available={security.totpAvailable !== false}

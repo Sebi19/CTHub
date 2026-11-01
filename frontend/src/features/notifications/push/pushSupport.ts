@@ -4,9 +4,11 @@ import { client } from '../../../api.ts';
 export const SERVICE_WORKER_URL = '/sw.js';
 /** Id of the user this browser's push subscription was registered for. */
 const OWNER_KEY = 'cthub.push.owner';
-/** When the install prompt was last dismissed (ms), or `never` after push was switched off explicitly. */
+/** When the push prompt was last dismissed (ms), or `never` after push was switched off explicitly. */
 const PROMPT_KEY = 'cthub.push.prompt';
-const PROMPT_SNOOZE_MS = 30 * 24 * 60 * 60 * 1000;
+const PROMPT_SNOOZE_MS = 7 * 24 * 60 * 60 * 1000;
+/** User whose push was only stopped by signing out; signing in again here turns it back on. */
+const RESUME_KEY = 'cthub.push.resume';
 
 export function isPushSupported(): boolean {
     return typeof window !== 'undefined'
@@ -64,6 +66,13 @@ export function snoozePrompt(forever = false) {
     localStorage.setItem(PROMPT_KEY, forever ? 'never' : String(Date.now()));
 }
 
+/** Whether push should be restored silently for this user (and forgets the marker). */
+export function takePushResume(userId: number): boolean {
+    const value = localStorage.getItem(RESUME_KEY);
+    localStorage.removeItem(RESUME_KEY);
+    return value === String(userId);
+}
+
 export async function getPushRegistration(): Promise<ServiceWorkerRegistration | undefined> {
     if (!isPushSupported()) return undefined;
     return navigator.serviceWorker.getRegistration('/');
@@ -109,10 +118,13 @@ export async function registerSubscription(
 /**
  * Stops pushes to this browser: removes it from the account and drops the browser subscription.
  * Called on logout so the next person using this browser doesn't get the previous user's pushes.
+ * The same user signing in here again gets push back without being asked (see `takePushResume`).
  */
 export async function releasePushSubscription(): Promise<void> {
     try {
         const subscription = await getCurrentSubscription();
+        const owner = getPushOwner();
+        if (subscription && owner) localStorage.setItem(RESUME_KEY, owner);
         if (subscription) {
             await client.api.unregisterPushSubscription({ endpoint: subscription.endpoint }).catch(() => undefined);
             await subscription.unsubscribe();

@@ -157,7 +157,7 @@ export const CompetitionAwardsTab = ({ competition }: Props) => {
                         </Stack>
                     </Box>
                 ) : (
-                    <Text c="dimmed" fs="italic" size="sm">Gewinner noch nicht bekannt</Text>
+                    <Text c="dimmed" fs="italic" size="sm">{t("app.competition.awards.winner_unknown")}</Text>
                 )}
 
                 {nominees.length > 0 && (

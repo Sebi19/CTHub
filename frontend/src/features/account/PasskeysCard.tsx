@@ -10,7 +10,7 @@ import { client } from '../../api.ts';
 import type { PasskeyDto } from '../../api/generated.ts';
 import { createPasskey, isPasskeyCancelled } from '../auth/passkey.ts';
 import { clearPasskeyNudge } from '../auth/passkeyNudge.ts';
-import { accountErrorMessage } from './accountErrors.ts';
+import { accountErrorKey } from './accountErrors.ts';
 
 interface Props {
     passkeys: PasskeyDto[];
@@ -35,7 +35,7 @@ export function PasskeysCard({ passkeys, onChange }: Props) {
             onChange();
         } catch (err) {
             if (!isPasskeyCancelled(err)) {
-                toasts.show({ color: 'red', message: accountErrorMessage(t, err) });
+                toasts.show({ color: 'red', message: t(accountErrorKey(err)) });
             }
         } finally {
             setBusy(false);
@@ -51,7 +51,7 @@ export function PasskeysCard({ passkeys, onChange }: Props) {
             setEditing(null);
             onChange();
         } catch (err) {
-            toasts.show({ color: 'red', message: accountErrorMessage(t, err) });
+            toasts.show({ color: 'red', message: t(accountErrorKey(err)) });
         } finally {
             setBusy(false);
         }
@@ -67,7 +67,7 @@ export function PasskeysCard({ passkeys, onChange }: Props) {
                 await client.api.deletePasskey(passkey.id);
                 onChange();
             } catch (err) {
-                toasts.show({ color: 'red', message: accountErrorMessage(t, err) });
+                toasts.show({ color: 'red', message: t(accountErrorKey(err)) });
             }
         },
     });

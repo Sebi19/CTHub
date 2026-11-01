@@ -5,7 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import { client } from '../../api.ts';
 import { useAuth } from '../auth/AuthContext.tsx';
-import { accountErrorMessage } from './accountErrors.ts';
+import type { TranslationKey } from '../../i18n/keys.ts';
+import { accountErrorKey } from './accountErrors.ts';
 
 /** Target of the link sent to a new address; confirming is a POST so mail scanners cannot trigger it. */
 export function ConfirmEmailPage() {
@@ -15,7 +16,7 @@ export function ConfirmEmailPage() {
     const token = params.get('token') ?? '';
     const { isAuthenticated, login } = useAuth();
     const [state, setState] = useState<'pending' | 'done' | 'error'>('pending');
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<TranslationKey | null>(null);
     const started = useRef(false);
 
     useEffect(() => {
@@ -30,11 +31,11 @@ export function ConfirmEmailPage() {
                     if (data) login(data);
                 }
             } catch (err) {
-                setError(accountErrorMessage(t, err));
+                setError(accountErrorKey(err));
                 setState('error');
             }
         })();
-    }, [token, isAuthenticated, login, t]);
+    }, [token, isAuthenticated, login]);
 
     return (
         <Container size="xl" py="xl">
@@ -48,7 +49,7 @@ export function ConfirmEmailPage() {
                                     {t('app.account.email.confirmed_description')}
                                 </Alert>
                             ) : (
-                                <Alert color="red" title={t('app.account.email.confirm_failed')}>{error}</Alert>
+                                <Alert color="red" title={t('app.account.email.confirm_failed')}>{error && t(error)}</Alert>
                             )}
                             <Anchor component={Link} to={isAuthenticated ? '/account' : '/login'} size="sm">
                                 {isAuthenticated ? t('app.account.back_to_account') : t('app.auth_link.go_to_login')}

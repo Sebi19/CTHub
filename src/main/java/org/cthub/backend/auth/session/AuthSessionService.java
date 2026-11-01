@@ -25,8 +25,9 @@ import java.util.UUID;
  * <p>Refresh semantics:
  * <ul>
  *   <li>A live, never-rotated token is rotated: it is marked rotated and exactly one successor is
- *       inserted, atomically ({@link RefreshTokenRepository#markRotated}). The session's 90-day
- *       lifetime slides forward.</li>
+ *       inserted, atomically ({@link RefreshTokenRepository#markRotated}). The session's lifetime
+ *       slides forward: 90 days for browsers, a year for the installed app, which keeps phones that
+ *       only approve sign-ins signed in across a season break.</li>
  *   <li>Parallel tabs racing on the same token: the loser presents a token rotated within the last
  *       {@link #ROTATION_GRACE}. If that token's direct successor is still the live head, the request
  *       is authenticated from the session only ({@link RefreshOutcome.Grace}) - no new token, no
@@ -39,6 +40,7 @@ import java.util.UUID;
 public class AuthSessionService {
 
     public static final Duration SESSION_LIFETIME = Duration.ofDays(90);
+    public static final Duration INSTALLED_APP_SESSION_LIFETIME = Duration.ofDays(365);
     public static final Duration ROTATION_GRACE = Duration.ofSeconds(30);
     private static final Duration LIVE_CACHE_TTL = Duration.ofSeconds(30);
     private static final int MAX_USER_AGENT = 512;
@@ -131,7 +133,7 @@ public class AuthSessionService {
                 .createdAt(now)
                 .build());
             fresh.setLastUsedAt(now);
-            fresh.setExpiresAt(now.plus(SESSION_LIFETIME));
+            fresh.setExpiresAt(now.plus(lifetimeOf(fresh)));
             fresh.setUserAgent(truncate(userAgent, MAX_USER_AGENT));
             fresh.setIpAddress(truncate(ip, MAX_IP));
             return new RefreshOutcome.Rotated(sessionId, userId, raw);
@@ -220,6 +222,26 @@ public class AuthSessionService {
     @Transactional
     public void markSteppedUp(UUID sessionId) {
         sessionRepository.findById(sessionId).ifPresent(session -> session.setStepUpAt(clock.instant()));
+    }
+
+    /**
+     * Flags a live session as the installed app and extends it to the longer lifetime right away.
+     * Self-reported by the client; it only stretches the user's own session, which stays rotated,
+     * reuse-protected and revocable from the session list.
+     */
+    @Transactional
+    public void markInstalledApp(UUID sessionId) {
+        Instant now = clock.instant();
+        sessionRepository.findById(sessionId)
+            .filter(session -> session.isLive(now) && !session.isInstalledApp())
+            .ifPresent(session -> {
+                session.setInstalledApp(true);
+                session.setExpiresAt(now.plus(INSTALLED_APP_SESSION_LIFETIME));
+            });
+    }
+
+    public static Duration lifetimeOf(AuthSession session) {
+        return session.isInstalledApp() ? INSTALLED_APP_SESSION_LIFETIME : SESSION_LIFETIME;
     }
 
     @Transactional(readOnly = true)

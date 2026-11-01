@@ -13,6 +13,7 @@ public record SessionDto(
     @NotNull Instant createdAt,
     @NotNull Instant lastUsedAt,
     boolean current,
+    boolean installedApp,
     @NotNull List<AuthMethod> methods
 ) {
 }

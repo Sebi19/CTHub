@@ -15,10 +15,11 @@ export function PushPromptBanner() {
     const { t } = useTranslation();
     const { enabled } = useNotifications();
     const { supported, available, permission, subscribed, ready, busy, enable } = usePush();
-    const [dismissed, setDismissed] = useState(() => isPromptSnoozed());
+    const [dismissed, setDismissed] = useState(false);
 
+    // Read on every render: PushProvider may reset the snooze after its sync (see resetPushPrompt).
     const visible = enabled && supported && available === true && ready && !subscribed && !dismissed
-        && permission !== 'denied' && isStandalone();
+        && !isPromptSnoozed() && permission !== 'denied' && isStandalone();
 
     const onEnable = async () => {
         try {

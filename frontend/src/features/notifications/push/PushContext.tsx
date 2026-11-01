@@ -10,6 +10,7 @@ import {
     hasApplicationServerKey,
     isPushSupported,
     registerSubscription,
+    resetPushPrompt,
     setPushOwner,
     snoozePrompt,
     takePushResume,
@@ -104,14 +105,15 @@ export function PushProvider({ children }: { children: ReactNode }) {
                     }
                     return;
                 }
-                if (Notification.permission !== 'granted') return;
-
                 const current = await reg.pushManager.getSubscription();
                 if (!current) {
-                    // Gone (rotated key, browser reset): enabling again is an explicit user decision.
+                    // Gone (rotated key, app reinstalled, browser reset): enabling again is an explicit user
+                    // decision, but the user didn't switch it off, so offer it again.
                     setPushOwner(null);
+                    resetPushPrompt();
                     return;
                 }
+                if (Notification.permission !== 'granted') return;
                 try {
                     const id = await registerSubscription(current, { renewOnly: true });
                     if (!cancelled) setCurrentDeviceId(id);

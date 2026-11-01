@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActionIcon, Alert, Badge, Button, Center, Divider, Group, Loader, Paper, Stack, Switch, Text, Title, Tooltip } from '@mantine/core';
+import { Accordion, ActionIcon, Alert, Badge, Button, Center, Divider, Group, List, Loader, Paper, Stack, Switch, Text, Title, Tooltip } from '@mantine/core';
 import { notifications as toasts } from '@mantine/notifications';
-import { IconDeviceMobile, IconSend, IconTrash } from '@tabler/icons-react';
+import { IconDeviceMobile, IconInfoCircle, IconSend, IconTrash } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { client } from '../../../api.ts';
 import type { PushSubscriptionDto } from '../../../api/generated.ts';
 import { formatNotificationTime } from '../notificationText.ts';
 import { usePush } from './PushContext.tsx';
-import { describeDevice, isIos, isStandalone } from './pushSupport.ts';
+import { describeDevice, isAndroid, isIos, isStandalone } from './pushSupport.ts';
 
 export function PushSettingsSection() {
     const { t } = useTranslation();
@@ -120,6 +120,27 @@ export function PushSettingsSection() {
                 </div>
 
                 {renderControl()}
+
+                {subscribed && isAndroid() && (
+                    <Accordion variant="contained" chevronPosition="right">
+                        <Accordion.Item value="android-popup">
+                            <Accordion.Control icon={<IconInfoCircle size={18} />}>
+                                <Text size="sm">{t('app.notifications.push.android_hint.title')}</Text>
+                            </Accordion.Control>
+                            <Accordion.Panel>
+                                <Stack gap="xs">
+                                    <Text size="sm">{t('app.notifications.push.android_hint.intro')}</Text>
+                                    <List type="ordered" size="sm" spacing={4}>
+                                        <List.Item>{t('app.notifications.push.android_hint.step_app')}</List.Item>
+                                        <List.Item>{t('app.notifications.push.android_hint.step_categories')}</List.Item>
+                                        <List.Item>{t('app.notifications.push.android_hint.step_popup')}</List.Item>
+                                    </List>
+                                    <Text size="sm" c="dimmed">{t('app.notifications.push.android_hint.samsung')}</Text>
+                                </Stack>
+                            </Accordion.Panel>
+                        </Accordion.Item>
+                    </Accordion>
+                )}
 
                 {available && (
                     <>

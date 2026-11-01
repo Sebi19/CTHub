@@ -28,7 +28,8 @@ public interface AuthMapper {
 
     default SessionDto toSessionDto(AuthSession session, UUID currentSessionId) {
         return new SessionDto(session.getId(), DeviceLabel.of(session.getUserAgent()), session.getCreatedAt(),
-            session.getLastUsedAt(), session.getId().equals(currentSessionId), List.copyOf(session.methods()));
+            session.getLastUsedAt(), session.getId().equals(currentSessionId), session.isInstalledApp(),
+            List.copyOf(session.methods()));
     }
 
     default LoginAttemptStateDto toStateDto(LoginAttempt attempt, Instant now) {

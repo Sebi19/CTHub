@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { SERVICE_WORKER_URL, isIos, isStandalone } from '../notifications/push/pushSupport.ts';
+import { SERVICE_WORKER_URL, isIos, isStandalone, resetPushPrompt } from '../notifications/push/pushSupport.ts';
 
 interface BeforeInstallPromptEvent extends Event {
     prompt: () => Promise<void>;
@@ -26,6 +26,7 @@ if (typeof window !== 'undefined') {
     });
     window.addEventListener('appinstalled', () => {
         deferredPrompt = null;
+        resetPushPrompt();
         notify();
     });
     // Installability in some browsers needs a registered worker - also for visitors who are not signed in.

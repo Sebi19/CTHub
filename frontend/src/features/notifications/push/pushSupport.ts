@@ -29,6 +29,11 @@ export function isIos(): boolean {
     return /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
 }
 
+/** Android, where web notifications land in a category that does not show pop-ups by default. */
+export function isAndroid(): boolean {
+    return /Android/i.test(navigator.userAgent);
+}
+
 export function urlBase64ToUint8Array(base64Url: string): Uint8Array {
     const padding = '='.repeat((4 - (base64Url.length % 4)) % 4);
     const raw = atob((base64Url + padding).replace(/-/g, '+').replace(/_/g, '/'));
@@ -64,6 +69,14 @@ export function isPromptSnoozed(): boolean {
 
 export function snoozePrompt(forever = false) {
     localStorage.setItem(PROMPT_KEY, forever ? 'never' : String(Date.now()));
+}
+
+/**
+ * Offers push again, also after "never". For (re)installing the app and for losing push without the
+ * user switching it off - localStorage outlives an uninstalled app, so old snoozes would hide the prompt.
+ */
+export function resetPushPrompt() {
+    localStorage.removeItem(PROMPT_KEY);
 }
 
 /** Whether push should be restored silently for this user (and forgets the marker). */

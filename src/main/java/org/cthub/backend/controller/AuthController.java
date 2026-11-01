@@ -11,6 +11,7 @@ import org.cthub.backend.auth.RequestInfo;
 import org.cthub.backend.auth.attempt.LoginAttemptService;
 import org.cthub.backend.auth.credentials.TotpService;
 import org.cthub.backend.auth.session.AuthMethod;
+import org.cthub.backend.auth.session.AuthSessionService;
 import org.cthub.backend.auth.session.SessionIssuer;
 import org.cthub.backend.auth.session.SessionRevokeReason;
 import org.cthub.backend.auth.webauthn.WebAuthnService;
@@ -73,6 +74,7 @@ public class AuthController {
     private final AccountService accountService;
     private final PushSubscriptionService pushSubscriptionService;
     private final SessionIssuer sessionIssuer;
+    private final AuthSessionService sessionService;
     private final AuthCookies cookies;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -220,6 +222,13 @@ public class AuthController {
     @PreAuthorize("permitAll()")
     public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
         sessionIssuer.signOut(request, response, SessionRevokeReason.LOGOUT);
+        return ResponseEntity.noContent().build();
+    }
+
+    /** Called by the installed app (PWA) on start: its session slides for a year instead of 90 days. */
+    @PostMapping("/session/installed-app")
+    public ResponseEntity<Void> markInstalledApp(HttpServletRequest request) {
+        SessionIssuer.currentSessionId(request).ifPresent(sessionService::markInstalledApp);
         return ResponseEntity.noContent().build();
     }
 

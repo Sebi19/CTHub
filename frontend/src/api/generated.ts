@@ -782,6 +782,7 @@ export interface SessionDto {
   /** @format date-time */
   lastUsedAt: string;
   current?: boolean;
+  installedApp?: boolean;
   methods: AuthMethod[];
 }
 
@@ -1214,6 +1215,20 @@ export class Api<
         method: "POST",
         body: data,
         type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags auth-controller
+     * @name MarkInstalledApp
+     * @request POST:/api/auth/session/installed-app
+     */
+    markInstalledApp: (params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/api/auth/session/installed-app`,
+        method: "POST",
         ...params,
       }),
 

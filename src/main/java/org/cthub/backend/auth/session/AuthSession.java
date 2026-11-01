@@ -12,8 +12,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * One signed-in browser/device. Lives up to {@link AuthSessionService#SESSION_LIFETIME} past its
- * last refresh and owns the device's push subscriptions.
+ * One signed-in browser/device. Lives up to {@link AuthSessionService#lifetimeOf} past its last
+ * refresh and owns the device's push subscriptions.
  */
 @Entity
 @Table(name = "auth_session")
@@ -58,6 +58,10 @@ public class AuthSession {
 
     @Column(name = "step_up_at")
     private Instant stepUpAt;
+
+    /** Reported by the installed app (PWA); such sessions slide for a year, see {@link AuthSessionService}. */
+    @Column(name = "installed_app", nullable = false)
+    private boolean installedApp;
 
     public boolean isLive(Instant now) {
         return revokedAt == null && expiresAt.isAfter(now);

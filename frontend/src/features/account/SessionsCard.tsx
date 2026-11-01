@@ -75,6 +75,11 @@ export function SessionsCard({ sessions, onChange }: Props) {
                                             {t('app.account.sessions.current')}
                                         </Badge>
                                     )}
+                                    {session.installedApp && (
+                                        <Badge size="xs" variant="light" color="blue">
+                                            {t('app.account.sessions.installed_app')}
+                                        </Badge>
+                                    )}
                                 </Group>
                                 <Text size="xs" c="dimmed">
                                     {t('app.account.sessions.meta', {

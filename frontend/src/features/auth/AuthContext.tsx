@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from '
 import { Center, Loader } from '@mantine/core';
 import {client} from "../../api.ts";
 import type {UserDto} from "../../api/generated.ts"; // Import Loader
-import {releasePushSubscription} from "../notifications/push/pushSupport.ts";
+import {isStandalone, releasePushSubscription} from "../notifications/push/pushSupport.ts";
 
 interface AuthContextType {
     isAuthenticated: boolean;
@@ -35,6 +35,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
         checkSession();
     }, []);
+
+    useEffect(() => {
+        // The installed app is the user's second factor; its session gets the longer lifetime.
+        if (isAuthenticated && isStandalone()) {
+            client.api.markInstalledApp().catch(() => undefined);
+        }
+    }, [isAuthenticated]);
 
     const login = (user: UserDto) => {
         setIsAuthenticated(true);

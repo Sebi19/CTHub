@@ -39,7 +39,8 @@ public class AuthCookies {
     }
 
     public void writeRefresh(HttpServletResponse response, String rawToken) {
-        write(response, refreshName, rawToken, AuthSessionService.SESSION_LIFETIME);
+        // As long as the longest session; the server enforces each session's own expiry.
+        write(response, refreshName, rawToken, AuthSessionService.INSTALLED_APP_SESSION_LIFETIME);
     }
 
     public void clearRefresh(HttpServletResponse response) {

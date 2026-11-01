@@ -34,7 +34,7 @@ CT Hub
 - Java 21
 - Spring Boot 4.0.1
 - Spring Web MVC
-- Spring Security with 90-day rotating refresh-token sessions, passkeys (WebAuthn), optional password + TOTP
+- Spring Security with 90-day rotating refresh-token sessions (365 days for the installed app), passkeys (WebAuthn), optional password + TOTP
 - Spring Data JPA
 - PostgreSQL for local and production data
 - H2 available as a dependency for lightweight environments
@@ -247,7 +247,15 @@ Statuses: `PENDING`, `APPROVED`, `COMPLETED`, `CLAIMED_ELSEWHERE`, `REJECTED`, `
 
 ### Sessions (`auth/session`)
 
-- Every sign-in creates an `AuthSession` that lives for 90 days, with no "remember me" option. The short-lived
+- Every sign-in creates an `AuthSession` that lives for 90 days, with no "remember me" option. Each refresh-token
+  rotation slides the expiry forward, so only sessions unused for 90 days end.
+- **Installed app:** when the PWA runs standalone it calls `POST /api/auth/session/installed-app`, which flags
+  its session (`auth_session.installed_app`) and extends it to 365 days (also on every rotation). The app is the
+  user's push second factor and must survive the season break. The flag is self-reported, but it only lengthens
+  the caller's own session, which stays rotated, reuse-protected and revocable. On Android the WebAPK shares
+  Chrome's cookies, so the Chrome session on that device is the same session. The refresh cookie's max-age is
+  365 days; the server enforces each session's own expiry.
+- The short-lived
   access session is the servlet HTTP session. The long-lived credential is a **rotating refresh token** in the
   HttpOnly, Secure, SameSite=Lax `__Host-ct_refresh` cookie (`ct_refresh` when `app.security.cookie-secure=false`
   locally).
@@ -261,7 +269,9 @@ Statuses: `PENDING`, `APPROVED`, `COMPLETED`, `CLAIMED_ELSEWHERE`, `REJECTED`, `
 - **Re-enabling push after a new sign-in:** logging out drops the device's subscription. If notification
   permission was already granted, the frontend resubscribes the device silently after the next sign-in
   (`localStorage` key `cthub.push.resume`). The prompt banner snoozes for 7 days only when the user chooses
-  *Not now*.
+  *Not now*, and for good once push is switched off in the settings. Because `localStorage` outlives an
+  uninstalled app, the snooze is cleared on `appinstalled` and whenever a device loses its subscription
+  without the user switching push off (`resetPushPrompt`).
 - **Nudges to install the app** (`features/pwa`): on mobile, `InstallBanner` offers a one-tap install when the
   browser exposes `beforeinstallprompt`, and step-by-step instructions on iOS Safari or when the site is opened
   via `/?install=1`. On desktop, signed-in users without a mobile push device get a QR code that opens the

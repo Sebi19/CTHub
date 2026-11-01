@@ -152,6 +152,39 @@ class AuthSessionServiceTest {
     }
 
     @Test
+    void installedAppSessionsLiveAYearAndKeepSlidingByAYear() {
+        AuthSessionService.Issued issued = service.create(user, EnumSet.of(AuthMethod.EMAIL), "UA", null);
+        UUID id = issued.session().getId();
+
+        service.markInstalledApp(id);
+
+        assertThat(sessionRepository.findById(id).orElseThrow().getExpiresAt())
+            .isEqualTo(clock.instant().plus(AuthSessionService.INSTALLED_APP_SESSION_LIFETIME));
+
+        // Untouched for longer than a browser session would survive (season break).
+        clock.advance(AuthSessionService.SESSION_LIFETIME.plusDays(60));
+        AuthSessionService.RefreshOutcome outcome = service.refresh(issued.refreshToken(), "UA", null);
+
+        assertThat(outcome).isInstanceOf(AuthSessionService.RefreshOutcome.Rotated.class);
+        AuthSession session = sessionRepository.findById(id).orElseThrow();
+        assertThat(session.isInstalledApp()).isTrue();
+        assertThat(session.getExpiresAt()).isEqualTo(clock.instant().plus(AuthSessionService.INSTALLED_APP_SESSION_LIFETIME));
+    }
+
+    @Test
+    void endedSessionsCannotBeRevivedAsInstalledApp() {
+        AuthSessionService.Issued issued = service.create(user, EnumSet.of(AuthMethod.EMAIL), "UA", null);
+        UUID id = issued.session().getId();
+        service.revoke(id, SessionRevokeReason.LOGOUT);
+
+        service.markInstalledApp(id);
+
+        AuthSession session = sessionRepository.findById(id).orElseThrow();
+        assertThat(session.isInstalledApp()).isFalse();
+        assertThat(session.isLive(clock.instant())).isFalse();
+    }
+
+    @Test
     void expiredAndUnknownTokensAreInvalid() {
         AuthSessionService.Issued issued = service.create(user, EnumSet.of(AuthMethod.PASSKEY), "UA", null);
         clock.advance(AuthSessionService.SESSION_LIFETIME.plusMinutes(1));

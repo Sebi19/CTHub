@@ -266,7 +266,9 @@ Statuses: `PENDING`, `APPROVED`, `COMPLETED`, `CLAIMED_ELSEWHERE`, `REJECTED`, `
   browser exposes `beforeinstallprompt`, and step-by-step instructions on iOS Safari or when the site is opened
   via `/?install=1`. On desktop, signed-in users without a mobile push device get a QR code that opens the
   install link on their phone. The account security page shows the push/app status as a sign-in method
-  (`AppPushCard`).
+  (`AppPushCard`). Samsung Internet packages installed web apps for an outdated Android SDK, which Play Protect
+  blocks as an "unsafe app", so there the banner and the card send users to Chrome via an `intent://` link
+  instead of offering the install.
 
 ### Credentials & step-up
 

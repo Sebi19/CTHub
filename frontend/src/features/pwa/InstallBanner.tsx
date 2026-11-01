@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Affix, Button, Group, Paper, Stack, Text, ThemeIcon, Transition } from '@mantine/core';
 import { notifications as toasts } from '@mantine/notifications';
-import { IconDeviceMobile, IconDownload, IconShare2 } from '@tabler/icons-react';
+import { IconBrandChrome, IconDeviceMobile, IconDownload, IconShare2 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { client } from '../../api.ts';
 import { useNotifications } from '../notifications/NotificationsContext.tsx';
@@ -10,15 +10,17 @@ import { isStandalone } from '../notifications/push/pushSupport.ts';
 import { PhoneQrModal } from './PhoneQrCode.tsx';
 import {
     INSTALL_PARAM,
+    chromeInstallIntentUrl,
     isInstallBannerSnoozed,
     isMobileDevice,
+    isSamsungInternet,
     needsManualIosInstall,
     promptInstall,
     snoozeInstallBanner,
     useCanPromptInstall,
 } from './pwaInstall.ts';
 
-type Mode = 'prompt' | 'ios' | 'manual' | 'desktop';
+type Mode = 'prompt' | 'chrome' | 'ios' | 'manual' | 'desktop';
 
 const MOBILE_UA = /Android|iPhone|iPad|iPod|Mobi/i;
 
@@ -58,6 +60,7 @@ export function InstallBanner() {
     let mode: Mode | null = null;
     if (mobile && !standalone && (forced || !dismissed)) {
         if (canPrompt) mode = 'prompt';
+        else if (isSamsungInternet()) mode = 'chrome';
         else if (needsManualIosInstall()) mode = 'ios';
         else if (forced) mode = 'manual';
     } else if (desktopCandidate && phoneHasPush === false) {
@@ -75,9 +78,10 @@ export function InstallBanner() {
     };
 
     const body = mode === 'ios' ? t('app.pwa.banner.ios_steps')
-        : mode === 'manual' ? t('app.pwa.banner.manual_steps')
-            : mode === 'desktop' ? t('app.pwa.desktop.body')
-                : t('app.pwa.banner.body');
+        : mode === 'chrome' ? t('app.pwa.banner.chrome_body')
+            : mode === 'manual' ? t('app.pwa.banner.manual_steps')
+                : mode === 'desktop' ? t('app.pwa.desktop.body')
+                    : t('app.pwa.banner.body');
 
     return (
         <>
@@ -88,8 +92,9 @@ export function InstallBanner() {
                             <Group align="flex-start" wrap="nowrap" gap="md">
                                 <ThemeIcon variant="light" size="lg" radius="xl">
                                     {mode === 'ios' ? <IconShare2 size={18} />
-                                        : mode === 'desktop' ? <IconDeviceMobile size={18} />
-                                            : <IconDownload size={18} />}
+                                        : mode === 'chrome' ? <IconBrandChrome size={18} />
+                                            : mode === 'desktop' ? <IconDeviceMobile size={18} />
+                                                : <IconDownload size={18} />}
                                 </ThemeIcon>
                                 <Stack gap="xs" style={{ flex: 1 }}>
                                     <Text fw={600}>
@@ -103,6 +108,11 @@ export function InstallBanner() {
                                         {mode === 'prompt' && (
                                             <Button size="xs" onClick={() => void install()}>
                                                 {t('app.pwa.banner.install')}
+                                            </Button>
+                                        )}
+                                        {mode === 'chrome' && (
+                                            <Button size="xs" component="a" href={chromeInstallIntentUrl()}>
+                                                {t('app.pwa.banner.open_chrome')}
                                             </Button>
                                         )}
                                         {mode === 'desktop' && (

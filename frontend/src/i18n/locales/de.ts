@@ -216,6 +216,8 @@ export const de = {
                 title: "CT-Hub als App installieren",
                 body: "Mit einem Tipp vom Home-Bildschirm öffnen, Benachrichtigungen erhalten und Anmeldungen per Push bestätigen.",
                 install: "Installieren",
+                chrome_body: "Samsung Internet installiert Web-Apps in einem veralteten Format, das Android als unsicher blockiert. Öffnen Sie CT-Hub in Chrome und installieren Sie die App dort.",
+                open_chrome: "In Chrome öffnen",
                 ios_steps: "Tippen Sie in Safari unten auf „Teilen“ und dann auf „Zum Home-Bildschirm“. Danach können Sie Anmeldungen per Push bestätigen.",
                 manual_steps: "Öffnen Sie das Menü Ihres Browsers (⋮) und wählen Sie „App installieren“ bzw. „Zum Startbildschirm hinzufügen“.",
             },

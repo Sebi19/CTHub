@@ -32,9 +32,12 @@ i18n
 
 i18n.on('languageChanged', (lng) => {
     dayjs.locale(lng);
+    // Drives the browser's hyphenation dictionary (long German words) and screen reader voice.
+    document.documentElement.lang = lng;
 });
 
 dayjs.locale(i18n.resolvedLanguage || 'de');
+document.documentElement.lang = i18n.resolvedLanguage || 'de';
 
 i18n.services.formatter?.add('datetime', (value, lng, options) => {
     // If a specific format is passed (like 'LL'), use it. Otherwise, default to 'L' (short date)

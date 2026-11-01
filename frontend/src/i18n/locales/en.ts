@@ -216,6 +216,8 @@ export const en: I18nLocale = {
                 title: "Install CT-Hub as an app",
                 body: "Open it with one tap from your home screen, get notifications and approve sign-ins via push.",
                 install: "Install",
+                chrome_body: "Samsung Internet installs web apps in an outdated format that Android blocks as unsafe. Open CT-Hub in Chrome and install the app there.",
+                open_chrome: "Open in Chrome",
                 ios_steps: "In Safari, tap “Share” at the bottom, then “Add to Home Screen”. Afterwards you can approve sign-ins via push.",
                 manual_steps: "Open your browser menu (⋮) and choose “Install app” or “Add to Home screen”.",
             },

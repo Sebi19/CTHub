@@ -139,19 +139,20 @@ export default function App() {
             <GlobalSearchSpotlight />
 
             <AppShell.Header>
-                <Group h="100%" px="md" justify="space-between">
+                <Group h="100%" px="md" justify="space-between" wrap="nowrap">
 
                     {/* LEFT: Logo & Burger */}
-                    <Group>
+                    <Group gap="sm" wrap="nowrap">
                         <Burger opened={opened} onClick={toggle} hiddenFrom="lg" size="sm" />
-                        <Group gap="sm" style={{ cursor: 'pointer' }} onClick={() => navigate('/')}>
+                        <Group gap="sm" wrap="nowrap" style={{ cursor: 'pointer' }} onClick={() => navigate('/')}>
                             <Image src={logo} h={32} w="auto" fit="contain" />
                             {/* Hide full text on tiny screens */}
                             <Title order={3} visibleFrom="xs">Challenge Team Hub</Title>
                             {/* Show acronym on very small screens */}
                             <Title order={3} hiddenFrom="xs">CTH</Title>
                         </Group>
-                        <Anchor href="https://github.com/Sebi19/CTHub" target="_blank" td="none">
+                        {/* Phones: lives in the drawer, the header has no room for it */}
+                        <Anchor href="https://github.com/Sebi19/CTHub" target="_blank" td="none" visibleFrom="xs">
                             <ActionIcon variant="default" size="lg">
                                 <IconBrandGithub size={18} />
                             </ActionIcon>
@@ -159,7 +160,7 @@ export default function App() {
                     </Group>
 
                     {/* RIGHT: Actions (Theme + Auth) */}
-                    <Group gap="xs">
+                    <Group gap="xs" wrap="nowrap">
                         <Button
                             variant="default"
                             leftSection={<IconSearch size={16} />}
@@ -234,6 +235,10 @@ export default function App() {
                         </Stack>
                     </Stack>
                     <Stack gap={5}>
+                        <Button component="a" href="https://github.com/Sebi19/CTHub" target="_blank" hiddenFrom="xs"
+                                variant="default" fullWidth justify="flex-start" leftSection={<IconBrandGithub size={18} />}>
+                            GitHub
+                        </Button>
                         <LanguageSwitcher isMobile={true} />
                         {/* Theme Toggle */}
                         <Button variant="default" fullWidth justify="flex-start" onClick={toggleColorScheme} leftSection={computedColorScheme === 'dark' ? <IconSun size={18} /> : <IconMoon size={18} />}>

@@ -43,9 +43,23 @@ const subscribe = (listener: () => void) => {
     };
 };
 
-/** Whether the browser offers a one-tap install (Chrome, Edge, Samsung Internet …). */
+/**
+ * Samsung Internet packages installed web apps for an outdated Android SDK, which Play Protect blocks
+ * as "unsafe app" on current Android versions. Installation is routed through Chrome instead.
+ */
+export function isSamsungInternet(): boolean {
+    return /SamsungBrowser/i.test(navigator.userAgent);
+}
+
+/** Android intent that opens the install link in Chrome (or its Play Store page if it is missing). */
+export function chromeInstallIntentUrl(): string {
+    const { host } = window.location;
+    return `intent://${host}/?${INSTALL_PARAM}=1#Intent;scheme=https;package=com.android.chrome;end`;
+}
+
+/** Whether the browser offers a usable one-tap install (Chrome, Edge …). */
 export function useCanPromptInstall(): boolean {
-    return useSyncExternalStore(subscribe, () => deferredPrompt != null, () => false);
+    return useSyncExternalStore(subscribe, () => deferredPrompt != null && !isSamsungInternet(), () => false);
 }
 
 /** Opens the browser's install dialog; resolves to whether the user accepted. */

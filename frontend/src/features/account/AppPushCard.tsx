@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Anchor, Badge, Button, Divider, Group, Paper, Stack, Text, Title } from '@mantine/core';
 import { notifications as toasts } from '@mantine/notifications';
-import { IconBellRinging, IconDownload } from '@tabler/icons-react';
+import { IconBellRinging, IconBrandChrome, IconDownload } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { client } from '../../api.ts';
@@ -9,7 +9,7 @@ import { NOTIFICATION_SETTINGS_PATH } from '../notifications/NotificationsContex
 import { usePush } from '../notifications/push/PushContext.tsx';
 import { isIos, isStandalone } from '../notifications/push/pushSupport.ts';
 import { PhoneQrCode } from '../pwa/PhoneQrCode.tsx';
-import { isMobileDevice, promptInstall, useCanPromptInstall } from '../pwa/pwaInstall.ts';
+import { chromeInstallIntentUrl, isMobileDevice, isSamsungInternet, promptInstall, useCanPromptInstall } from '../pwa/pwaInstall.ts';
 
 /** Push on signed-in devices is a sign-in method: new sign-ins are approved there with one tap. */
 export function AppPushCard() {
@@ -95,6 +95,16 @@ export function AppPushCard() {
                         <Button size="sm" radius="xl" variant="light" leftSection={<IconDownload size={16} />}
                                 style={{ flexShrink: 0 }} onClick={() => void onInstall()}>
                             {t('app.pwa.banner.install')}
+                        </Button>
+                    </Group>
+                )}
+
+                {isSamsungInternet() && !isStandalone() && (
+                    <Group justify="space-between" wrap="nowrap" gap="sm">
+                        <Text size="sm" c="dimmed">{t('app.pwa.banner.chrome_body')}</Text>
+                        <Button size="sm" radius="xl" variant="light" leftSection={<IconBrandChrome size={16} />}
+                                style={{ flexShrink: 0 }} component="a" href={chromeInstallIntentUrl()}>
+                            {t('app.pwa.banner.open_chrome')}
                         </Button>
                     </Group>
                 )}

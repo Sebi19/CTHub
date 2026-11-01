@@ -7,14 +7,15 @@ import {
     Paper,
     Center,
     Loader,
-    ThemeIcon
+    ThemeIcon,
+    Flex
 } from '@mantine/core';
 import {IconBuildingBank, IconCalendarStats, IconMapPin} from '@tabler/icons-react';
 import {useLocation, useNavigate, useParams} from 'react-router-dom';
 import {SeasonTeamDetails} from "../seasonTeam/SeasonTeamDetails.tsx";
 import {useEffect, useMemo, useState} from "react";
 import type {TeamProfileDetailsDto} from "../../api/generated.ts";
-import {useDocumentTitle} from "@mantine/hooks";
+import {useDocumentTitle, useMediaQuery} from "@mantine/hooks";
 import {client} from "../../api.ts";
 import {useTranslation} from "react-i18next";
 import dayjs from "dayjs";
@@ -38,6 +39,8 @@ export const TeamProfileDetailPage = () => {
     const [isLoading, setIsLoading] = useState(true);
 
     const [activeTab, setActiveTab] = useState<string>(seasonId || 'profile');
+    // Below Mantine's `xs` breakpoint the profile header stacks vertically and centers.
+    const isMobile = useMediaQuery('(max-width: 35.99em)');
 
     useEffect(() => {
         if (seasonId) {
@@ -91,8 +94,8 @@ export const TeamProfileDetailPage = () => {
 
         // TODO: Extract into a seperate component
         const teamProfileTab = (
-            <Paper shadow="md" radius="lg" p="xl" mb="xl" withBorder>
-                <Group wrap="nowrap" align="flex-start">
+            <Paper shadow="md" radius="lg" p={{ base: 'md', sm: 'xl' }} mb="xl" withBorder>
+                <Flex direction={{ base: 'column', xs: 'row' }} align={{ base: 'center', xs: 'flex-start' }} gap="md">
                     <ProfileAvatar
                         avatarUrl={profile.avatarUrl}
                         size={120}
@@ -100,11 +103,11 @@ export const TeamProfileDetailPage = () => {
                         color="initials"
                     />
 
-                    <Stack gap="xs">
+                    <Stack gap="xs" miw={0} align={isMobile ? 'center' : undefined} ta={{ base: 'center', xs: 'left' }}>
                         <Title order={1}>{profile.profileName}</Title>
 
                         {latestSeason && (
-                            <Group gap="xl" c="dimmed" mt="xs">
+                            <Group gap={isMobile ? 'xs' : 'xl'} c="dimmed" mt="xs" justify={isMobile ? 'center' : undefined}>
                                 <Group gap="xs" justify="center">
                                     <IconBuildingBank size={18} />
                                     <Text size="sm">{latestSeason.institution}</Text>
@@ -117,14 +120,14 @@ export const TeamProfileDetailPage = () => {
                         )}
 
                         {/* A fun little summary stat */}
-                        <Group gap="xs">
+                        <Group gap="xs" justify={isMobile ? 'center' : undefined}>
                             <ThemeIcon variant={"light"} color={"blue"} radius="md">
                                 <IconCalendarStats size={16} opacity={0.6} />
                             </ThemeIcon>
                             <Text size="sm" fw={500}>{t("app.team_profile.detail.seasons_on_record", {count: profile.seasons.length})}</Text>
                         </Group>
                     </Stack>
-                </Group>
+                </Flex>
             </Paper>
         );
 
@@ -140,7 +143,7 @@ export const TeamProfileDetailPage = () => {
                 content: <SeasonTeamDetails teamDetails={season} hideSeasonBadge={true} />
             })),
         ];
-    }, [profile, t]);
+    }, [profile, t, isMobile]);
 
     const handleTabChange = (newTab: string | null) => {
         if (!newTab) return;

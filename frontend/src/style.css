@@ -908,3 +908,9 @@
         border: 1px solid var(--mantine-color-default-border);
     }
 }
+
+/* Long German compounds ("Benachrichtigungseinstellungen") must not widen the page on phones. */
+h1, h2, h3, h4 {
+    overflow-wrap: break-word;
+    hyphens: auto;
+}

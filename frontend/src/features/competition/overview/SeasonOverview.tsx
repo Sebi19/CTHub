@@ -30,6 +30,7 @@ import {CompetitionType} from "../../../api/generated.ts";
 import {SeasonBadge} from "../../common/season/SeasonBadge.tsx";
 import {useAppContext} from "../../../hooks/AppContext.tsx";
 import {useMemoryState} from "../../../utils/memoryUtils.ts";
+import {CountryFlag} from "../../common/CountryFlag.tsx";
 
 export const SeasonOverview = () => {
     const { seasonId } = useParams<{ seasonId: string }>();
@@ -232,9 +233,15 @@ export const SeasonOverview = () => {
                                 onChange={setCountryFilter}
                                 data={[
                                     { label: t('app.competition.overview.filter.all'), value: 'ALL' },
-                                    { label: '🇩🇪 DE', value: 'DE' },
-                                    { label: '🇦🇹 AT', value: 'AT' },
-                                    { label: '🇨🇭 CH', value: 'CH' },
+                                    ...(['DE', 'AT', 'CH'] as const).map(country => ({
+                                        value: country,
+                                        label: (
+                                            <Group gap={6} wrap="nowrap" justify="center">
+                                                <CountryFlag country={country} />
+                                                {country}
+                                            </Group>
+                                        ),
+                                    })),
                                 ]}
                             />
                             <SegmentedControl

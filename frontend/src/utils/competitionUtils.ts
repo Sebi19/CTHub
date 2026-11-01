@@ -94,14 +94,14 @@ export const getFormattedCompetitionDate = (competition: CompetitionSearchResult
 }
 
 
-export const getCountryFlagEmoji = (countryCode: string): string => {
-    if (!countryCode) return '';
+// Flag emojis don't render on Windows (Segoe UI Emoji has no flag glyphs), so we use SVGs.
+// Only the URLs are bundled; each SVG is emitted as its own asset and fetched on demand.
+const countryFlagUrls = import.meta.glob<string>(
+    '/node_modules/country-flag-icons/3x2/*.svg',
+    {eager: true, query: '?url&no-inline', import: 'default'},
+);
 
-    // Convert country code to regional indicator symbols
-    const codePoints = countryCode
-        .toUpperCase()
-        .split('')
-        .map(char => 127397 + char.charCodeAt(0));
-
-    return String.fromCodePoint(...codePoints);
+export const getCountryFlagUrl = (countryCode: string): string | undefined => {
+    if (!countryCode) return undefined;
+    return countryFlagUrls[`/node_modules/country-flag-icons/3x2/${countryCode.toUpperCase()}.svg`];
 }

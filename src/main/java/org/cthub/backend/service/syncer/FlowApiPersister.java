@@ -45,7 +45,7 @@ public class FlowApiPersister {
 
         // 2. HARD DEPENDENCY CHECK: Missing Venue Data
         if (venueDto == null) {
-            if (!(eventDto.getSlug().contains("finale-2") || eventDto.getName().toLowerCase().contains("qualifikation"))) {
+            if (!(eventDto.getSlug().contains("finale-2") || eventDto.getSlug().toLowerCase().contains("quali"))) {
                 if (existingOpt.isPresent()) {
                     Competition comp = existingOpt.get();
                     if (comp.isActive()) {
